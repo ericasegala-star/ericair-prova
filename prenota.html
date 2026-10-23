@@ -231,15 +231,76 @@
   };
   function paeseSalvato() { try { return localStorage.getItem('prenotaPaese') || ''; } catch (e) { return ''; } }
   var paesePag = paeseSalvato();
-  function inglese() { return paesePag === 'US'; }
-  function ucraino() { return paesePag === 'UA'; }
-  function dizionarioPag() { return inglese() ? EN : ucraino() ? UKD : null; }
-  function L(it, en, uk) { return inglese() ? en : ucraino() ? uk : it; }
+  // Altre lingue: ogni lingua ha S (testi fissi, chiave = italiano) e D (frasi dinamiche, chiave = italiano).
+  const LANGDATA = {};
+  LANGDATA.hr = {
+    S: {
+      'Prenota un appuntamento': 'Rezervirajte termin',
+      'La prenotazione online non è ancora attiva. Chiamaci per fissare un appuntamento.': 'Online rezervacija još nije aktivna. Nazovite nas kako biste dogovorili termin.',
+      'La tua prenotazione': 'Vaša rezervacija',
+      'Sposta o modifica': 'Premjesti ili promijeni',
+      'Annulla appuntamento': 'Otkaži termin',
+      'Vuoi davvero annullare?': 'Želite li zaista otkazati?',
+      'Sì, annulla': 'Da, otkaži',
+      'No, lo tengo': 'Ne, zadržavam ga',
+      'Appuntamento annullato': 'Termin je otkazan',
+      'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Hvala što ste nam javili. Kad želite, možete rezervirati novi.',
+      'Prenota di nuovo': 'Rezerviraj ponovno',
+      'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'Mijenjate svoju rezervaciju: promijenite uslugu, dan ili vrijeme i potvrdite.',
+      'Lascia com\'è': 'Ostavi kako jest',
+      'Servizio': 'Usluga',
+      'Con chi': 'S kim',
+      'Quando': 'Kada',
+      'Orario': 'Vrijeme',
+      'I tuoi dati': 'Vaši podaci',
+      '— scegli —': '— odaberite —',
+      'Nome e cognome': 'Ime i prezime',
+      'Numero di telefono (anche WhatsApp)': 'Broj telefona (i WhatsApp)',
+      'Note (facoltativo)': 'Napomene (neobavezno)',
+      'I dati che scrivi qui sono trattati da': 'Podatke koje ovdje upišete obrađuje',
+      'il salone': 'salon',
+      'solo per gestire la tua richiesta di appuntamento e per contattarti (anche su WhatsApp) per promemoria o variazioni di orario. Non vengono condivisi con terzi per scopi commerciali e si conservano solo per il tempo necessario a questo scopo. In qualsiasi momento puoi chiedere di vederli, correggerli o farli cancellare, scrivendo o chiamando il salone.': 'isključivo radi obrade vašeg zahtjeva za termin i kontaktiranja (i putem WhatsAppa) zbog podsjetnika ili promjena termina. Ne dijele se s trećim stranama u komercijalne svrhe i čuvaju se samo onoliko koliko je potrebno za tu svrhu. U svakom trenutku možete zatražiti uvid, ispravak ili brisanje podataka pisanjem salonu ili pozivom.',
+      'Leggi l\'informativa completa sulla privacy': 'Pročitajte cjelovitu politiku privatnosti',
+      'Ho letto l\'': 'Pročitao/pročitala sam ',
+      'informativa': 'politiku privatnosti',
+      'e acconsento al trattamento dei miei dati per gestire la richiesta di appuntamento.': 'i pristajem na obradu svojih podataka radi obrade zahtjeva za termin.',
+      'Richiedi appuntamento': 'Zatraži termin',
+      'Conferma modifica': 'Potvrdi promjenu',
+      'Richiesta inviata!': 'Zahtjev je poslan!',
+      'Se per qualche motivo quell\'orario non fosse più disponibile, ti contattiamo noi al numero che hai scritto.': 'Ako taj termin iz bilo kojeg razloga više ne bude dostupan, javit ćemo vam se na broj koji ste upisali.',
+      'Hai bisogno di cambiare giorno, orario o servizio? Salva questo link tra i preferiti: con quello puoi modificare la prenotazione quando vuoi.': 'Trebate promijeniti dan, vrijeme ili uslugu? Spremite ovu poveznicu u favorite: njome možete mijenjati rezervaciju kad god želite.'
+    },
+    D: {
+      ' alle ': ' u ',
+      ' da ': ', kod ',
+      ' per ': ', usluga ',
+      'Un attimo…': 'Trenutak…',
+      'Non ci sono orari liberi quel giorno: prova un\'altra data.': 'Nema slobodnih termina taj dan: pokušajte s drugim datumom.',
+      '{n} non ha orari liberi quel giorno: prova un\'altra data o un\'altra operatrice.': '{n} nema slobodnih termina taj dan: pokušajte s drugim datumom ili drugom osobom.',
+      'Qualsiasi': 'Bilo tko',
+      'Disponibilità aggiornata al ': 'Dostupnost ažurirana: ',
+      'Invio…': 'Slanje…',
+      'Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.': 'Ovaj termin je upravo zauzela druga osoba: odaberite neki od preostalih.',
+      'Modifica inviata!': 'Promjena je poslana!',
+      'Il tuo link per modificare la prenotazione': 'Vaša poveznica za promjenu rezervacije',
+      'Ti aspettiamo ': 'Očekujemo vas: ',
+      'Non sono riuscita a inviare la richiesta. Controlla la connessione e riprova, oppure chiamaci.': 'Nismo uspjeli poslati zahtjev. Provjerite vezu i pokušajte ponovno ili nas nazovite.',
+      'Non sono riuscita ad annullare. Controlla la connessione e riprova, oppure chiamaci.': 'Nismo uspjeli otkazati. Provjerite vezu i pokušajte ponovno ili nas nazovite.'
+    }
+  };
+  // @@LANGDATA@@
+  const LINGUA_PAESE = { US: 'en', UA: 'uk', HR: 'hr', FI: 'fi', DE: 'de', EG: 'ar' };
+  function lingPag() { return LINGUA_PAESE[paesePag] || 'it'; }
+  function inglese() { return lingPag() === 'en'; }
+  function ucraino() { return lingPag() === 'uk'; }
+  function dizionarioPag() { const c = lingPag(); return c === 'en' ? EN : c === 'uk' ? UKD : (LANGDATA[c] ? LANGDATA[c].S : null); }
+  function L(it, en, uk) { const c = lingPag(); if (c === 'en') return en; if (c === 'uk') return uk; const d = LANGDATA[c]; return (d && d.D[it]) || it; }
   function T(it) { const d = dizionarioPag(); return d && d[it] ? d[it] : it; }
   function traduciPagina() {
     const D = dizionarioPag();
     if (!D) return;
-    document.documentElement.lang = inglese() ? 'en' : 'uk';
+    document.documentElement.lang = lingPag();
+    document.documentElement.dir = lingPag() === 'ar' ? 'rtl' : 'ltr';
     document.title = document.title.replace('Prenota un appuntamento', D['Prenota un appuntamento']);
     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const nodi = []; while (w.nextNode()) nodi.push(w.currentNode);
@@ -430,11 +491,9 @@
     const slots = slotsLiberi(operatoreScelto, data, servizioScelto.durataMin);
     cont.innerHTML = '';
     if (!slots.length) {
-      hint.textContent = ucraino()
-        ? (operatoreScelto === QUALSIASI ? 'Немає вільного часу' : NOME_OPERATORE[operatoreScelto] + ' не має вільного часу') + ' цього дня: оберіть іншу дату' + (operatoreScelto === QUALSIASI ? '.' : ' або іншого майстра.')
-        : inglese()
-        ? (operatoreScelto === QUALSIASI ? 'No times available' : NOME_OPERATORE[operatoreScelto] + ' has no times available') + ' that day: try another date' + (operatoreScelto === QUALSIASI ? '.' : ' or another team member.')
-        : (operatoreScelto === QUALSIASI ? 'Non ci sono orari liberi' : NOME_OPERATORE[operatoreScelto] + ' non ha orari liberi') + ' quel giorno: prova un\'altra data' + (operatoreScelto === QUALSIASI ? '.' : ' o un\'altra operatrice.');
+      hint.textContent = operatoreScelto === QUALSIASI
+        ? L('Non ci sono orari liberi quel giorno: prova un\'altra data.', 'No times available that day: try another date.', 'Немає вільного часу цього дня: оберіть іншу дату.')
+        : L('{n} non ha orari liberi quel giorno: prova un\'altra data o un\'altra operatrice.', '{n} has no times available that day: try another date or another team member.', '{n} не має вільного часу цього дня: оберіть іншу дату або іншого майстра.').replace('{n}', NOME_OPERATORE[operatoreScelto]);
       return;
     }
     hint.textContent = '';
