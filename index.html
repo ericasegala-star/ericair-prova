@@ -1045,6 +1045,27 @@
   }
   .settings-close:hover { background: var(--berry-soft); }
   [dir="rtl"] .settings-close { right: auto; left: 14px; }
+  #anagraficaModal .anag-card { width: min(1000px, 100%); }
+  .anag-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+  .anag-top input[type="text"] { flex: 1 1 200px; min-width: 0; }
+  .anag-filtri { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+  .anag-filtri button.attivo { background: var(--berry-soft); border-color: var(--berry); color: var(--berry); }
+  .anag-tabella-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+  table.anag-tabella { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .anag-tabella th, .anag-tabella td { padding: 8px 10px; text-align: start; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .anag-tabella th { cursor: pointer; font-weight: 600; font-size: 12px; color: var(--ink-soft); background: var(--paper); position: sticky; top: 0; user-select: none; }
+  .anag-tabella tbody tr { cursor: pointer; }
+  .anag-tabella tbody tr:hover { background: var(--berry-soft); }
+  .anag-si { color: var(--ok); font-weight: 600; }
+  .anag-no { color: var(--ink-soft); }
+  .anag-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0; }
+  .anag-form label { display: block; font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
+  .anag-form input { width: 100%; }
+  .anag-consenso { margin: 6px 0 12px; display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+  .anag-azioni { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .anag-azioni .anag-pericolo { color: #a3322b; border-color: #a3322b; }
+  .anag-conta { font-size: 12.5px; color: var(--ink-soft); margin: 4px 0 8px; }
+  .anag-wa, #anagWa { color: var(--berry); font-weight: 600; text-decoration: none; }
   .settings-section { margin-bottom: 22px; }
   .settings-section > label {
     display: block; margin-bottom: 8px; font-weight: 600; font-size: 13.5px; color: var(--ink-soft);
@@ -1523,6 +1544,12 @@
           </div>
         </aside>
         <aside class="panel notes-banner">
+          <div class="notes-banner-item" id="anagraficaEntry">
+            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.9-5 5.5-5s4.9 1.8 5.5 5"/><path d="M16.5 7.5h4M16.5 11h4M17 14.5h3.5"/></svg></span>
+            <span class="name" data-i18n="nav.anagrafica">Anagrafica clienti</span>
+          </div>
+        </aside>
+        <aside class="panel notes-banner">
           <div class="notes-banner-item" id="serviziEntry">
             <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><path d="M8 7.5 19 18M8 16.5 19 6"/></svg></span>
             <span class="name" data-i18n="nav.servizi">Crea servizio</span>
@@ -1737,6 +1764,13 @@
   </div>
 </div>
 
+<div class="settings-modal" id="anagraficaModal" hidden>
+  <div class="settings-card anag-card">
+    <button type="button" class="settings-close" id="anagraficaClose" aria-label="Chiudi" data-i18n-aria="ui.close">×</button>
+    <div id="anagraficaBody"></div>
+  </div>
+</div>
+
 <div class="settings-modal" id="agendaAssenzaModal" hidden>
   <div class="settings-card">
     <button type="button" class="settings-close" id="agendaAssenzaClose" aria-label="Chiudi" data-i18n-aria="ui.close">×</button>
@@ -1806,7 +1840,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-23.127-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-23.128-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -1841,7 +1875,7 @@
   ];
   const TRANSLATIONS = {
     en: {
-      'nav.tecnico': 'Stylist', 'nav.tricologo': 'Trichologist', 'nav.agenda': 'Calendar',
+      'nav.tecnico': 'Stylist', 'nav.tricologo': 'Trichologist', 'nav.agenda': 'Calendar', 'nav.anagrafica': 'Client directory',
       'top.settings': 'Settings', 'top.export': 'Export backup', 'top.import': 'Import backup',
       'top.newSheet': '+ New record', 'menu.toggle': 'Menu',
       'nav.schedaStampare': 'Printable form', 'nav.consigli': 'Usage notes',
@@ -2004,7 +2038,7 @@
       'sc.nuovaCreata': 'New card created.'
     },
     es: {
-      'nav.tecnico': 'Estilista', 'nav.tricologo': 'Tricólogo', 'nav.agenda': 'Agenda',
+      'nav.tecnico': 'Estilista', 'nav.tricologo': 'Tricólogo', 'nav.agenda': 'Agenda', 'nav.anagrafica': 'Directorio de clientas',
       'top.settings': 'Configuración', 'top.export': 'Exportar copia de seguridad', 'top.import': 'Importar copia de seguridad',
       'top.newSheet': '+ Nueva ficha', 'menu.toggle': 'Menú',
       'nav.schedaStampare': 'Ficha para imprimir', 'nav.consigli': 'Consejos de uso',
@@ -2167,7 +2201,7 @@
       'sc.nuovaCreata': 'Nueva ficha creada.'
     },
     ro: {
-      'nav.tecnico': 'Stilist', 'nav.tricologo': 'Tricolog', 'nav.agenda': 'Agendă',
+      'nav.tecnico': 'Stilist', 'nav.tricologo': 'Tricolog', 'nav.agenda': 'Agendă', 'nav.anagrafica': 'Registrul clientelor',
       'top.settings': 'Setări', 'top.export': 'Exportă copia de siguranță', 'top.import': 'Importă copia de siguranță',
       'top.newSheet': '+ Fișă nouă', 'menu.toggle': 'Meniu',
       'nav.schedaStampare': 'Fișă de imprimat', 'nav.consigli': 'Sfaturi de utilizare',
@@ -2330,7 +2364,7 @@
       'sc.nuovaCreata': 'Fișă nouă creată.'
     },
     sq: {
-      'nav.tecnico': 'Stiliste', 'nav.tricologo': 'Trikologe', 'nav.agenda': 'Agjenda',
+      'nav.tecnico': 'Stiliste', 'nav.tricologo': 'Trikologe', 'nav.agenda': 'Agjenda', 'nav.anagrafica': 'Regjistri i klientëve',
       'top.settings': 'Cilësimet', 'top.export': 'Eksporto kopjen rezervë', 'top.import': 'Importo kopjen rezervë',
       'top.newSheet': '+ Fletë e re', 'menu.toggle': 'Menyja',
       'nav.schedaStampare': 'Fletë për printim', 'nav.consigli': 'Këshilla përdorimi',
@@ -2493,7 +2527,7 @@
       'sc.nuovaCreata': 'Kartela e re u krijua.'
     },
     pl: {
-      'nav.tecnico': 'Stylista', 'nav.tricologo': 'Trycholog', 'nav.agenda': 'Kalendarz',
+      'nav.tecnico': 'Stylista', 'nav.tricologo': 'Trycholog', 'nav.agenda': 'Kalendarz', 'nav.anagrafica': 'Lista klientek',
       'top.settings': 'Ustawienia', 'top.export': 'Eksportuj kopię zapasową', 'top.import': 'Importuj kopię zapasową',
       'top.newSheet': '+ Nowa karta', 'menu.toggle': 'Menu',
       'nav.schedaStampare': 'Karta do wydruku', 'nav.consigli': 'Wskazówki użytkowania',
@@ -2658,7 +2692,7 @@
     uk: {
       'nav.tecnico': 'Стиліст',
       'nav.tricologo': 'Трихолог',
-      'nav.agenda': 'Календар',
+      'nav.agenda': 'Календар', 'nav.anagrafica': 'Картотека клієнтів',
       'top.settings': 'Налаштування',
       'top.export': 'Експорт резервної копії',
       'top.import': 'Імпорт резервної копії',
@@ -2870,7 +2904,7 @@
     hr: {
       'nav.tecnico': 'Frizer',
       'nav.tricologo': 'Trihološkinja',
-      'nav.agenda': 'Kalendar',
+      'nav.agenda': 'Kalendar', 'nav.anagrafica': 'Imenik klijenata',
       'top.settings': 'Postavke',
       'top.export': 'Izvezi sigurnosnu kopiju',
       'top.import': 'Uvezi sigurnosnu kopiju',
@@ -3082,7 +3116,7 @@
     fi: {
       'nav.tecnico': 'Kampaaja',
       'nav.tricologo': 'Trikologi',
-      'nav.agenda': 'Kalenteri',
+      'nav.agenda': 'Kalenteri', 'nav.anagrafica': 'Asiakasrekisteri',
       'top.settings': 'Asetukset',
       'top.export': 'Vie varmuuskopio',
       'top.import': 'Tuo varmuuskopio',
@@ -3294,7 +3328,7 @@
     de: {
       'nav.tecnico': 'Friseur',
       'nav.tricologo': 'Trichologe',
-      'nav.agenda': 'Kalender',
+      'nav.agenda': 'Kalender', 'nav.anagrafica': 'Kundenverzeichnis',
       'top.settings': 'Einstellungen',
       'top.export': 'Backup exportieren',
       'top.import': 'Backup importieren',
@@ -3506,7 +3540,7 @@
     ar: {
       'nav.tecnico': 'مصفف الشعر',
       'nav.tricologo': 'أخصائي الشعر',
-      'nav.agenda': 'التقويم',
+      'nav.agenda': 'التقويم', 'nav.anagrafica': 'سجل العملاء',
       'top.settings': 'الإعدادات',
       'top.export': 'تصدير نسخة احتياطية',
       'top.import': 'استيراد نسخة احتياطية',
@@ -4589,6 +4623,7 @@
   // fissato (slot occupato nel frattempo): mostrate come avviso nella home, da risolvere a mano
   // (si contatta la cliente per un altro orario).
   let richiesteOnlineConflitto = [];
+  let clientiCreatiOnline = false;
   // Rigenera il "pannello" pubblico (app/disponibilitaPubblica), con SOLO i dati che servono alla
   // pagina di prenotazione online per calcolare gli orari liberi: niente nomi di clienti, niente
   // servizi/note/formule — solo orari occupati, turni e servizi marcati "prenotabile online".
@@ -4687,6 +4722,13 @@
         }
         const servizio = r.servizioId ? getServizio(r.servizioId) : null;
         const cliente = trovaClienteDaTelefono(r.telefono);
+        // Chi prenota online e ha già una scheda (riconosciuta dal telefono) riceve il consenso privacy,
+        // che il modulo pubblico richiede per poter inviare la richiesta. Per chi non ha una scheda
+        // non se ne crea una da sola (scelta già presa: niente schede automatiche).
+        if (cliente && !cliente.consensoAt) {
+          cliente.consensoAt = r.createdAt || Date.now(); cliente.consensoVia = 'online';
+          cliente.updatedAt = Date.now(); save(clients); clientiCreatiOnline = true;
+        }
         const nuovoApp = createAppuntamento({
           data: r.data, ora: r.ora, operatore: r.operatore, tipo: 'cliente',
           clienteId: cliente ? cliente.id : null,
@@ -4701,6 +4743,7 @@
         doc.ref.update({ stato: 'confermata' }).catch(() => {});
       });
       richiesteOnlineConflitto = nuoveInConflitto;
+      if (clientiCreatiOnline) { clientiCreatiOnline = false; renderAll(); }
       if (viewingHome) renderSheet();
       return puliziaOccupatiProvvisori(elaborate);
     }).catch(() => { /* si riprova alla prossima apertura */ });
@@ -5720,6 +5763,10 @@
     if (!Array.isArray(c.foto)) c.foto = [];
     if (!Array.isArray(c.versioni)) c.versioni = [];
     if (c.telefono === undefined) c.telefono = "";
+    if (c.email === undefined) c.email = "";
+    if (c.nascita === undefined) c.nascita = "";
+    if (c.consensoAt === undefined) c.consensoAt = null;
+    if (c.consensoVia === undefined) c.consensoVia = "";
     return c;
   }
 
@@ -7628,7 +7675,7 @@
     const isTouchDevice = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
     const sidebarAsideEl = document.querySelector('.sidebar-stack .sidebar');
     if (sidebarAsideEl) sidebarAsideEl.style.display = (viewingTricologo || (viewingMagazzino && isTouchDevice)) ? 'none' : '';
-    ['blankSheetEntry', 'notesEntry', 'ostwaldEntry', 'ispirazioneEntry', 'serviziEntry'].forEach(id => {
+    ['blankSheetEntry', 'notesEntry', 'ostwaldEntry', 'ispirazioneEntry', 'serviziEntry', 'anagraficaEntry'].forEach(id => {
       const voce = document.getElementById(id);
       const wrapper = voce && voce.closest('.notes-banner');
       if (wrapper) wrapper.style.display = viewingTricologo ? 'none' : '';
@@ -10626,6 +10673,217 @@
 
   // ---- Turni di lavoro / Ferie e permessi: pulsanti statici dei due modali ----
   document.getElementById('agendaTurniClose').addEventListener('click', closeAgendaTurniModal);
+
+  // ===== Anagrafica clienti =====
+  // Elenco unico dei dati di contatto (nome, telefono, email, data di nascita, consenso privacy),
+  // con ordinamento, ricerca, filtri "da ricontattare" / "senza consenso", esportazione CSV,
+  // scarico dei dati di una cliente e cancellazione su richiesta. Si apre dal menu come finestra
+  // a sé, senza toccare le altre sezioni.
+  let anagOrd = { key: 'nome', dir: 1 }, anagFiltro = 'tutti', anagTesto = '', anagSel = null, anagDelArmed = false, anagModificata = false;
+  function anagData(ts) { return ts ? new Date(ts).toLocaleDateString(localeFmt(), { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'; }
+  function anagDataISO(iso) { return iso ? new Date(iso + 'T00:00:00').toLocaleDateString(localeFmt(), { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'; }
+  function anagUltimaVisita(c) {
+    const oggi = fmtDateISO(new Date()); let m = '';
+    (agendaCache.appuntamenti || []).forEach(a => { if (a.clienteId === c.id && a.tipo !== 'lavoro' && a.data <= oggi && a.data > m) m = a.data; });
+    return m;
+  }
+  function anagDaRicontattare(c) {
+    const mesi = appSettingsCache.mesiRicontatto;
+    return !!(mesi && (Date.now() - (c.updatedAt || 0)) >= mesi * 30 * 24 * 3600 * 1000);
+  }
+  function anagRiga(c) {
+    return { c, nome: (c.nome || '').trim(), telefono: c.telefono || '', email: c.email || '', creato: c.createdAt || 0,
+      ultima: anagUltimaVisita(c), consenso: c.consensoAt || 0, ric: anagDaRicontattare(c) };
+  }
+  function anagRighe() {
+    const q = anagTesto.trim().toLowerCase();
+    const qDigit = q.replace(/\D/g, '');
+    let righe = clients.map(c => anagRiga(hydrate(c)));
+    if (q) righe = righe.filter(r => r.nome.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || (qDigit && r.telefono.replace(/\D/g, '').includes(qDigit)));
+    if (anagFiltro === 'ricontattare') righe = righe.filter(r => r.ric);
+    if (anagFiltro === 'senzaconsenso') righe = righe.filter(r => !r.consenso);
+    const k = anagOrd.key, dir = anagOrd.dir;
+    righe.sort((a, b) => {
+      const va = a[k], vb = b[k];
+      if (typeof va === 'number' || typeof vb === 'number') return ((va || 0) - (vb || 0)) * dir || a.nome.localeCompare(b.nome);
+      return String(va || '').localeCompare(String(vb || ''), localeFmt(), { sensitivity: 'base' }) * dir;
+    });
+    return righe;
+  }
+  function anagMessaggioRicontatto(c) {
+    const salone = appSettingsCache.nome || DEFAULT_NOME;
+    const nome = (c.nome || '').trim().split(/\s+/)[0] || '';
+    const T = {
+      it: 'Ciao ' + nome + '! È un po\' che non ci vediamo da ' + salone + ': ti va di fissare un appuntamento? A presto!',
+      en: 'Hi ' + nome + '! It\'s been a while since we saw you at ' + salone + ': would you like to book an appointment? See you soon!',
+      es: '¡Hola ' + nome + '! Hace tiempo que no te vemos en ' + salone + ': ¿quieres reservar una cita? ¡Hasta pronto!',
+      de: 'Hallo ' + nome + '! Wir haben uns lange nicht gesehen bei ' + salone + ': Möchtest du einen Termin vereinbaren? Bis bald!'
+    };
+    return T[linguaCorrente()] || T.en;
+  }
+  function anagLinkWhatsapp(c, conMessaggio) {
+    const n = telefonoPerWhatsapp(c.telefono);
+    if (!n) return '';
+    return 'https://wa.me/' + n + (conMessaggio ? '?text=' + encodeURIComponent(anagMessaggioRicontatto(c)) : '');
+  }
+  function anagCsvCella(v) { const t = String(v == null ? '' : v); return /[";,\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }
+  async function anagScarica(nomeFile, testo, mime) {
+    const blob = new Blob([testo], { type: mime });
+    const dl = window.claude ? await window.claude.use('downloads') : null;
+    if (dl) { await dl.save({ filename: nomeFile, data: blob }); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = nomeFile; document.body.appendChild(a); a.click();
+    a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  function anagEsportaCsv() {
+    const sep = paeseCorrente() === 'US' ? ',' : ';';
+    const righe = [['Nome', 'Telefono', 'Email', 'Data di nascita', 'Consenso privacy', 'Data consenso', 'Prima registrazione', 'Ultima visita']];
+    anagRighe().forEach(r => righe.push([r.nome, r.telefono, r.email, r.c.nascita || '', r.consenso ? 'sì' : 'no', r.consenso ? anagData(r.consenso) : '', anagData(r.creato), r.ultima ? anagDataISO(r.ultima) : '']));
+    const csv = '﻿' + righe.map(r => r.map(anagCsvCella).join(sep)).join('\r\n');
+    anagScarica('anagrafica-clienti.csv', csv, 'text/csv;charset=utf-8');
+  }
+  async function anagScaricaDatiCliente(c) {
+    let foto = [];
+    try { if (db) { const snap = await db.collection('clients/' + c.id + '/foto').get(); foto = snap.docs.map(d => Object.assign({ id: d.id }, d.data())); } } catch (e) { /* senza foto, il resto si scarica comunque */ }
+    const copia = JSON.parse(JSON.stringify(c)); delete copia.foto;
+    const appuntamenti = (agendaCache.appuntamenti || []).filter(a => a.clienteId === c.id);
+    const dati = { esportatoIl: new Date().toISOString(), scheda: copia, appuntamenti, foto };
+    const nome = (c.nome || 'cliente').replace(/[^\p{L}\p{N}\-_ ]/gu, '').trim() || 'cliente';
+    anagScarica('dati-' + nome + '.json', JSON.stringify(dati, null, 2), 'application/json');
+  }
+  function anagCancellaCliente(c) {
+    clients = clients.filter(cl => cl.id !== c.id);
+    (agendaCache.appuntamenti || []).forEach(a => { if (a.clienteId === c.id) { a.clienteId = null; a.nomeManuale = 'Cliente eliminata'; a.telefonoManuale = ''; } });
+    saveAgenda();
+    if (activeId === c.id) activeId = clients.length ? clients[0].id : null;
+    return deleteClientCompletely(c.id);
+  }
+  function renderAnagraficaLista() {
+    const righe = anagRighe();
+    const cols = [['nome', 'Nome'], ['telefono', 'Telefono'], ['email', 'Email'], ['creato', 'Prima registrazione'], ['ultima', 'Ultima visita'], ['consenso', 'Consenso privacy']];
+    const frecce = k => anagOrd.key === k ? (anagOrd.dir === 1 ? ' ▲' : ' ▼') : '';
+    const filtri = [['tutti', 'Tutte'], ['ricontattare', 'Da ricontattare'], ['senzaconsenso', 'Senza consenso']];
+    return `
+      <h2>Anagrafica clienti</h2>
+      <p class="hint">Tutti i contatti in un unico elenco. Clicca una riga per vedere e modificare i dati, scaricarli o eliminarli.</p>
+      <div class="anag-top">
+        <input type="text" id="anagCerca" placeholder="Cerca per nome, telefono o email…" value="${escapeHtml(anagTesto)}">
+        <button type="button" class="ghost small" id="anagNuova">+ Nuova cliente</button>
+        <button type="button" class="ghost small" id="anagCsv">Scarica elenco (CSV)</button>
+      </div>
+      <div class="anag-filtri">${filtri.map(([k, l]) => `<button type="button" class="ghost small${anagFiltro === k ? ' attivo' : ''}" data-anag-filtro="${k}">${l}</button>`).join('')}</div>
+      <p class="anag-conta">${righe.length} ${righe.length === 1 ? 'cliente' : 'clienti'}</p>
+      <div class="anag-tabella-wrap"><table class="anag-tabella"><thead><tr>${cols.map(([k, l]) => `<th data-anag-ord="${k}">${l}${frecce(k)}</th>`).join('')}<th></th></tr></thead><tbody>
+        ${righe.length ? righe.map(r => `<tr data-anag-id="${escapeHtml(r.c.id)}">
+          <td>${escapeHtml(r.nome || 'Senza nome')}${r.ric ? '<span class="recontact-badge">Da ricontattare</span>' : ''}</td>
+          <td>${escapeHtml(r.telefono)}</td><td>${escapeHtml(r.email)}</td>
+          <td>${anagData(r.creato)}</td><td>${r.ultima ? anagDataISO(r.ultima) : '—'}</td>
+          <td>${r.consenso ? '<span class="anag-si">✓ ' + anagData(r.consenso) + '</span>' : '<span class="anag-no">—</span>'}</td>
+          <td>${r.ric && anagLinkWhatsapp(r.c) ? '<a href="' + escapeHtml(anagLinkWhatsapp(r.c, true)) + '" target="_blank" rel="noopener" class="anag-wa" data-anag-wa title="WhatsApp">WhatsApp</a>' : ''}</td>
+        </tr>`).join('') : '<tr><td colspan="7" class="anag-no">Nessuna cliente trovata.</td></tr>'}
+      </tbody></table></div>`;
+  }
+  function renderAnagraficaDettaglio(c) {
+    const wa = anagLinkWhatsapp(c, false);
+    const consensoTxt = c.consensoAt ? 'registrato il ' + anagData(c.consensoAt) + (c.consensoVia === 'online' ? ' (dalla prenotazione online)' : ' (in salone)') : 'non registrato';
+    return `
+      <button type="button" class="ghost small" id="anagIndietro">← Torna all'elenco</button>
+      <h2>${escapeHtml(c.nome || 'Senza nome')}</h2>
+      <div class="anag-form">
+        <div><label for="anagNome">Nome e cognome</label><input type="text" id="anagNome" value="${escapeHtml(c.nome || '')}"></div>
+        <div><label for="anagTel">Telefono</label><input type="tel" id="anagTel" value="${escapeHtml(c.telefono || '')}"></div>
+        <div><label for="anagEmail">Email</label><input type="email" id="anagEmail" value="${escapeHtml(c.email || '')}"></div>
+        <div><label for="anagNascita">Data di nascita</label><input type="date" id="anagNascita" value="${escapeHtml(c.nascita || '')}"></div>
+      </div>
+      <label class="anag-consenso"><input type="checkbox" id="anagConsenso" ${c.consensoAt ? 'checked' : ''}><span>Consenso al trattamento dei dati (privacy): <strong>${consensoTxt}</strong></span></label>
+      <p class="hint">Prima registrazione: ${anagData(c.createdAt)} · Ultima visita: ${anagUltimaVisita(c) ? anagDataISO(anagUltimaVisita(c)) : '—'}</p>
+      <div class="anag-azioni">
+        <button type="button" class="primary" id="anagApri">Apri la scheda</button>
+        ${wa ? '<a class="ghost small import-label" id="anagWa" href="' + escapeHtml(anagLinkWhatsapp(c, true)) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;">Scrivi su WhatsApp</a>' : ''}
+        <button type="button" class="ghost" id="anagScaricaDati">Scarica i suoi dati</button>
+        <button type="button" class="ghost anag-pericolo" id="anagElimina">Elimina cliente</button>
+      </div>
+      <p class="hint">"Scarica i suoi dati" crea un file con scheda, appuntamenti e foto: serve se la cliente chiede una copia dei propri dati. "Elimina cliente" cancella scheda e foto e rende anonimi i suoi appuntamenti.</p>`;
+  }
+  function anagSalvaCampi(c) {
+    c.updatedAt = Date.now(); anagModificata = true;
+    return save(clients);
+  }
+  function renderAnagrafica() {
+    const body = document.getElementById('anagraficaBody');
+    if (!body) return;
+    const c = anagSel ? clients.find(x => x.id === anagSel) : null;
+    body.innerHTML = c ? renderAnagraficaDettaglio(hydrate(c)) : renderAnagraficaLista();
+    anagDelArmed = false;
+    if (c) {
+      const cc = hydrate(c);
+      const on_ = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+      on_('anagIndietro', 'click', () => { anagSel = null; renderAnagrafica(); });
+      on_('anagNome', 'change', e => { cc.nome = e.target.value.trim(); anagSalvaCampi(cc); body.querySelector('h2').textContent = cc.nome || 'Senza nome'; });
+      on_('anagTel', 'change', e => { cc.telefono = e.target.value.trim(); anagSalvaCampi(cc); });
+      on_('anagEmail', 'change', e => { cc.email = e.target.value.trim(); anagSalvaCampi(cc); });
+      on_('anagNascita', 'change', e => { cc.nascita = e.target.value || ''; anagSalvaCampi(cc); });
+      on_('anagConsenso', 'change', e => {
+        if (e.target.checked) { cc.consensoAt = Date.now(); cc.consensoVia = 'salone'; } else { cc.consensoAt = null; cc.consensoVia = ''; }
+        anagSalvaCampi(cc); renderAnagrafica();
+      });
+      on_('anagApri', 'click', () => { chiudiAnagrafica(); switchActive(cc.id); });
+      on_('anagScaricaDati', 'click', () => anagScaricaDatiCliente(cc));
+      on_('anagElimina', 'click', () => {
+        const btn = document.getElementById('anagElimina');
+        if (!anagDelArmed) {
+          anagDelArmed = true; btn.textContent = 'Sicura? Clicca di nuovo per eliminare';
+          clearTimeout(window.__anagArm); window.__anagArm = setTimeout(() => { anagDelArmed = false; if (btn.isConnected) btn.textContent = 'Elimina cliente'; }, 4000);
+          return;
+        }
+        anagCancellaCliente(cc).then(() => { anagSel = null; anagModificata = true; renderAnagrafica(); notifyTop('Cliente eliminata.'); });
+      });
+      return;
+    }
+    const cerca = document.getElementById('anagCerca');
+    if (cerca) cerca.addEventListener('input', e => {
+      anagTesto = e.target.value;
+      const pos = e.target.selectionStart;
+      renderAnagrafica();
+      const n = document.getElementById('anagCerca'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} }
+    });
+    document.getElementById('anagCsv').addEventListener('click', anagEsportaCsv);
+    document.getElementById('anagNuova').addEventListener('click', () => {
+      const nuova = blankClient(); clients.push(nuova); anagModificata = true;
+      save(clients); anagSel = nuova.id; renderAnagrafica();
+      const n = document.getElementById('anagNome'); if (n) n.focus();
+    });
+    body.querySelectorAll('[data-anag-filtro]').forEach(b => b.addEventListener('click', () => { anagFiltro = b.getAttribute('data-anag-filtro'); renderAnagrafica(); }));
+    body.querySelectorAll('[data-anag-ord]').forEach(th => th.addEventListener('click', () => {
+      const k = th.getAttribute('data-anag-ord');
+      anagOrd = anagOrd.key === k ? { key: k, dir: -anagOrd.dir } : { key: k, dir: 1 };
+      renderAnagrafica();
+    }));
+    body.querySelectorAll('tr[data-anag-id]').forEach(tr => tr.addEventListener('click', e => {
+      if (e.target.closest('[data-anag-wa]')) return;
+      anagSel = tr.getAttribute('data-anag-id'); renderAnagrafica();
+    }));
+  }
+  function apriAnagrafica() {
+    anagSel = null; anagTesto = ''; anagFiltro = 'tutti'; anagModificata = false;
+    document.getElementById('anagraficaModal').hidden = false;
+    renderAnagrafica();
+    // l'ultima visita viene dall'Agenda: se non è ancora stata caricata, la leggo ora
+    if (db && !(agendaCache.appuntamenti || []).length) {
+      db.doc('app/agenda').get().then(doc => {
+        agendaCache.appuntamenti = (doc.exists && doc.data() && doc.data().appuntamenti) || [];
+        if (!document.getElementById('anagraficaModal').hidden && !anagSel) renderAnagrafica();
+      }).catch(() => {});
+    }
+  }
+  function chiudiAnagrafica() {
+    document.getElementById('anagraficaModal').hidden = true;
+    if (anagModificata) { anagModificata = false; renderAll(); }
+  }
+  document.getElementById('anagraficaEntry').addEventListener('click', () => { closeMobileMenu(); apriAnagrafica(); });
+  document.getElementById('anagraficaClose').addEventListener('click', chiudiAnagrafica);
+  document.getElementById('anagraficaModal').addEventListener('click', (e) => { if (e.target.id === 'anagraficaModal') chiudiAnagrafica(); });
+
   document.getElementById('agendaTurniModal').addEventListener('click', (e) => {
     if (e.target.id === 'agendaTurniModal') closeAgendaTurniModal();
   });
