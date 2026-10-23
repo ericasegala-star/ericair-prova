@@ -162,6 +162,58 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 (function () {
+  // Lingua della pagina: inglese se l'app ha impostato Paese = Stati Uniti (si legge da disp.paese;
+  // l'ultima scelta si ricorda nel browser per evitare lampi di italiano al caricamento).
+  const EN = {
+    'Prenota un appuntamento': 'Book an appointment',
+    'La prenotazione online non è ancora attiva. Chiamaci per fissare un appuntamento.': "Online booking isn't available yet. Please call us to book an appointment.",
+    'La tua prenotazione': 'Your booking',
+    'Sposta o modifica': 'Move or change',
+    'Annulla appuntamento': 'Cancel appointment',
+    'Vuoi davvero annullare?': 'Do you really want to cancel?',
+    'Sì, annulla': 'Yes, cancel',
+    'No, lo tengo': 'No, keep it',
+    'Appuntamento annullato': 'Appointment cancelled',
+    'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Thanks for letting us know. You can book another one whenever you like.',
+    'Prenota di nuovo': 'Book again',
+    'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'You are changing your booking: change the service, day or time and confirm.',
+    "Lascia com'è": 'Keep it as it is',
+    'Servizio': 'Service', 'Con chi': 'With whom', 'Quando': 'When', 'Orario': 'Time', 'I tuoi dati': 'Your details',
+    '— scegli —': '— choose —',
+    'Nome e cognome': 'Full name',
+    'Numero di telefono (anche WhatsApp)': 'Phone number (WhatsApp too)',
+    'Note (facoltativo)': 'Notes (optional)',
+    'I dati che scrivi qui sono trattati da': 'The details you enter here are handled by',
+    'il salone': 'the salon',
+    'solo per gestire la tua richiesta di appuntamento e per contattarti (anche su WhatsApp) per promemoria o variazioni di orario. Non vengono condivisi con terzi per scopi commerciali e si conservano solo per il tempo necessario a questo scopo. In qualsiasi momento puoi chiedere di vederli, correggerli o farli cancellare, scrivendo o chiamando il salone.': 'only to manage your appointment request and to contact you (also on WhatsApp) about reminders or schedule changes. They are not shared with third parties for commercial purposes and are kept only as long as needed for this purpose. At any time you can ask to see them, correct them or have them deleted by writing to or calling the salon.',
+    "Leggi l'informativa completa sulla privacy": 'Read the full privacy policy',
+    "Ho letto l'": 'I have read the ',
+    'informativa': 'privacy policy',
+    'e acconsento al trattamento dei miei dati per gestire la richiesta di appuntamento.': 'and I agree to my data being processed to manage my appointment request.',
+    'Richiedi appuntamento': 'Request appointment',
+    'Conferma modifica': 'Confirm change',
+    'Richiesta inviata!': 'Request sent!',
+    "Se per qualche motivo quell'orario non fosse più disponibile, ti contattiamo noi al numero che hai scritto.": 'If for any reason that time is no longer available, we will contact you at the number you entered.',
+    'Hai bisogno di cambiare giorno, orario o servizio? Salva questo link tra i preferiti: con quello puoi modificare la prenotazione quando vuoi.': 'Need to change the day, time or service? Save this link in your bookmarks: you can use it to change your booking at any time.'
+  };
+  function paeseSalvato() { try { return localStorage.getItem('prenotaPaese') || ''; } catch (e) { return ''; } }
+  var paesePag = paeseSalvato();
+  function inglese() { return paesePag === 'US'; }
+  function T(it) { return inglese() && EN[it] ? EN[it] : it; }
+  function traduciPagina() {
+    if (!inglese()) return;
+    document.documentElement.lang = 'en';
+    document.title = document.title.replace('Prenota un appuntamento', EN['Prenota un appuntamento']);
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodi = []; while (w.nextNode()) nodi.push(w.currentNode);
+    nodi.forEach(n => {
+      const t = n.nodeValue.trim();
+      if (t && EN[t]) n.nodeValue = n.nodeValue.replace(t, EN[t]);
+    });
+    document.querySelectorAll('[placeholder]').forEach(e => { const p = e.getAttribute('placeholder'); if (EN[p]) e.setAttribute('placeholder', EN[p]); });
+    document.querySelectorAll('option').forEach(o => { if (EN[o.textContent]) o.textContent = EN[o.textContent]; });
+  }
+  traduciPagina();
   // Stessa configurazione del file principale (schedario-colore-firebase.html): è lo stesso
   // database, non un segreto — è già visibile a chiunque apra quel file.
   const firebaseConfig = {
@@ -236,7 +288,7 @@
   function miaNelPassato() { return new Date(mia.d + 'T' + mia.o + ':00').getTime() < Date.now(); }
   function descrizioneMia() {
     return new Date(mia.d + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
-      ' alle ' + mia.o + ' da ' + (NOME_OPERATORE[mia.op] || mia.op) + (mia.sn ? ' per ' + mia.sn : '') + '.';
+      (inglese() ? ' at ' : ' alle ') + mia.o + (inglese() ? ' with ' : ' da ') + (NOME_OPERATORE[mia.op] || mia.op) + (mia.sn ? (inglese() ? ' for ' : ' per ') + mia.sn : '') + '.';
   }
   function mostraTua() {
     const box = document.getElementById('tuaBox');
@@ -329,7 +381,7 @@
     aggiornaTastoInvia();
     if (!servizioScelto || !operatoreScelto || !data) { fs.hidden = true; return; }
     fs.hidden = false;
-    hint.textContent = 'Un attimo…';
+    hint.textContent = inglese() ? 'One moment…' : 'Un attimo…';
     cont.innerHTML = '';
     // Ricarico le prenotazioni "appena fatte" da altri ogni volta, così chi sta scegliendo in
     // questo momento vede anche quello che altri hanno prenotato un minuto fa.
@@ -341,7 +393,9 @@
     const slots = slotsLiberi(operatoreScelto, data, servizioScelto.durataMin);
     cont.innerHTML = '';
     if (!slots.length) {
-      hint.textContent = (operatoreScelto === QUALSIASI ? 'Non ci sono orari liberi' : NOME_OPERATORE[operatoreScelto] + ' non ha orari liberi') + ' quel giorno: prova un\'altra data' + (operatoreScelto === QUALSIASI ? '.' : ' o un\'altra operatrice.');
+      hint.textContent = inglese()
+        ? (operatoreScelto === QUALSIASI ? 'No times available' : NOME_OPERATORE[operatoreScelto] + ' has no times available') + ' that day: try another date' + (operatoreScelto === QUALSIASI ? '.' : ' or another team member.')
+        : (operatoreScelto === QUALSIASI ? 'Non ci sono orari liberi' : NOME_OPERATORE[operatoreScelto] + ' non ha orari liberi') + ' quel giorno: prova un\'altra data' + (operatoreScelto === QUALSIASI ? '.' : ' o un\'altra operatrice.');
       return;
     }
     hint.textContent = '';
@@ -396,7 +450,7 @@
     });
     if (operatriciAttive().length > 1) {
       const bq = document.createElement('button');
-      bq.type = 'button'; bq.className = 'op-btn'; bq.textContent = 'Qualsiasi';
+      bq.type = 'button'; bq.className = 'op-btn'; bq.textContent = inglese() ? 'Any' : 'Qualsiasi';
       bq.addEventListener('click', () => {
         operatoreScelto = QUALSIASI;
         opCont.querySelectorAll('.op-btn').forEach(b => b.classList.toggle('scelto', b === bq));
@@ -417,7 +471,7 @@
     document.getElementById('campoConsenso').addEventListener('change', aggiornaTastoInvia);
 
     if (disp.generatoAt) {
-      document.getElementById('aggiornatoTxt').textContent = 'Disponibilità aggiornata al ' + new Date(disp.generatoAt).toLocaleString(LOCALE_DATE());
+      document.getElementById('aggiornatoTxt').textContent = (inglese() ? 'Availability updated on ' : 'Disponibilità aggiornata al ') + new Date(disp.generatoAt).toLocaleString(LOCALE_DATE());
     }
 
     document.getElementById('formPrenota').addEventListener('submit', (e) => {
@@ -432,8 +486,8 @@
       const scelta = operatoreScelto, slot = slotScelto, servizio = servizioScelto;
       let operatore = scelta;
       const btn = document.getElementById('btnInvia');
-      btn.disabled = true; btn.textContent = 'Invio…';
-      const testoBtn = modifica ? 'Conferma modifica' : 'Richiedi appuntamento';
+      btn.disabled = true; btn.textContent = inglese() ? 'Sending…' : 'Invio…';
+      const testoBtn = modifica ? T('Conferma modifica') : T('Richiedi appuntamento');
       // Ultimo controllo, appena prima di inviare: nel caso qualcun altro abbia preso proprio
       // questo orario nei pochi secondi da quando è stata disegnata la lista.
       caricaProvvisori().then(() => {
@@ -441,7 +495,7 @@
         operatore = operatriceDelloSlot(scelta, data, slot, servizio.durataMin);
         if (!ancoraLibero || !operatore) {
           btn.disabled = false; btn.textContent = testoBtn;
-          mostraErrore('Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.');
+          mostraErrore(inglese() ? 'This time was just taken by someone else: please choose another one from those left.' : 'Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.');
           disegnaSlot(data);
           return Promise.reject(new Error('slot-appena-preso'));
         }
@@ -466,16 +520,16 @@
         document.getElementById('modificaIntro').hidden = true;
         document.getElementById('formPrenota').hidden = true;
         document.getElementById('confermaBox').hidden = false;
-        document.querySelector('#confermaBox h2').textContent = eraModifica ? 'Modifica inviata!' : 'Richiesta inviata!';
+        document.querySelector('#confermaBox h2').textContent = eraModifica ? (inglese() ? 'Change sent!' : 'Modifica inviata!') : T('Richiesta inviata!');
         const lk = document.getElementById('linkModifica');
-        lk.href = linkPersonale(); lk.textContent = 'Il tuo link per modificare la prenotazione';
+        lk.href = linkPersonale(); lk.textContent = inglese() ? 'Your link to change your booking' : 'Il tuo link per modificare la prenotazione';
         document.getElementById('confermaTesto').textContent =
-          'Ti aspettiamo ' + new Date(data + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
-          ' alle ' + slot + ' da ' + NOME_OPERATORE[operatore] + ' per ' + servizio.nome + '.';
+          (inglese() ? 'We look forward to seeing you on ' : 'Ti aspettiamo ') + new Date(data + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
+          (inglese() ? ' at ' + slot + ' with ' + NOME_OPERATORE[operatore] + ' for ' + servizio.nome + '.' : ' alle ' + slot + ' da ' + NOME_OPERATORE[operatore] + ' per ' + servizio.nome + '.');
       }).catch((err) => {
         if (err && err.message === 'slot-appena-preso') return;
         btn.disabled = false; btn.textContent = testoBtn;
-        mostraErrore('Non sono riuscita a inviare la richiesta. Controlla la connessione e riprova, oppure chiamaci.');
+        mostraErrore(inglese() ? 'Sorry, we could not send your request. Check your connection and try again, or call us.' : 'Non sono riuscita a inviare la richiesta. Controlla la connessione e riprova, oppure chiamaci.');
       });
     });
   }
@@ -487,6 +541,9 @@
   }).then(doc => {
     if (!doc || !doc.exists) { document.getElementById('nonAttivo').hidden = false; return; }
     disp = doc.data();
+    paesePag = disp.paese || '';
+    try { localStorage.setItem('prenotaPaese', disp.paese || ''); } catch (e) {}
+    traduciPagina();
     document.getElementById('formPrenota').hidden = false;
     inizializza();
     caricaMia();
@@ -512,7 +569,7 @@
     document.getElementById('tuaBox').hidden = true;
     document.getElementById('modificaIntro').hidden = false;
     document.getElementById('fieldsetContatto').hidden = true;
-    document.getElementById('btnInvia').textContent = 'Conferma modifica';
+    document.getElementById('btnInvia').textContent = T('Conferma modifica');
     nascondiErrore();
     const sel = document.getElementById('selServizio');
     sel.value = mia.s; if (sel.value !== mia.s) sel.value = '';
@@ -526,7 +583,7 @@
   function esciDaModifica() {
     modifica = false;
     document.getElementById('modificaIntro').hidden = true;
-    document.getElementById('btnInvia').textContent = 'Richiedi appuntamento';
+    document.getElementById('btnInvia').textContent = T('Richiedi appuntamento');
     document.getElementById('btnInvia').disabled = true;
     document.getElementById('fieldsetOrario').hidden = true;
     mostraTua();
@@ -553,7 +610,7 @@
       document.getElementById('annullatoBox').hidden = false;
     }).catch(() => {
       b.disabled = false;
-      mostraErrore('Non sono riuscita ad annullare. Controlla la connessione e riprova, oppure chiamaci.');
+      mostraErrore(inglese() ? 'Sorry, we could not cancel. Check your connection and try again, or call us.' : 'Non sono riuscita ad annullare. Controlla la connessione e riprova, oppure chiamaci.');
     });
   });
   document.getElementById('btnRiprenota').addEventListener('click', () => location.reload());
