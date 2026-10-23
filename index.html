@@ -1611,6 +1611,15 @@
     </div>
 
     <div class="settings-section">
+      <label for="settingsPaese">Paese e formati</label>
+      <select id="settingsPaese">
+        <option value="IT">Italia: euro €, data giorno/mese/anno, settimana dal lunedì</option>
+        <option value="US">Stati Uniti: dollari $, data mese/giorno/anno, settimana dalla domenica</option>
+      </select>
+      <p class="hint">Cambia il modo di scrivere prezzi, date, giorni della settimana e numeri di telefono per WhatsApp.</p>
+    </div>
+
+    <div class="settings-section">
       <label for="settingsOperatrici">Operatrici (separate da virgola)</label>
       <input type="text" id="settingsOperatrici" placeholder="Per esempio: Anna, Marta" maxlength="120">
       <p class="hint">Compaiono nell'agenda, nei turni, nelle assenze e nella prenotazione online. Imposta i nomi all'inizio: cambiarli dopo non aggiorna gli appuntamenti già salvati.</p>
@@ -1791,7 +1800,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-23.115-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-23.116-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -2641,9 +2650,9 @@
   }
   function t(key, testoItaliano) {
     const lang = linguaCorrente();
-    if (lang === 'it') return testoItaliano;
+    if (lang === 'it') return conValuta(testoItaliano);
     const dict = TRANSLATIONS[lang];
-    return (dict && dict[key]) || testoItaliano;
+    return conValuta((dict && dict[key]) || testoItaliano);
   }
   // Rilegge dal DOM stesso il testo italiano "di fabbrica" di ogni elemento (quello già scritto
   // nell'HTML) così non serve duplicarlo qui: se manca una traduzione per la lingua scelta,
@@ -2794,7 +2803,21 @@
   let agendaModificaId = null; // id dell'appuntamento in modifica (null = si sta creando un nuovo appuntamento)
   let agendaEditingId = null; // id dell'appuntamento aperto nel calendario a slot (null = tutti chiusi, solo targhette)
   // Aspetto dell'app (logo, nome, colore): condiviso tra tutte, si cambia da "Impostazioni".
-  let appSettingsCache = { nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null };
+  let appSettingsCache = { nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null, paese: null };
+  // Paese e formati (valuta, data, settimana, prefisso telefonico): si sceglie in Impostazioni.
+  const PAESI = {
+    IT: { locale: 'it-IT', valuta: '€', prefisso: '39', primoGiorno: 1 },
+    US: { locale: 'en-US', valuta: '$', prefisso: '1', primoGiorno: 0 }
+  };
+  function paeseCorrente() { const p = appSettingsCache && appSettingsCache.paese; return PAESI[p] ? p : 'IT'; }
+  function cfgPaese() { return PAESI[paeseCorrente()]; }
+  function localeFmt() { return cfgPaese().locale; }
+  function conValuta(txt) { return paeseCorrente() === 'IT' ? txt : String(txt).replace(/€/g, cfgPaese().valuta); }
+  function giorniSettimanaOrdine() { return cfgPaese().primoGiorno === 0 ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 0]; }
+  function nomeGiornoSettimana(day) {
+    const s = new Date(2024, 0, 7 + day).toLocaleDateString(localeFmt(), { weekday: 'long' });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
   // Promemoria backup: quando è stato fatto l'ultimo "Esporta backup", condiviso tra tutte.
   let appBackupCache = { ultimoBackupAt: null };
   let backupReminderDismissed = false; // solo per questa sessione: riappare riaprendo l'app, se ancora vero
@@ -3172,7 +3195,11 @@
     const su = u.prima != null && u.prezzo > u.prima, giu = u.prima != null && u.prezzo < u.prima;
     return `<button type="button" class="mag-prezzo-storico ${su ? 'su' : (giu ? 'giu' : '')}" data-id="${p.id}" title="Storico prezzi" aria-label="Storico prezzi">${su ? '▲' : (giu ? '▼' : '◷')}</button>`;
   }
-  function fmtPrezzoEuro(n) { return (n == null ? '—' : Number(n).toFixed(2).replace('.', ',') + ' €'); }
+  function fmtPrezzoEuro(n) {
+    if (n == null) return '—';
+    if (paeseCorrente() === 'US') return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return Number(n).toFixed(2).replace('.', ',') + ' €';
+  }
   function mostraStoricoPrezzi(p) {
     const righe = (p.storicoPrezzi || []).slice().reverse();
     const old = document.getElementById('magStoricoModal');
@@ -3499,6 +3526,7 @@
       .map(a => ({ operatore: a.operatore, dataInizio: a.dataInizio, dataFine: a.dataFine, oraInizio: a.oraInizio || '', oraFine: a.oraFine || '' }));
     db.doc('app/disponibilitaPubblica').set({
       generatoAt: Date.now(),
+      paese: paeseCorrente(),
       turni: agendaTurniCache,
       servizi: serviziOnline,
       occupati: occupati,
@@ -3844,6 +3872,8 @@
     applyLineConfig();
     renderSettingsLinee(false);
     (function () { const el = document.getElementById('settingsEtichettaFinale'); if (el && document.activeElement !== el) el.value = appSettingsCache.etichettaFinale || ''; })();
+    const paeseSel = document.getElementById('settingsPaese');
+    if (paeseSel) paeseSel.value = paeseCorrente();
     const operatriciInput = document.getElementById('settingsOperatrici');
     if (operatriciInput && document.activeElement !== operatriciInput) operatriciInput.value = (appSettingsCache.operatrici || []).join(', ');
     const assenzaSel = document.getElementById('assenzaOperatore');
@@ -4042,7 +4072,8 @@
           mesiRicontatto: aspettoData.mesiRicontatto || null,
           operatrici: (aspettoData.operatrici && aspettoData.operatrici.length) ? aspettoData.operatrici : null,
           linee: (aspettoData.linee && aspettoData.linee.length) ? aspettoData.linee : null,
-          etichettaFinale: aspettoData.etichettaFinale || null
+          etichettaFinale: aspettoData.etichettaFinale || null,
+          paese: aspettoData.paese || null
         };
         appBackupCache = { ultimoBackupAt: (backup.exists && backup.data().ultimoBackupAt) || null };
         applySettings();
@@ -4245,17 +4276,17 @@
   }
   function fmtDate(ts) {
     const d = new Date(ts);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return d.toLocaleDateString(localeFmt(), { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
   function fmtDateStr(s) { return escapeHtml(s); }
   function fmtDateTime(ts) {
     const d = new Date(ts);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-      ' · ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString(localeFmt(), { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+      ' · ' + d.toLocaleTimeString(localeFmt(), { hour: '2-digit', minute: '2-digit' });
   }
   function fmtDateLong(ts) {
     const d = new Date(ts);
-    return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+    return d.toLocaleDateString(localeFmt(), { day: 'numeric', month: 'long', year: 'numeric' });
   }
   // YYYY-MM-DD locale (non UTC), per i campi <input type="date"> dell'Agenda.
   function fmtDateISO(d) {
@@ -4268,17 +4299,17 @@
     const [y, m, d] = agendaDataSelezionata.split('-').map(Number);
     const sel = new Date(y, (m || 1) - 1, d || 1);
     const oggiISO = fmtDateISO(new Date());
-    const lunedi = new Date(sel); lunedi.setDate(sel.getDate() - ((sel.getDay() + 6) % 7));
-    let mese = sel.toLocaleDateString('it-IT', { month: 'long' });
+    const lunedi = new Date(sel); lunedi.setDate(sel.getDate() - ((sel.getDay() - cfgPaese().primoGiorno + 7) % 7));
+    let mese = sel.toLocaleDateString(localeFmt(), { month: 'long' });
     mese = mese.charAt(0).toUpperCase() + mese.slice(1);
     if (sel.getFullYear() !== new Date().getFullYear()) mese += ' ' + sel.getFullYear();
     const giorni = [];
     for (let i = 0; i < 7; i++) {
       const g = new Date(lunedi); g.setDate(lunedi.getDate() + i);
       const iso = fmtDateISO(g);
-      const lettera = g.toLocaleDateString('it-IT', { weekday: 'narrow' }).toUpperCase();
-      const nome = g.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
-      giorni.push(`<button type="button" class="agenda-giorno${i >= 5 ? ' weekend' : ''}${iso === oggiISO ? ' oggi' : ''}${iso === agendaDataSelezionata ? ' scelto' : ''}" data-data="${iso}" aria-label="${escapeHtml(nome)}"${iso === agendaDataSelezionata ? ' aria-current="date"' : ''}><span class="lettera">${lettera}</span><span class="numero">${g.getDate()}</span></button>`);
+      const lettera = g.toLocaleDateString(localeFmt(), { weekday: 'narrow' }).toUpperCase();
+      const nome = g.toLocaleDateString(localeFmt(), { weekday: 'long', day: 'numeric', month: 'long' });
+      giorni.push(`<button type="button" class="agenda-giorno${(g.getDay() === 0 || g.getDay() === 6) ? ' weekend' : ''}${iso === oggiISO ? ' oggi' : ''}${iso === agendaDataSelezionata ? ' scelto' : ''}" data-data="${iso}" aria-label="${escapeHtml(nome)}"${iso === agendaDataSelezionata ? ' aria-current="date"' : ''}><span class="lettera">${lettera}</span><span class="numero">${g.getDate()}</span></button>`);
     }
     return `
       <div class="agenda-mese-riga">
@@ -4303,7 +4334,7 @@
     if (!iso) return '';
     const [y, m, d] = iso.split('-').map(Number);
     const date = new Date(y, (m || 1) - 1, d || 1);
-    const s = date.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const s = date.toLocaleDateString(localeFmt(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
   // "YYYY-MM-DD" -> "16/10/2026": per lo storico appuntamenti e la serie ricorrente in Agenda.
@@ -4732,7 +4763,7 @@
       doc.line(contentLeft, y, pageW - margin, y); y += 11;
       doc.setTextColor(30, 24, 20);
     }
-    function money(n) { return '€ ' + n.toFixed(2).replace('.', ','); }
+    function money(n) { return paeseCorrente() === 'US' ? '$' + n.toFixed(2) : '€ ' + n.toFixed(2).replace('.', ','); }
     function drawRow(p) {
       doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(30, 24, 20);
       doc.text(p.nome || 'Senza nome', col.nome, y, { maxWidth: col.prezzo - col.nome - 14 });
@@ -4889,7 +4920,7 @@
     const wb = XLSX.utils.book_new();
     MAGAZZINO_TIPI.filter(t => t.key).forEach(t => {
       const prodotti = magazzinoEsportabili(t.key);
-      const rows = [['Marca/fornitore', 'Prodotto', 'Prezzo €', 'Quantità', 'Valore €']];
+      const rows = [['Marca/fornitore', 'Prodotto', conValuta('Prezzo €'), 'Quantità', conValuta('Valore €')]];
       const merges = [];
       groupMagazzinoByMarca(prodotti).forEach(g => {
         const startR = rows.length;
@@ -4902,8 +4933,8 @@
       ws['!merges'] = merges;
       ws['!cols'] = [{ wch: 22 }, { wch: 34 }, { wch: 10 }, { wch: 10 }, { wch: 10 }];
       for (let i = 1; i < rows.length; i++) {
-        const cPrezzo = ws[XLSX.utils.encode_cell({ r: i, c: 2 })]; if (cPrezzo) cPrezzo.z = '"€"#,##0.00';
-        const cValore = ws[XLSX.utils.encode_cell({ r: i, c: 4 })]; if (cValore) cValore.z = '"€"#,##0.00';
+        const cPrezzo = ws[XLSX.utils.encode_cell({ r: i, c: 2 })]; if (cPrezzo) cPrezzo.z = '"' + cfgPaese().valuta + '"#,##0.00';
+        const cValore = ws[XLSX.utils.encode_cell({ r: i, c: 4 })]; if (cValore) cValore.z = '"' + cfgPaese().valuta + '"#,##0.00';
       }
       XLSX.utils.book_append_sheet(wb, ws, t.label);
     });
@@ -5221,7 +5252,7 @@
   function businessPlanFmtDisplay(v) {
     if (typeof v === 'number') {
       const rounded = Math.round(v * 100) / 100;
-      return rounded.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return rounded.toLocaleString(localeFmt(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     return (v == null) ? '' : String(v);
   }
@@ -5298,7 +5329,7 @@
           html += `<td class="biz-cell biz-cell-check"><input type="checkbox" class="biz-input-check" data-ref="${ref}" ${cell.v ? 'checked' : ''}></td>`;
         } else if (cell && cell.t === 'd') {
           const d = new Date(cell.v);
-          const label = isNaN(d) ? String(cell.v) : d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+          const label = isNaN(d) ? String(cell.v) : d.toLocaleDateString(localeFmt(), { day: 'numeric', month: 'short' });
           html += `<td class="biz-cell biz-cell-date" data-ref="${ref}">${escapeHtml(label)}</td>`;
         } else {
           const v = cell ? cell.v : '';
@@ -6278,7 +6309,8 @@
   function telefonoPerWhatsapp(telefono) {
     let n = normalizzaTelefono(telefono).replace(/^\+/, '');
     if (!n) return '';
-    if (n.length <= 11 && !n.startsWith('39')) n = '39' + n;
+    const pre = cfgPaese().prefisso;
+    if (n.length <= 11 && !n.startsWith(pre)) n = pre + n;
     return n;
   }
   // Messaggio di promemoria pronto per quell'appuntamento: cliente, data, ora, servizio e nome
@@ -6942,7 +6974,7 @@
     }
 
     if (viewingHome) {
-      const todayLong = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const todayLong = new Date().toLocaleDateString(localeFmt(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       const todayCap = todayLong.charAt(0).toUpperCase() + todayLong.slice(1);
       const op = currentOperator();
       panel.innerHTML = `
@@ -8092,14 +8124,14 @@
   }
 
   // ---- "Turni di lavoro": per ogni giorno della settimana, chi lavora e con quale orario ----
-  const GIORNI_SETTIMANA_ORDINE = [1, 2, 3, 4, 5, 6, 0];
+  
   const GIORNI_SETTIMANA_NOMI = { 0: 'Domenica', 1: 'Lunedì', 2: 'Martedì', 3: 'Mercoledì', 4: 'Giovedì', 5: 'Venerdì', 6: 'Sabato' };
   function minutiToHHMM(m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
   function hhmmToMinuti(s) { const parts = (s || '0:0').split(':').map(Number); return (parts[0] || 0) * 60 + (parts[1] || 0); }
   function renderAgendaTurniModalBody() {
-    return GIORNI_SETTIMANA_ORDINE.map(day => `
+    return giorniSettimanaOrdine().map(day => `
       <div class="turni-day" data-day="${day}">
-        <div class="turni-day-label">${GIORNI_SETTIMANA_NOMI[day]}</div>
+        <div class="turni-day-label">${nomeGiornoSettimana(day)}</div>
         ${elencoOperatrici().map(op => {
           const range = agendaTurniCache[op] && agendaTurniCache[op][day];
           return `
@@ -8660,7 +8692,7 @@
             <th class="mag-import-col-fornitore">Fornitore</th>
             <th>Abbina a</th>
             <th class="mag-import-col-qty">Quantità</th>
-            <th class="mag-import-col-prezzo">Prezzo €</th>
+            <th class="mag-import-col-prezzo">${conValuta('Prezzo €')}</th>
           </tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>
@@ -9603,6 +9635,9 @@
   document.getElementById('settingsEtichettaFinale').addEventListener('change', (e) => {
     saveSettings({ etichettaFinale: e.target.value.trim() || null }).then(() => { try { renderSheetMantenendoScroll(); } catch (er) {} });
   });
+  document.getElementById('settingsPaese').addEventListener('change', (e) => {
+    saveSettings({ paese: e.target.value === 'US' ? 'US' : null }).then(() => { try { pubblicaDisponibilitaOnline(); renderSheetMantenendoScroll(); } catch (er) {} });
+  });
   document.getElementById('settingsOperatrici').addEventListener('change', (e) => {
     const l = e.target.value.split(',').map(x => x.trim()).filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).slice(0, 6);
     saveSettings({ operatrici: l.length ? l : null });
@@ -9623,7 +9658,7 @@
     });
   })();
   document.getElementById('settingsResetBtn').addEventListener('click', () => {
-    saveSettings({ nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null })
+    saveSettings({ nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null, paese: null })
       .then(ok => { if (ok) notifyTop('Aspetto ripristinato.'); });
   });
   // Lingua (la titolare, 19/10): scelta per dispositivo, salvata solo in locale (non su Firestore,

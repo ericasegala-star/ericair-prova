@@ -235,7 +235,7 @@
   }
   function miaNelPassato() { return new Date(mia.d + 'T' + mia.o + ':00').getTime() < Date.now(); }
   function descrizioneMia() {
-    return new Date(mia.d + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) +
+    return new Date(mia.d + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
       ' alle ' + mia.o + ' da ' + (NOME_OPERATORE[mia.op] || mia.op) + (mia.sn ? ' per ' + mia.sn : '') + '.';
   }
   function mostraTua() {
@@ -246,6 +246,7 @@
     box.hidden = false;
   }
   let disp = null; // dati pubblici letti da app/disponibilitaPubblica
+  function LOCALE_DATE() { return (disp && disp.paese === 'US') ? 'en-US' : 'it-IT'; }
   let db = null;
   let servizioScelto = null;
   let operatoreScelto = null;
@@ -416,7 +417,7 @@
     document.getElementById('campoConsenso').addEventListener('change', aggiornaTastoInvia);
 
     if (disp.generatoAt) {
-      document.getElementById('aggiornatoTxt').textContent = 'Disponibilità aggiornata al ' + new Date(disp.generatoAt).toLocaleString('it-IT');
+      document.getElementById('aggiornatoTxt').textContent = 'Disponibilità aggiornata al ' + new Date(disp.generatoAt).toLocaleString(LOCALE_DATE());
     }
 
     document.getElementById('formPrenota').addEventListener('submit', (e) => {
@@ -469,7 +470,7 @@
         const lk = document.getElementById('linkModifica');
         lk.href = linkPersonale(); lk.textContent = 'Il tuo link per modificare la prenotazione';
         document.getElementById('confermaTesto').textContent =
-          'Ti aspettiamo ' + new Date(data + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) +
+          'Ti aspettiamo ' + new Date(data + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
           ' alle ' + slot + ' da ' + NOME_OPERATORE[operatore] + ' per ' + servizio.nome + '.';
       }).catch((err) => {
         if (err && err.message === 'slot-appena-preso') return;
