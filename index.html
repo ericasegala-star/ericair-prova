@@ -1805,7 +1805,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-23.121-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-23.122-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -2817,7 +2817,7 @@
     HR: { locale: 'hr-HR', valuta: '€', prefisso: '385', primoGiorno: 1 },
     FI: { locale: 'fi-FI', valuta: '€', prefisso: '358', primoGiorno: 1 },
     DE: { locale: 'de-DE', valuta: '€', prefisso: '49', primoGiorno: 1 },
-    EG: { locale: 'ar-EG-u-nu-latn', valuta: 'EGP', prefisso: '20', primoGiorno: 6 } // cifre latine; settimana dal sabato
+    EG: { locale: 'ar-EG-u-nu-latn', valuta: 'EGP', prefisso: '20', primoGiorno: 6, weekend: [5, 6], rtl: true } // cifre latine; settimana dal sabato; fine settimana venerdì-sabato; scrittura da destra a sinistra
   };
   // Paesi che scrivono il simbolo dopo la cifra (100,00 €) e che tolgono lo 0 iniziale dei numeri nazionali
   const PAESI_SIMBOLO_DOPO = ['UA', 'HR', 'FI', 'DE', 'EG'];
@@ -2825,6 +2825,8 @@
   function cfgPaese() { return PAESI[paeseCorrente()]; }
   function localeFmt() { return cfgPaese().locale; }
   function conValuta(txt) { return paeseCorrente() === 'IT' ? txt : String(txt).replace(/€/g, cfgPaese().valuta); }
+  function giornoDiFesta(day) { return (cfgPaese().weekend || [6, 0]).includes(day); }
+  function applicaDirezione() { try { document.documentElement.dir = cfgPaese().rtl ? 'rtl' : 'ltr'; } catch (e) {} }
   function giorniSettimanaOrdine() { const p = cfgPaese().primoGiorno; return [0, 1, 2, 3, 4, 5, 6].map(i => (p + i) % 7); }
   function nomeGiornoSettimana(day) {
     const s = new Date(2024, 0, 7 + day).toLocaleDateString(localeFmt(), { weekday: 'long' });
@@ -3815,6 +3817,7 @@
       brandContact.hidden = !parts.length;
     }
     applyAccentColor(appSettingsCache.colore);
+    applicaDirezione();
     renderSettingsForm();
     renderList(); // i bollini "Da ricontattare" dipendono dalla soglia in mesi appena caricata/cambiata
   }
@@ -4322,7 +4325,7 @@
       const iso = fmtDateISO(g);
       const lettera = g.toLocaleDateString(localeFmt(), { weekday: 'narrow' }).toUpperCase();
       const nome = g.toLocaleDateString(localeFmt(), { weekday: 'long', day: 'numeric', month: 'long' });
-      giorni.push(`<button type="button" class="agenda-giorno${(g.getDay() === 0 || g.getDay() === 6) ? ' weekend' : ''}${iso === oggiISO ? ' oggi' : ''}${iso === agendaDataSelezionata ? ' scelto' : ''}" data-data="${iso}" aria-label="${escapeHtml(nome)}"${iso === agendaDataSelezionata ? ' aria-current="date"' : ''}><span class="lettera">${lettera}</span><span class="numero">${g.getDate()}</span></button>`);
+      giorni.push(`<button type="button" class="agenda-giorno${giornoDiFesta(g.getDay()) ? ' weekend' : ''}${iso === oggiISO ? ' oggi' : ''}${iso === agendaDataSelezionata ? ' scelto' : ''}" data-data="${iso}" aria-label="${escapeHtml(nome)}"${iso === agendaDataSelezionata ? ' aria-current="date"' : ''}><span class="lettera">${lettera}</span><span class="numero">${g.getDate()}</span></button>`);
     }
     return `
       <div class="agenda-mese-riga">
