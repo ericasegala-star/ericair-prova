@@ -1615,6 +1615,7 @@
       <select id="settingsPaese">
         <option value="IT">Italia: euro €, data giorno/mese/anno, settimana dal lunedì</option>
         <option value="US">Stati Uniti: dollari $, data mese/giorno/anno, settimana dalla domenica</option>
+        <option value="DE">Germania: euro €, data giorno.mese.anno, settimana dal lunedì</option>
         <option value="FI">Finlandia: euro €, data giorno.mese.anno, settimana dal lunedì</option>
         <option value="HR">Croazia: euro €, data giorno.mese.anno, settimana dal lunedì</option>
         <option value="UA">Ucraina: grivna ₴, data giorno.mese.anno, settimana dal lunedì</option>
@@ -1803,7 +1804,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-23.119-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-23.120-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -2813,10 +2814,11 @@
     US: { locale: 'en-US', valuta: '$', prefisso: '1', primoGiorno: 0 },
     UA: { locale: 'uk-UA', valuta: '₴', prefisso: '380', primoGiorno: 1 },
     HR: { locale: 'hr-HR', valuta: '€', prefisso: '385', primoGiorno: 1 },
-    FI: { locale: 'fi-FI', valuta: '€', prefisso: '358', primoGiorno: 1 }
+    FI: { locale: 'fi-FI', valuta: '€', prefisso: '358', primoGiorno: 1 },
+    DE: { locale: 'de-DE', valuta: '€', prefisso: '49', primoGiorno: 1 }
   };
   // Paesi che scrivono il simbolo dopo la cifra (100,00 €) e che tolgono lo 0 iniziale dei numeri nazionali
-  const PAESI_SIMBOLO_DOPO = ['UA', 'HR', 'FI'];
+  const PAESI_SIMBOLO_DOPO = ['UA', 'HR', 'FI', 'DE'];
   function paeseCorrente() { const p = appSettingsCache && appSettingsCache.paese; return PAESI[p] ? p : 'IT'; }
   function cfgPaese() { return PAESI[paeseCorrente()]; }
   function localeFmt() { return cfgPaese().locale; }
@@ -6319,7 +6321,7 @@
     let n = normalizzaTelefono(telefono).replace(/^\+/, '');
     if (!n) return '';
     const pre = cfgPaese().prefisso;
-    if (PAESI_SIMBOLO_DOPO.includes(paeseCorrente()) && /^0\d{8,9}$/.test(n)) n = n.slice(1); // 0 iniziale nazionale
+    if (PAESI_SIMBOLO_DOPO.includes(paeseCorrente()) && /^0\d{8,10}$/.test(n)) n = n.slice(1); // 0 iniziale nazionale
     if (n.length <= 11 && !n.startsWith(pre)) n = pre + n;
     return n;
   }
