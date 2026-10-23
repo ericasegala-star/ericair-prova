@@ -1615,6 +1615,7 @@
       <select id="settingsPaese">
         <option value="IT">Italia: euro €, data giorno/mese/anno, settimana dal lunedì</option>
         <option value="US">Stati Uniti: dollari $, data mese/giorno/anno, settimana dalla domenica</option>
+        <option value="UA">Ucraina: grivna ₴, data giorno.mese.anno, settimana dal lunedì</option>
       </select>
       <p class="hint">Cambia il modo di scrivere prezzi, date, giorni della settimana e numeri di telefono per WhatsApp.</p>
     </div>
@@ -1800,7 +1801,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-23.116-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-23.117-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -2807,7 +2808,8 @@
   // Paese e formati (valuta, data, settimana, prefisso telefonico): si sceglie in Impostazioni.
   const PAESI = {
     IT: { locale: 'it-IT', valuta: '€', prefisso: '39', primoGiorno: 1 },
-    US: { locale: 'en-US', valuta: '$', prefisso: '1', primoGiorno: 0 }
+    US: { locale: 'en-US', valuta: '$', prefisso: '1', primoGiorno: 0 },
+    UA: { locale: 'uk-UA', valuta: '₴', prefisso: '380', primoGiorno: 1 }
   };
   function paeseCorrente() { const p = appSettingsCache && appSettingsCache.paese; return PAESI[p] ? p : 'IT'; }
   function cfgPaese() { return PAESI[paeseCorrente()]; }
@@ -3198,6 +3200,7 @@
   function fmtPrezzoEuro(n) {
     if (n == null) return '—';
     if (paeseCorrente() === 'US') return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (paeseCorrente() === 'UA') return Number(n).toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₴';
     return Number(n).toFixed(2).replace('.', ',') + ' €';
   }
   function mostraStoricoPrezzi(p) {
@@ -4763,7 +4766,7 @@
       doc.line(contentLeft, y, pageW - margin, y); y += 11;
       doc.setTextColor(30, 24, 20);
     }
-    function money(n) { return paeseCorrente() === 'US' ? '$' + n.toFixed(2) : '€ ' + n.toFixed(2).replace('.', ','); }
+    function money(n) { const p = paeseCorrente(); return p === 'US' ? '$' + n.toFixed(2) : p === 'UA' ? n.toFixed(2).replace('.', ',') + ' ₴' : '€ ' + n.toFixed(2).replace('.', ','); }
     function drawRow(p) {
       doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(30, 24, 20);
       doc.text(p.nome || 'Senza nome', col.nome, y, { maxWidth: col.prezzo - col.nome - 14 });
@@ -6310,6 +6313,7 @@
     let n = normalizzaTelefono(telefono).replace(/^\+/, '');
     if (!n) return '';
     const pre = cfgPaese().prefisso;
+    if (paeseCorrente() === 'UA' && /^0\d{9}$/.test(n)) n = n.slice(1); // 067… -> 67…
     if (n.length <= 11 && !n.startsWith(pre)) n = pre + n;
     return n;
   }
@@ -9636,7 +9640,7 @@
     saveSettings({ etichettaFinale: e.target.value.trim() || null }).then(() => { try { renderSheetMantenendoScroll(); } catch (er) {} });
   });
   document.getElementById('settingsPaese').addEventListener('change', (e) => {
-    saveSettings({ paese: e.target.value === 'US' ? 'US' : null }).then(() => { try { pubblicaDisponibilitaOnline(); renderSheetMantenendoScroll(); } catch (er) {} });
+    saveSettings({ paese: PAESI[e.target.value] && e.target.value !== 'IT' ? e.target.value : null }).then(() => { try { pubblicaDisponibilitaOnline(); renderSheetMantenendoScroll(); } catch (er) {} });
   });
   document.getElementById('settingsOperatrici').addEventListener('change', (e) => {
     const l = e.target.value.split(',').map(x => x.trim()).filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).slice(0, 6);

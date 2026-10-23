@@ -246,7 +246,7 @@
     box.hidden = false;
   }
   let disp = null; // dati pubblici letti da app/disponibilitaPubblica
-  function LOCALE_DATE() { return (disp && disp.paese === 'US') ? 'en-US' : 'it-IT'; }
+  function LOCALE_DATE() { return (disp && disp.paese === 'US') ? 'en-US' : (disp && disp.paese === 'UA') ? 'uk-UA' : 'it-IT'; }
   let db = null;
   let servizioScelto = null;
   let operatoreScelto = null;
