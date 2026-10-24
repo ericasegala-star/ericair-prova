@@ -1844,7 +1844,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-24.133-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-24.134-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -10880,8 +10880,12 @@
   // cliente senza nessuna scheda tecnica compilata (importata prima che esistesse la distinzione): mai aperta né modificata
   function anagSenzaScheda(c) {
     if (c.soloAnagrafica) return false;
+    if (Math.abs((c.updatedAt || 0) - (c.createdAt || 0)) > 3 * 24 * 3600 * 1000) return false; // creata e mai davvero lavorata
+    return anagSchedaVuota(c);
+  }
+  // nessun dato tecnico scritto nella scheda (solo i contatti)
+  function anagSchedaVuota(c) {
     if ((c.versioni || []).length) return false;
-    if (Math.abs((c.updatedAt || 0) - (c.createdAt || 0)) > 60000) return false;
     const vuoto = v => v == null || v === '';
     const vuotoObj = o => !o || Object.values(o).every(vuoto);
     const testi = ['note', 'allergie', 'bianchiDavanti', 'bianchiDietro', 'livFondo', 'livLunghezze', 'livPunte', 'obiettivo', 'modifiche', 'postColoreSalone', 'consigliMantenimento'];
@@ -10939,6 +10943,7 @@
       <div class="anag-azioni">
         <button type="button" class="primary" id="anagApri">${c.soloAnagrafica ? 'Crea la scheda tecnica' : 'Apri la scheda'}</button>
         ${wa ? '<a class="ghost small import-label" id="anagWa" href="' + escapeHtml(anagLinkWhatsapp(c, true)) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;">Scrivi su WhatsApp</a>' : ''}
+        ${!c.soloAnagrafica && anagSchedaVuota(c) ? '<button type="button" class="ghost" id="anagTogli">Togli dalle schede tecniche</button>' : ''}
         <button type="button" class="ghost" id="anagScaricaDati">Scarica i suoi dati</button>
         <button type="button" class="ghost anag-pericolo" id="anagElimina">Elimina cliente</button>
       </div>
@@ -10967,6 +10972,12 @@
         anagSalvaCampi(cc); renderAnagrafica();
       });
       on_('anagApri', 'click', () => { if (cc.soloAnagrafica) { cc.soloAnagrafica = false; cc.updatedAt = Date.now(); save(clients); } chiudiAnagrafica(); switchActive(cc.id); });
+      on_('anagTogli', 'click', () => {
+        cc.soloAnagrafica = true; lastWrittenUpdatedAt[cc.id] = 0;
+        if (activeId === cc.id) { const prima = clients.find(x => !x.soloAnagrafica); activeId = prima ? prima.id : null; }
+        anagModificata = true; save(clients); anagSel = null; renderAnagrafica();
+        notifyTop('Tolta dalle schede tecniche: resta solo in Anagrafica.');
+      });
       on_('anagScaricaDati', 'click', () => anagScaricaDatiCliente(cc));
       on_('anagElimina', 'click', () => {
         const btn = document.getElementById('anagElimina');
