@@ -1067,6 +1067,8 @@
   .anag-conta { font-size: 12.5px; color: var(--ink-soft); margin: 4px 0 8px; }
   .anag-imp-riepilogo { margin: 8px 0 12px; padding-left: 18px; }
   .anag-imp-riepilogo li { margin: 4px 0; }
+  .anag-avviso { background: #fff6e0; border: 1px solid #e8c878; border-radius: 8px; padding: 8px 10px; margin: 8px 0; font-size: 14px; }
+  .anag-avviso button { margin-left: 6px; }
   .anag-wa, #anagWa { color: var(--berry); font-weight: 600; text-decoration: none; }
   .settings-section { margin-bottom: 22px; }
   .settings-section > label {
@@ -1842,7 +1844,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-24.131-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-24.132-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -10867,14 +10869,27 @@
     if (activeId === c.id) { const prima = clients.find(x => !x.soloAnagrafica); activeId = prima ? prima.id : null; }
     return deleteClientCompletely(c.id);
   }
+  // nomi con il cognome ripetuto (es. "Rossi Anna Rossi"): propone "Rossi Anna", senza toccare altro della scheda
+  function anagNomeSenzaRipetizione(nome) {
+    const t = String(nome || '').trim().split(/\s+/);
+    for (let k = Math.floor((t.length - 1) / 2); k >= 1; k--) {
+      if (t.slice(0, k).join(' ').toLowerCase() === t.slice(t.length - k).join(' ').toLowerCase()) return t.slice(0, t.length - k).join(' ');
+    }
+    return null;
+  }
+  function anagNomiRipetuti() {
+    return clients.map(c => ({ c, nuovo: anagNomeSenzaRipetizione(c.nome) })).filter(x => x.nuovo && x.nuovo !== x.c.nome);
+  }
   function renderAnagraficaLista() {
     const righe = anagRighe();
+    const rip = anagNomiRipetuti();
     const cols = [['nome', 'Nome'], ['telefono', 'Telefono'], ['email', 'Email'], ['creato', 'Prima registrazione'], ['ultima', 'Ultima visita'], ['consenso', 'Consenso privacy']];
     const frecce = k => anagOrd.key === k ? (anagOrd.dir === 1 ? ' ▲' : ' ▼') : '';
     const filtri = [['tutti', 'Tutte'], ['ricontattare', 'Da ricontattare'], ['senzaconsenso', 'Senza consenso']];
     return `
       <h2>Anagrafica clienti</h2>
       <p class="hint">Tutti i contatti in un unico elenco. Clicca una riga per vedere e modificare i dati, scaricarli o eliminarli.</p>
+      ${rip.length ? `<div class="anag-avviso"><span>${rip.length} ${rip.length === 1 ? 'nome ha' : 'nomi hanno'} il cognome ripetuto (es. «${escapeHtml(rip[0].c.nome)}» diventerebbe «${escapeHtml(rip[0].nuovo)}»). Si cambia solo il nome: schede e foto restano.</span> <button type="button" class="primary small" id="anagFixNomi">Correggi ${rip.length === 1 ? 'il nome' : 'i ' + rip.length + ' nomi'}</button></div>` : ''}
       <div class="anag-top">
         <input type="text" id="anagCerca" placeholder="Cerca per nome, telefono o email…" value="${escapeHtml(anagTesto)}">
         <button type="button" class="ghost small" id="anagNuova">+ Nuova cliente</button>
@@ -10965,6 +10980,12 @@
       const n = document.getElementById('anagCerca'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} }
     });
     document.getElementById('anagCsv').addEventListener('click', anagEsportaCsv);
+    const fixNomi = document.getElementById('anagFixNomi');
+    if (fixNomi) fixNomi.addEventListener('click', () => {
+      anagNomiRipetuti().forEach(x => { x.c.nome = x.nuovo; lastWrittenUpdatedAt[x.c.id] = 0; }); // updatedAt resta com'è: non cambia l'ordine né "Da ricontattare"
+      anagModificata = true; save(clients); renderAnagrafica();
+      notifyTop('Nomi corretti.');
+    });
     const fileCsv = document.getElementById('anagCsvFile');
     document.getElementById('anagImporta').addEventListener('click', () => fileCsv.click());
     fileCsv.addEventListener('change', async () => {
