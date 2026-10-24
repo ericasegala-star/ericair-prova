@@ -1065,6 +1065,8 @@
   .anag-azioni { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .anag-azioni .anag-pericolo { color: #a3322b; border-color: #a3322b; }
   .anag-conta { font-size: 12.5px; color: var(--ink-soft); margin: 4px 0 8px; }
+  .anag-imp-riepilogo { margin: 8px 0 12px; padding-left: 18px; }
+  .anag-imp-riepilogo li { margin: 4px 0; }
   .anag-wa, #anagWa { color: var(--berry); font-weight: 600; text-decoration: none; }
   .settings-section { margin-bottom: 22px; }
   .settings-section > label {
@@ -1840,7 +1842,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-23.128-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-24.129-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -10726,6 +10728,110 @@
     if (!n) return '';
     return 'https://wa.me/' + n + (conMessaggio ? '?text=' + encodeURIComponent(anagMessaggioRicontatto(c)) : '');
   }
+  // ---- Importazione elenco clienti da CSV ----
+  let anagImport = null;
+  function anagParseCsv(testo) {
+    testo = testo.replace(/^﻿/, '');
+    const prima = testo.split(/\r?\n/)[0] || '';
+    const sep = [';', ',', '\t'].map(ch => [ch, prima.split(ch).length - 1]).sort((a, b) => b[1] - a[1])[0][0];
+    const righe = []; let riga = [], cella = '', q = false;
+    for (let i = 0; i < testo.length; i++) {
+      const ch = testo[i];
+      if (q) { if (ch === '"') { if (testo[i + 1] === '"') { cella += '"'; i++; } else q = false; } else cella += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === sep) { riga.push(cella); cella = ''; }
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && testo[i + 1] === '\n') i++;
+        riga.push(cella); cella = '';
+        if (riga.some(x => x.trim())) righe.push(riga);
+        riga = [];
+      } else cella += ch;
+    }
+    riga.push(cella); if (riga.some(x => x.trim())) righe.push(riga);
+    return righe;
+  }
+  function anagMappaColonne(intest) {
+    const n = intest.map(h => String(h).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]/g, ''));
+    const ha = (h, chiavi) => chiavi.some(k => h.includes(k));
+    const cogn = n.findIndex(h => ha(h, ['cognome', 'surname', 'lastname', 'familyname']));
+    const nome = n.findIndex(h => ha(h, ['nome', 'name', 'nominativo', 'cliente']) && !ha(h, ['cognome', 'surname', 'lastname', 'familyname']));
+    const tel = n.findIndex(h => ha(h, ['telefono', 'cellulare', 'cell', 'mobile', 'phone', 'tel']));
+    const email = n.findIndex(h => ha(h, ['email', 'mail', 'posta']));
+    const nascita = n.findIndex(h => ha(h, ['nascita', 'compleanno', 'birth']));
+    const trovato = [nome, cogn, tel, email, nascita].some(i => i >= 0);
+    return trovato ? { intestazione: true, nome, cogn, tel, email, nascita } : { intestazione: false, nome: 0, cogn: -1, tel: 1, email: 2, nascita: -1 };
+  }
+  function anagDataImport(t) {
+    t = String(t || '').trim(); let m;
+    if ((m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return anagDataValida(+m[1], +m[2], +m[3]);
+    if ((m = t.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/))) return paeseCorrente() === 'US' ? anagDataValida(+m[3], +m[1], +m[2]) : anagDataValida(+m[3], +m[2], +m[1]);
+    return '';
+  }
+  function anagDataValida(a, m, g) {
+    if (m < 1 || m > 12 || g < 1 || g > 31 || a < 1900 || a > 2100) return '';
+    return a + '-' + String(m).padStart(2, '0') + '-' + String(g).padStart(2, '0');
+  }
+  function anagChiaveTel(t) { const c = String(t || '').replace(/\D/g, ''); return c.length >= 7 ? c.slice(-9) : ''; }
+  function anagAnalizzaCsv(testo) {
+    const righe = anagParseCsv(testo);
+    if (!righe.length) return { nuove: [], doppie: 0, scartate: 0, totale: 0 };
+    const mp = anagMappaColonne(righe[0]);
+    const dati = mp.intestazione ? righe.slice(1) : righe;
+    const cella = (r, i) => (i >= 0 && r[i] != null ? String(r[i]).trim() : '');
+    const chiaviTel = new Set(), chiaviMail = new Set(), chiaviNome = new Set();
+    clients.forEach(c => {
+      const k = anagChiaveTel(c.telefono); if (k) chiaviTel.add(k);
+      if (c.email) chiaviMail.add(String(c.email).trim().toLowerCase());
+      if (!k && !c.email && c.nome) chiaviNome.add(String(c.nome).trim().toLowerCase());
+    });
+    const nuove = []; let doppie = 0, scartate = 0;
+    dati.forEach(r => {
+      const nome = (cella(r, mp.nome) + ' ' + cella(r, mp.cogn)).replace(/\s+/g, ' ').trim();
+      const telefono = cella(r, mp.tel), email = cella(r, mp.email);
+      if (!nome) { scartate++; return; }
+      const kt = anagChiaveTel(telefono), km = email.toLowerCase(), kn = nome.toLowerCase();
+      const esiste = (kt && chiaviTel.has(kt)) || (km && chiaviMail.has(km)) || (!kt && !km && chiaviNome.has(kn));
+      if (esiste) { doppie++; return; }
+      if (kt) chiaviTel.add(kt); if (km) chiaviMail.add(km); if (!kt && !km) chiaviNome.add(kn);
+      nuove.push({ nome, telefono, email, nascita: anagDataImport(cella(r, mp.nascita)) });
+    });
+    return { nuove, doppie, scartate, totale: dati.length };
+  }
+  async function anagLeggiFile(file) {
+    const buf = await file.arrayBuffer();
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (e) { return new TextDecoder('windows-1252').decode(buf); }
+  }
+  function renderAnagraficaImport() {
+    const a = anagImport;
+    const esempio = a.nuove.slice(0, 5);
+    return `
+      <button type="button" class="ghost small" id="anagImpAnnulla">← Torna all'elenco</button>
+      <h2>Importa elenco clienti</h2>
+      <p class="hint">File: ${escapeHtml(a.nomeFile)} — ${a.totale} ${a.totale === 1 ? 'riga' : 'righe'} lette.</p>
+      <ul class="anag-imp-riepilogo">
+        <li><strong>${a.nuove.length}</strong> ${a.nuove.length === 1 ? 'nuova cliente' : 'nuove clienti'} da importare</li>
+        <li><strong>${a.doppie}</strong> già presenti (stesso telefono o stessa email): non vengono toccate</li>
+        <li><strong>${a.scartate}</strong> senza nome: saltate</li>
+      </ul>
+      ${esempio.length ? `<div class="anag-tabella-wrap"><table class="anag-tabella"><thead><tr><th>Nome</th><th>Telefono</th><th>Email</th><th>Nascita</th></tr></thead><tbody>
+        ${esempio.map(n => `<tr><td>${escapeHtml(n.nome)}</td><td>${escapeHtml(n.telefono)}</td><td>${escapeHtml(n.email)}</td><td>${escapeHtml(n.nascita)}</td></tr>`).join('')}
+      </tbody></table></div><p class="hint">Anteprima delle prime ${esempio.length}.</p>` : '<p class="anag-no">Non c\'è nessuna cliente nuova da importare. Controlla che la prima riga contenga le intestazioni (Nome, Telefono, Email…).</p>'}
+      <p class="hint">Le clienti importate risultano <strong>senza consenso privacy</strong>: lo registri tu quando lo ricevi.</p>
+      <div class="anag-top">
+        ${a.nuove.length ? `<button type="button" class="primary" id="anagImpConferma">Importa ${a.nuove.length} ${a.nuove.length === 1 ? 'cliente' : 'clienti'}</button>` : ''}
+        <button type="button" class="ghost small" id="anagImpAnnulla2">Annulla</button>
+      </div>`;
+  }
+  function anagEseguiImport() {
+    const a = anagImport; if (!a || !a.nuove.length) return;
+    a.nuove.forEach(n => {
+      const c = blankClient(); c.nome = n.nome; c.telefono = n.telefono; c.email = n.email; c.nascita = n.nascita;
+      clients.push(c);
+    });
+    anagModificata = true; save(clients);
+    const tot = a.nuove.length; anagImport = null; renderAnagrafica();
+    notifyTop(tot + (tot === 1 ? ' cliente importata.' : ' clienti importate.'));
+  }
   function anagCsvCella(v) { const t = String(v == null ? '' : v); return /[";,\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }
   async function anagScarica(nomeFile, testo, mime) {
     const blob = new Blob([testo], { type: mime });
@@ -10770,6 +10876,8 @@
         <input type="text" id="anagCerca" placeholder="Cerca per nome, telefono o email…" value="${escapeHtml(anagTesto)}">
         <button type="button" class="ghost small" id="anagNuova">+ Nuova cliente</button>
         <button type="button" class="ghost small" id="anagCsv">Scarica elenco (CSV)</button>
+        <button type="button" class="ghost small" id="anagImporta">Importa elenco (CSV)</button>
+        <input type="file" id="anagCsvFile" accept=".csv,.txt,text/csv,text/plain" hidden>
       </div>
       <div class="anag-filtri">${filtri.map(([k, l]) => `<button type="button" class="ghost small${anagFiltro === k ? ' attivo' : ''}" data-anag-filtro="${k}">${l}</button>`).join('')}</div>
       <p class="anag-conta">${righe.length} ${righe.length === 1 ? 'cliente' : 'clienti'}</p>
@@ -10813,7 +10921,7 @@
     const body = document.getElementById('anagraficaBody');
     if (!body) return;
     const c = anagSel ? clients.find(x => x.id === anagSel) : null;
-    body.innerHTML = c ? renderAnagraficaDettaglio(hydrate(c)) : renderAnagraficaLista();
+    body.innerHTML = c ? renderAnagraficaDettaglio(hydrate(c)) : anagImport ? renderAnagraficaImport() : renderAnagraficaLista();
     anagDelArmed = false;
     if (c) {
       const cc = hydrate(c);
@@ -10840,6 +10948,12 @@
       });
       return;
     }
+    if (anagImport) {
+      const annulla = () => { anagImport = null; renderAnagrafica(); };
+      ['anagImpAnnulla', 'anagImpAnnulla2'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', annulla); });
+      const cf = document.getElementById('anagImpConferma'); if (cf) cf.addEventListener('click', anagEseguiImport);
+      return;
+    }
     const cerca = document.getElementById('anagCerca');
     if (cerca) cerca.addEventListener('input', e => {
       anagTesto = e.target.value;
@@ -10848,6 +10962,15 @@
       const n = document.getElementById('anagCerca'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} }
     });
     document.getElementById('anagCsv').addEventListener('click', anagEsportaCsv);
+    const fileCsv = document.getElementById('anagCsvFile');
+    document.getElementById('anagImporta').addEventListener('click', () => fileCsv.click());
+    fileCsv.addEventListener('change', async () => {
+      const f = fileCsv.files && fileCsv.files[0]; if (!f) return;
+      try {
+        const r = anagAnalizzaCsv(await anagLeggiFile(f));
+        r.nomeFile = f.name; anagImport = r; renderAnagrafica();
+      } catch (e) { notifyTop('Non riesco a leggere questo file.'); }
+    });
     document.getElementById('anagNuova').addEventListener('click', () => {
       const nuova = blankClient(); clients.push(nuova); anagModificata = true;
       save(clients); anagSel = nuova.id; renderAnagrafica();
@@ -10865,7 +10988,7 @@
     }));
   }
   function apriAnagrafica() {
-    anagSel = null; anagTesto = ''; anagFiltro = 'tutti'; anagModificata = false;
+    anagSel = null; anagTesto = ''; anagFiltro = 'tutti'; anagModificata = false; anagImport = null;
     document.getElementById('anagraficaModal').hidden = false;
     renderAnagrafica();
     // l'ultima visita viene dall'Agenda: se non è ancora stata caricata, la leggo ora
