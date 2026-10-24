@@ -1844,7 +1844,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-24.134-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-24.135-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -10174,12 +10174,17 @@
         return;
       }
       deleteArmed = false;
-      clients = clients.filter(cl => cl.id !== c.id);
+      // Elimina solo la scheda tecnica (formule, note, foto, storico): il contatto resta in Anagrafica
+      // (per eliminare del tutto la persona c'è "Elimina cliente" nell'Anagrafica).
+      const resto = Object.assign(blankClient(), { id: c.id, nome: c.nome, telefono: c.telefono || '', email: c.email || '', nascita: c.nascita || '', consensoAt: c.consensoAt || null, consensoVia: c.consensoVia || '', createdAt: c.createdAt, soloAnagrafica: true, updatedAt: Math.max(Date.now(), (c.updatedAt || 0) + 1) });
+      clients = clients.map(cl => cl.id === c.id ? resto : cl);
+      delete sessionBaseline[c.id];
       { const prima = clients.find(x => !x.soloAnagrafica); activeId = prima ? prima.id : null; }
-      deleteClientCompletely(c.id);
+      if (db) db.collection('clients/' + c.id + '/foto').get().then(snap => Promise.all(snap.docs.map(dd => db.doc('clients/' + c.id + '/foto/' + dd.id).delete()))).catch(() => {});
+      save(clients);
       renderAll();
       const statusEl = document.getElementById('saveStatus');
-      if (statusEl) { statusEl.textContent = t('sc.schedaEliminata', 'Scheda eliminata.'); statusEl.style.color = 'var(--ok)'; clearTimeout(persist._t); persist._t = setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 1800); }
+      if (statusEl) { statusEl.textContent = t('sc.schedaEliminata', 'Scheda eliminata.') + ' ' + t('sc.restaInAnagrafica', 'Il contatto resta in Anagrafica.'); statusEl.style.color = 'var(--ok)'; clearTimeout(persist._t); persist._t = setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 1800); }
     });
 
     on('duplicateBtn', 'click', () => {
