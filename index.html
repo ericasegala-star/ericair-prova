@@ -1842,7 +1842,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-24.130-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-24.131-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -10787,7 +10787,9 @@
     });
     const nuove = []; let doppie = 0, scartate = 0;
     dati.forEach(r => {
-      const nome = (cella(r, mp.nome) + ' ' + cella(r, mp.cogn)).replace(/\s+/g, ' ').trim();
+      const n0 = cella(r, mp.nome).replace(/\s+/g, ' ').trim(), c0 = cella(r, mp.cogn).replace(/\s+/g, ' ').trim();
+      // se la colonna del nome contiene già il cognome (es. "Rossi Anna" + "Rossi"), non lo aggiungo una seconda volta
+      const nome = (c0 && !(' ' + n0.toLowerCase() + ' ').includes(' ' + c0.toLowerCase() + ' ')) ? (n0 + ' ' + c0).trim() : (n0 || c0);
       const telefono = cella(r, mp.tel), email = cella(r, mp.email);
       if (!nome) { scartate++; return; }
       const kt = anagChiaveTel(telefono), km = email.toLowerCase(), kn = nome.toLowerCase();
