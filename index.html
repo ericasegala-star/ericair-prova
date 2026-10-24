@@ -1844,7 +1844,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-24.132-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-24.133-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -10877,18 +10877,31 @@
     }
     return null;
   }
+  // cliente senza nessuna scheda tecnica compilata (importata prima che esistesse la distinzione): mai aperta né modificata
+  function anagSenzaScheda(c) {
+    if (c.soloAnagrafica) return false;
+    if ((c.versioni || []).length) return false;
+    if (Math.abs((c.updatedAt || 0) - (c.createdAt || 0)) > 60000) return false;
+    const vuoto = v => v == null || v === '';
+    const vuotoObj = o => !o || Object.values(o).every(vuoto);
+    const testi = ['note', 'allergie', 'bianchiDavanti', 'bianchiDietro', 'livFondo', 'livLunghezze', 'livPunte', 'obiettivo', 'modifiche', 'postColoreSalone', 'consigliMantenimento'];
+    if (!testi.every(k => vuoto(c[k]))) return false;
+    return vuotoObj(c.tempiTime) && vuotoObj(c.tempiGreen) && vuotoObj(c.formulaTime) && vuotoObj(c.formulaGreen) && !(c.foto || []).length;
+  }
   function anagNomiRipetuti() {
     return clients.map(c => ({ c, nuovo: anagNomeSenzaRipetizione(c.nome) })).filter(x => x.nuovo && x.nuovo !== x.c.nome);
   }
   function renderAnagraficaLista() {
     const righe = anagRighe();
     const rip = anagNomiRipetuti();
+    const vuote = clients.filter(anagSenzaScheda);
     const cols = [['nome', 'Nome'], ['telefono', 'Telefono'], ['email', 'Email'], ['creato', 'Prima registrazione'], ['ultima', 'Ultima visita'], ['consenso', 'Consenso privacy']];
     const frecce = k => anagOrd.key === k ? (anagOrd.dir === 1 ? ' ▲' : ' ▼') : '';
     const filtri = [['tutti', 'Tutte'], ['ricontattare', 'Da ricontattare'], ['senzaconsenso', 'Senza consenso']];
     return `
       <h2>Anagrafica clienti</h2>
       <p class="hint">Tutti i contatti in un unico elenco. Clicca una riga per vedere e modificare i dati, scaricarli o eliminarli.</p>
+      ${vuote.length ? `<div class="anag-avviso"><span>${vuote.length} ${vuote.length === 1 ? 'cliente compare' : 'clienti compaiono'} tra le schede tecniche ma non ${vuote.length === 1 ? 'ha' : 'hanno'} nessuna scheda compilata. Spostandole resteranno solo qui in Anagrafica; le schede già compilate non vengono toccate.</span> <button type="button" class="primary small" id="anagFixVuote">Sposta ${vuote.length === 1 ? 'la cliente' : 'le ' + vuote.length + ' clienti'} solo in Anagrafica</button></div>` : ''}
       ${rip.length ? `<div class="anag-avviso"><span>${rip.length} ${rip.length === 1 ? 'nome ha' : 'nomi hanno'} il cognome ripetuto (es. «${escapeHtml(rip[0].c.nome)}» diventerebbe «${escapeHtml(rip[0].nuovo)}»). Si cambia solo il nome: schede e foto restano.</span> <button type="button" class="primary small" id="anagFixNomi">Correggi ${rip.length === 1 ? 'il nome' : 'i ' + rip.length + ' nomi'}</button></div>` : ''}
       <div class="anag-top">
         <input type="text" id="anagCerca" placeholder="Cerca per nome, telefono o email…" value="${escapeHtml(anagTesto)}">
@@ -10980,6 +10993,14 @@
       const n = document.getElementById('anagCerca'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} }
     });
     document.getElementById('anagCsv').addEventListener('click', anagEsportaCsv);
+    const fixVuote = document.getElementById('anagFixVuote');
+    if (fixVuote) fixVuote.addEventListener('click', () => {
+      const v = clients.filter(anagSenzaScheda);
+      v.forEach(c => { c.soloAnagrafica = true; lastWrittenUpdatedAt[c.id] = 0; });
+      if (v.some(c => c.id === activeId)) { const prima = clients.find(x => !x.soloAnagrafica); activeId = prima ? prima.id : null; }
+      anagModificata = true; save(clients); renderAnagrafica();
+      notifyTop(v.length + (v.length === 1 ? ' cliente spostata.' : ' clienti spostate.'));
+    });
     const fixNomi = document.getElementById('anagFixNomi');
     if (fixNomi) fixNomi.addEventListener('click', () => {
       anagNomiRipetuti().forEach(x => { x.c.nome = x.nuovo; lastWrittenUpdatedAt[x.c.id] = 0; }); // updatedAt resta com'è: non cambia l'ordine né "Da ricontattare"
