@@ -1844,7 +1844,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-24.135-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-24.136-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -6126,20 +6126,26 @@
     }
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
     prodotti.forEach(p => {
-      ensureSpace(rowH);
+      // nome e marca lunghi vanno a capo: la riga si allunga di conseguenza, così non si accavallano
+      const lineH = 11.5;
+      const nomeRighe = doc.splitTextToSize(p.nome || 'Senza nome', col.marca - col.nome - 14);
+      const marcaRighe = doc.splitTextToSize(p.marca || '—', col.qty - col.marca - 40);
+      const righe = Math.max(nomeRighe.length, marcaRighe.length);
+      const altezza = Math.max(rowH, righe * lineH + 5);
+      ensureSpace(altezza);
       // La riga sotto soglia resta leggibile anche in bianco e nero, ma un pallino rosso accanto
       // al nome rende subito evidente quali prodotti servono di più (stesso rosso usato a
       // schermo per la stessa segnalazione).
       doc.setFillColor(168, 67, 60);
       doc.circle(col.nome - 7, y - 3, 2.6, 'F');
       doc.setTextColor(30, 24, 20);
-      doc.text(p.nome || 'Senza nome', col.nome, y, { maxWidth: col.marca - col.nome - 14 });
-      doc.text(p.marca || '—', col.marca, y, { maxWidth: col.qty - col.marca - 14 });
+      doc.text(nomeRighe, col.nome, y, { lineHeightFactor: lineH / 9.5 });
+      doc.text(marcaRighe, col.marca, y, { lineHeightFactor: lineH / 9.5 });
       doc.text(String(p.quantita || 0), col.qty, y, { align: 'right' });
       doc.setTextColor(168, 67, 60); doc.setFont('helvetica', 'bold');
       doc.text(String(p.quantitaMinima), col.min, y, { align: 'right' });
       doc.setFont('helvetica', 'normal'); doc.setTextColor(30, 24, 20);
-      y += rowH;
+      y += altezza;
     });
     return doc.output('blob');
   }
