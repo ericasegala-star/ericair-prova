@@ -1844,7 +1844,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-25.137-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-25.138-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -6147,7 +6147,19 @@
       return doc.output('blob');
     }
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
-    prodotti.forEach(p => {
+    // Due parti, come nell'inventario: prima Materie prime, poi Merci vendita (e, se ce ne sono, i prodotti senza tipo)
+    const parti = MAGAZZINO_TIPI.map(t => ({ label: t.label, prodotti: prodotti.filter(p => (p.tipo || '') === t.key) })).filter(pt => pt.prodotti.length);
+    const righeDaDisegnare = [];
+    parti.forEach(pt => { righeDaDisegnare.push({ titolo: pt.label }); pt.prodotti.forEach(p => righeDaDisegnare.push(p)); });
+    righeDaDisegnare.forEach(p => {
+      if (p.titolo) {
+        ensureSpace(48);
+        y += 6;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(122, 59, 86);
+        doc.text(p.titolo, margin, y); y += 16;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(30, 24, 20);
+        return;
+      }
       // nome e marca lunghi vanno a capo: la riga si allunga di conseguenza, così non si accavallano
       const lineH = 11.5;
       const nomeRighe = doc.splitTextToSize(p.nome || 'Senza nome', col.marca - col.nome - 14);
