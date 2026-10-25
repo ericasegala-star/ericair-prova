@@ -1045,6 +1045,8 @@
   }
   .settings-close:hover { background: var(--berry-soft); }
   [dir="rtl"] .settings-close { right: auto; left: 14px; }
+  .layout > * { min-width: 0; } /* una tabella larga non deve allargare la pagina oltre lo schermo */
+  #anagraficaBody { min-width: 0; max-width: 100%; }
   .anag-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
   .anag-top input[type="text"] { flex: 1 1 200px; min-width: 0; }
   .anag-filtri { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
@@ -1057,6 +1059,21 @@
   .anag-tabella tbody tr:hover { background: var(--berry-soft); }
   .anag-si { color: var(--ok); font-weight: 600; }
   .anag-no { color: var(--ink-soft); }
+  @media (max-width: 700px) {
+    /* telefono: ogni cliente diventa una scheda (nome, poi telefono ed email…) invece di una tabella larga */
+    .anag-tabella-wrap { border: none; overflow: visible; }
+    table.anag-tabella, .anag-tabella tbody, .anag-tabella tr, .anag-tabella td { display: block; width: 100%; }
+    .anag-tabella thead { display: none; }
+    .anag-tabella tbody tr { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 8px; }
+    .anag-tabella td { border: none; padding: 2px 0; white-space: normal; overflow-wrap: anywhere; }
+    .anag-tabella td:empty { display: none; }
+    .anag-tabella td[data-label]::before { content: attr(data-label) ': '; color: var(--ink-soft); font-size: 12px; }
+    .anag-tabella td:first-child { font-weight: 600; font-size: 15px; }
+    .anag-tabella td[data-label="Prima registrazione"], .anag-tabella td[data-label="Ultima visita"] { display: none; } /* si vedono aprendo la cliente */
+    .anag-tabella td[data-label="Consenso privacy"] { font-size: 12.5px; }
+    .anag-tabella tbody tr { padding: 10px 12px; }
+    .anag-top > button { flex: 1 1 auto; }
+  }
   .anag-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0; }
   .anag-form label { display: block; font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
   .anag-form input { width: 100%; }
@@ -1836,7 +1853,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-25.139-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-25.140-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -10973,9 +10990,9 @@
       <div class="anag-tabella-wrap"><table class="anag-tabella"><thead><tr>${cols.map(([k, l]) => `<th data-anag-ord="${k}">${l}${frecce(k)}</th>`).join('')}<th></th></tr></thead><tbody>
         ${righe.length ? righe.map(r => `<tr data-anag-id="${escapeHtml(r.c.id)}">
           <td>${escapeHtml(r.nome || 'Senza nome')}${r.ric ? '<span class="recontact-badge">Da ricontattare</span>' : ''}</td>
-          <td>${escapeHtml(r.telefono)}</td><td>${escapeHtml(r.email)}</td>
-          <td>${anagData(r.creato)}</td><td>${r.ultima ? anagDataISO(r.ultima) : '—'}</td>
-          <td>${r.consenso ? '<span class="anag-si">✓ ' + anagData(r.consenso) + '</span>' : '<span class="anag-no">—</span>'}</td>
+          <td data-label="Telefono">${escapeHtml(r.telefono)}</td><td data-label="Email">${escapeHtml(r.email)}</td>
+          <td data-label="Prima registrazione">${anagData(r.creato)}</td><td data-label="Ultima visita">${r.ultima ? anagDataISO(r.ultima) : '—'}</td>
+          <td data-label="Consenso privacy">${r.consenso ? '<span class="anag-si">✓ ' + anagData(r.consenso) + '</span>' : '<span class="anag-no">—</span>'}</td>
           <td>${r.ric && anagLinkWhatsapp(r.c) ? '<a href="' + escapeHtml(anagLinkWhatsapp(r.c, true)) + '" target="_blank" rel="noopener" class="anag-wa" data-anag-wa title="WhatsApp">WhatsApp</a>' : ''}</td>
         </tr>`).join('') : '<tr><td colspan="7" class="anag-no">Nessuna cliente trovata.</td></tr>'}
       </tbody></table></div>`;
