@@ -1844,7 +1844,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-24.136-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-25.137-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -5976,8 +5976,17 @@
       doc.text('Nessun prodotto con quantità e prezzo diversi da zero.', margin, y);
       return doc.output('blob');
     }
+    // Due parti separate, ognuna su una pagina nuova: Materie prime e Merci vendita (come i due fogli dell'Excel).
+    // I prodotti senza tipo scelto (se ce ne sono) finiscono in una terza parte, così non spariscono.
+    const sezioni = MAGAZZINO_TIPI.map(t => ({ label: t.label, prodotti: prodotti.filter(p => (p.tipo || '') === t.key) }))
+      .filter(sz => sz.prodotti.length);
+    sezioni.forEach((sz, iSez) => {
+    if (iSez > 0) { doc.addPage(); y = 54; }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(122, 59, 86);
+    doc.text(sz.label, margin, y); y += 18;
     tableHeader();
-    groupMagazzinoByMarca(prodotti).forEach(g => {
+    let sezioneTotale = 0;
+    groupMagazzinoByMarca(sz.prodotti).forEach(g => {
       let sidebarStartY = y;
       let continued = false;
       let groupValore = 0;
@@ -6004,8 +6013,12 @@
         y += Math.min(neededH - naturalH, maxPad, avail);
       }
       drawSidebar(g.marca, sidebarStartY, y, continued);
-      grandTotal += groupValore;
+      grandTotal += groupValore; sezioneTotale += groupValore;
       y += 10;
+    });
+    ensureSpace(20);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(30, 24, 20);
+    doc.text('Totale ' + sz.label + ': ' + money(sezioneTotale), pageW - margin, y, { align: 'right' }); y += 18;
     });
     ensureSpace(20);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(30, 24, 20);
@@ -6072,6 +6085,15 @@
       }
       XLSX.utils.book_append_sheet(wb, ws, t.label);
     });
+    // prodotti senza tipo scelto: un terzo foglio, solo se ce ne sono, così non spariscono dall'export
+    const senzaTipo = magazzinoEsportabili().filter(p => !p.tipo);
+    if (senzaTipo.length) {
+      const rows = [['Marca/fornitore', 'Prodotto', conValuta('Prezzo €'), 'Quantità', conValuta('Valore €')]];
+      groupMagazzinoByMarca(senzaTipo).forEach(g => g.prodotti.forEach(p => rows.push([g.marca, p.nome || 'Senza nome', p.prezzo, p.quantita, Math.round(p.prezzo * p.quantita * 100) / 100])));
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{ wch: 22 }, { wch: 34 }, { wch: 10 }, { wch: 10 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Senza categoria');
+    }
     return wb;
   }
   async function downloadMagazzinoExcel() {
