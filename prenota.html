@@ -72,6 +72,10 @@
   .contatti { margin-top: 34px; text-align: center; font-size: 14px; }
   .contatti { display: flex; justify-content: center; gap: 14px; }
   .contatti a { width: 44px; height: 44px; border-radius: 50%; background: var(--berry); color: #fff; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; transition: transform .15s, opacity .15s; }
+  .recensione { margin: 16px 0 0; text-align: center; font-size: 14px; }
+  .recensione a { color: var(--berry); font-weight: 600; text-decoration: none; }
+  .recensione a::before { content: '★ '; }
+  .recensione a:hover { text-decoration: underline; }
   .contatti a:hover { transform: translateY(-2px); opacity: .9; }
   .contatti svg { width: 22px; height: 22px; fill: currentColor; }
   button.annulla { font-family: inherit; font-size: 13px; padding: 9px 12px; background: none; border: none; color: #A5483F; cursor: pointer; text-decoration: underline; }
@@ -153,6 +157,7 @@
   </div>
 
   <div class="contatti" id="contatti" hidden></div>
+  <p class="recensione" id="recensione" hidden><a id="recensioneLink" href="#" target="_blank" rel="noopener">Lascia una recensione su Google</a></p>
 
   <p class="aggiornato" id="aggiornatoTxt"></p>
 </div>
@@ -175,6 +180,7 @@
     'No, lo tengo': 'No, keep it',
     'Appuntamento annullato': 'Appointment cancelled',
     'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Thanks for letting us know. You can book another one whenever you like.',
+    'Lascia una recensione su Google': 'Leave us a review on Google',
     'Prenota di nuovo': 'Book again',
     'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'You are changing your booking: change the service, day or time and confirm.',
     "Lascia com'è": 'Keep it as it is',
@@ -208,6 +214,7 @@
     'No, lo tengo': 'Ні, залишаю',
     'Appuntamento annullato': 'Запис скасовано',
     'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Дякуємо, що повідомили. Ви можете записатися знову, коли забажаєте.',
+    'Lascia una recensione su Google': 'Залиште відгук у Google',
     'Prenota di nuovo': 'Записатися знову',
     'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'Ви змінюєте свій запис: оберіть іншу послугу, день чи час і підтвердьте.',
     "Lascia com'è": 'Залишити як є',
@@ -245,6 +252,7 @@
       'No, lo tengo': 'Ne, zadržavam ga',
       'Appuntamento annullato': 'Termin je otkazan',
       'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Hvala što ste nam javili. Kad želite, možete rezervirati novi.',
+      'Lascia una recensione su Google': 'Ostavite recenziju na Googleu',
       'Prenota di nuovo': 'Rezerviraj ponovno',
       'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'Mijenjate svoju rezervaciju: promijenite uslugu, dan ili vrijeme i potvrdite.',
       'Lascia com\'è': 'Ostavi kako jest',
@@ -300,6 +308,7 @@
       'No, lo tengo': 'Ei, pidän sen',
       'Appuntamento annullato': 'Aika peruutettu',
       'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Kiitos, kun kerroit meille. Voit varata uuden ajan milloin haluat.',
+      'Lascia una recensione su Google': 'Jätä arvostelu Googlessa',
       'Prenota di nuovo': 'Varaa uudelleen',
       'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'Muokkaat varaustasi: vaihda palvelu, päivä tai aika ja vahvista.',
       'Lascia com\'è': 'Jätä ennalleen',
@@ -355,6 +364,7 @@
       'No, lo tengo': 'Nein, behalten',
       'Appuntamento annullato': 'Termin abgesagt',
       'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Danke, dass Sie uns Bescheid gesagt haben. Sie können jederzeit einen neuen Termin buchen.',
+      'Lascia una recensione su Google': 'Hinterlassen Sie eine Bewertung bei Google',
       'Prenota di nuovo': 'Erneut buchen',
       'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'Sie ändern Ihre Buchung: Wählen Sie Leistung, Tag oder Uhrzeit neu und bestätigen Sie.',
       'Lascia com\'è': 'Unverändert lassen',
@@ -410,6 +420,7 @@
       'No, lo tengo': 'لا، سأحتفظ به',
       'Appuntamento annullato': 'تم إلغاء الموعد',
       'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'شكرًا لإخبارنا. يمكنك حجز موعد آخر وقتما تشاء.',
+      'Lascia una recensione su Google': 'اترك تقييمًا على Google',
       'Prenota di nuovo': 'احجز مرة أخرى',
       'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'أنت تعدّل حجزك: غيّر الخدمة أو اليوم أو الوقت ثم أكّد.',
       'Lascia com\'è': 'اتركه كما هو',
@@ -506,7 +517,8 @@
     sito: '',        // es. 'https://www.tuosito.it'
     instagram: '',   // es. 'https://www.instagram.com/tuoprofilo'
     facebook: '',    // es. 'https://www.facebook.com/tuapagina'
-    tiktok: ''       // es. 'https://www.tiktok.com/@tuoprofilo'
+    tiktok: '',       // es. 'https://www.tiktok.com/@tuoprofilo'
+    recensioni: ''   // link Google per lasciare una recensione (profilo attività > "Chiedi recensioni")
   };
   function disegnaContatti() {
     const box = document.getElementById('contatti');
@@ -518,6 +530,8 @@
     };
     const voci = [['Sito web', CONTATTI.sito], ['Instagram', CONTATTI.instagram], ['Facebook', CONTATTI.facebook], ['TikTok', CONTATTI.tiktok]]
       .filter(v => /^https?:\/\//i.test(v[1] || ''));
+    const rec = document.getElementById('recensione');
+    if (rec && /^https:\/\//i.test(CONTATTI.recensioni || '')) { document.getElementById('recensioneLink').href = CONTATTI.recensioni; rec.hidden = false; }
     if (!voci.length) { box.hidden = true; return; }
     box.innerHTML = '';
     voci.forEach(v => {
