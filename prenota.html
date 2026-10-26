@@ -586,6 +586,8 @@
   let provvisori = [];
 
   function parseOra(ora) { const [h, m] = (ora || '0:0').split(':').map(Number); return (h || 0) * 60 + (m || 0); }
+  // Minuti che il servizio occupa davvero in agenda: solo la lavorazione (nel tempo di posa si è libere).
+  function durataOcc(sv) { const l = Number(sv.tempoLavorazione) || 0; return l > 0 ? Math.ceil(l / 15) * 15 : sv.durataMin; }
   function fmtOra(min) { return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0'); }
   function fmtDateISO(d) { const p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
 
@@ -667,7 +669,7 @@
   function disegnaSlot(data) {
     const cont = document.getElementById('slotScelta');
     const hint = document.getElementById('slotHint');
-    const slots = slotsLiberi(operatoreScelto, data, servizioScelto.durataMin);
+    const slots = slotsLiberi(operatoreScelto, data, durataOcc(servizioScelto));
     cont.innerHTML = '';
     if (!slots.length) {
       hint.textContent = operatoreScelto === QUALSIASI
@@ -768,8 +770,8 @@
       // Ultimo controllo, appena prima di inviare: nel caso qualcun altro abbia preso proprio
       // questo orario nei pochi secondi da quando è stata disegnata la lista.
       caricaProvvisori().then(() => {
-        const ancoraLibero = slotsLiberi(scelta, data, servizio.durataMin).includes(slot);
-        operatore = operatriceDelloSlot(scelta, data, slot, servizio.durataMin);
+        const ancoraLibero = slotsLiberi(scelta, data, durataOcc(servizio)).includes(slot);
+        operatore = operatriceDelloSlot(scelta, data, slot, durataOcc(servizio));
         if (!ancoraLibero || !operatore) {
           btn.disabled = false; btn.textContent = testoBtn;
           mostraErrore(L('Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.', 'This time was just taken by someone else: please choose another one from those left.', 'Цей час щойно зайняла інша людина: оберіть інший із тих, що залишилися.'));
@@ -778,7 +780,7 @@
         }
         // Blocco subito l'orario per chi sta guardando in questo momento, poi registro la
         // richiesta vera: le operatrici la trasformeranno in appuntamento riaprendo l'app.
-        return db.collection('occupatiProvvisori').add({ data: data, ora: slot, operatore: operatore, durataMin: servizio.durataMin, createdAt: Date.now() });
+        return db.collection('occupatiProvvisori').add({ data: data, ora: slot, operatore: operatore, durataMin: durataOcc(servizio), createdAt: Date.now() });
       }).then(() => {
         const token = modifica ? mia.k : nuovoToken();
         const richiesta = {
