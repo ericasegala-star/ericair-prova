@@ -14,8 +14,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --ink: #2B2320;
@@ -176,7 +174,7 @@
   .app-splash[hidden] { display: none; }
   .app-splash-text {
     font-size: 26px; font-weight: 700; color: var(--berry); text-align: center;
-    animation: appSplashAnim 1.8s forwards;
+    animation: appSplashAnim 0.9s forwards;
   }
   /* Tre fasi ben distinte (la titolare, 19/10: "non gira" — con una sola rotazione veloce e
      ease-in-out non si notava): un ingresso rapido, poi una girata vera e propria a velocità
@@ -5166,6 +5164,8 @@
     let initPromise;
     try {
       firebase.initializeApp(firebaseConfig);
+      // Cache locale di Firestore (anche offline, più tab insieme): va attivata prima di ogni altro uso del database.
+      try { const _p = firebase.firestore().enablePersistence({ synchronizeTabs: true }); if (_p && _p.catch) _p.catch(() => {}); } catch (e) { /* non supportata: si prosegue senza */ }
       // Accesso come "app vera" (non anonimo): distingue questo file dalla pagina pubblica di
       // prenotazione, che è invece anonima. Se l'utente admin non è stato ancora creato in
       // Firebase (prima configurazione) — o il metodo non esiste, come nei test — si ripiega
@@ -5183,10 +5183,7 @@
       db = null;
     }).then(() => {
       if (!db) { showStorageError('Il salvataggio non è disponibile: controlla la configurazione Firebase in alto nel file. Ricarica la pagina dopo averla corretta.'); renderDiagnostics(); applySettings(); updateBackupReminderUI(); return; }
-      return migrateLegacyLocalStorageIfNeeded().then(() => db.collection('clients').get()).then(snap => {
-        clients = snap.docs.map(d => clientFromDbDoc(d.id, d.data()));
-        clients.forEach(c => { lastWrittenUpdatedAt[c.id] = c.updatedAt || Date.now(); });
-        return Promise.all([
+      return migrateLegacyLocalStorageIfNeeded().then(() => Promise.all([db.collection('clients').get(), Promise.all([
           db.doc(appuntiDocPath('time')).get(),
           db.doc(appuntiDocPath('green')).get(),
           db.doc(appuntiDocPath('gloss')).get(),
@@ -5196,7 +5193,10 @@
           db.doc('app/agendaTurni').get(),
           db.doc('app/assenze').get(),
           db.doc('app/servizi').get()
-        ]);
+        ])])).then(([snap, docsLetti]) => {
+        clients = snap.docs.map(d => clientFromDbDoc(d.id, d.data()));
+        clients.forEach(c => { lastWrittenUpdatedAt[c.id] = c.updatedAt || Date.now(); });
+        return docsLetti;
       }).then(([aTime, aGreen, aGloss, aspetto, backup, agenda, turni, assenze, servizi]) => migrateLegacyAppuntiIfNeeded([aTime, aGreen, aGloss]).then(migrated => migrated.concat([aspetto, backup, agenda, turni, assenze, servizi]))).then(([aTime, aGreen, aGloss, aspetto, backup, agenda, turni, assenze, servizi]) => {
         ispirazioneCache = { libri: [] };
         appuntiCache = {
@@ -5607,6 +5607,28 @@
     return `<div class="version-full">${parts.join('')}</div>`;
   }
 
+  // jsPDF e SheetJS (Excel) pesano circa 1 MB e servono solo per esportare: si scaricano al
+  // primo bisogno (o in sottofondo a app già pronta), non più all'avvio.
+  const _libPromises = {};
+  function caricaLibreria(url) {
+    if (!_libPromises[url]) {
+      _libPromises[url] = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = url; s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => { delete _libPromises[url]; reject(new Error('Libreria non caricata: ' + url)); };
+        document.head.appendChild(s);
+      });
+    }
+    return _libPromises[url];
+  }
+  function ensureJsPdf() {
+    return window.jspdf ? Promise.resolve() : caricaLibreria('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  }
+  function ensureXlsx() {
+    return window.XLSX ? Promise.resolve() : caricaLibreria('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  }
+
   function buildClientPdf(c) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -5798,6 +5820,7 @@
   function getClient(id) { const c = clients.find(c => c.id === id); return c ? hydrate(c) : null; }
 
   async function downloadClientPdf(c) {
+    await ensureJsPdf();
     const blob = buildClientPdf(c);
     const filename = (c.nome || 'scheda-cliente').replace(/[^\p{L}\p{N}\-_ ]/gu, '').trim() + '.pdf';
     const dl = window.claude ? await window.claude.use('downloads') : null;
@@ -6074,6 +6097,7 @@
     return await loadImageAsPngDataUrl(src, 160);
   }
   async function downloadMagazzinoPdf() {
+    await ensureJsPdf();
     const logo = await getMagazzinoPdfLogo();
     const blob = buildMagazzinoPdf(logo);
     await saveBlobAsFile(blob, 'magazzino-' + fmtDate(Date.now()).replace(/\//g, '-') + '.pdf');
@@ -6118,6 +6142,7 @@
     return wb;
   }
   async function downloadMagazzinoExcel() {
+    await ensureXlsx();
     const wb = buildMagazzinoWorkbook();
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([wbout], { type: 'application/octet-stream' });
@@ -6205,6 +6230,7 @@
     return doc.output('blob');
   }
   async function downloadMagazzinoRiordiniPdf() {
+    await ensureJsPdf();
     const logo = await getMagazzinoPdfLogo();
     const blob = buildMagazzinoRiordiniPdf(logo);
     await saveBlobAsFile(blob, 'lista-riordini-' + fmtDate(Date.now()).replace(/\//g, '-') + '.pdf');
@@ -11754,9 +11780,10 @@
   // d'apertura animata col nome del salone, che resta a schermo un tempo fisso (gira su se
   // stessa e sfuma verso l'alto) finché i dati non sono pronti, così non si vede mai nulla
   // "a scatti" sotto.
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
   applyTraduzioni(); // lingua del "guscio" fisso dell'app: va applicata il prima possibile, prima ancora del caricamento dati
   const appSplashEl = document.getElementById('appSplash');
-  const SPLASH_MIN_MS = 1800; // combacia con la durata dell'animazione CSS (appSplashAnim)
+  const SPLASH_MIN_MS = 900; // combacia con la durata dell'animazione CSS (appSplashAnim)
   const splashTimer = new Promise((resolve) => setTimeout(resolve, SPLASH_MIN_MS));
   Promise.all([bootstrapStorage(), splashTimer]).then(() => {
     // All'apertura dell'app si parte dalla schermata iniziale (frase del giorno), non dall'ultima
@@ -11766,6 +11793,7 @@
     renderAll();
     agendaScrollA830();
     if (appSplashEl) appSplashEl.hidden = true;
+    setTimeout(() => { ensureJsPdf().catch(() => {}); ensureXlsx().catch(() => {}); }, 4000); // precarico in sottofondo, a app già usabile
     window.__schedarioReady = true; // segnale per i test automatici: i dati sono caricati e la pagina è disegnata
   });
 })();
