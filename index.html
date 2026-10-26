@@ -1860,7 +1860,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-26.141-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-26.142-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -4653,7 +4653,7 @@
     const oggi = fmtDateISO(new Date());
     const occupati = agendaCache.appuntamenti
       .filter(a => a.data >= oggi)
-      .map(a => ({ data: a.data, ora: a.ora, operatore: a.operatore, durataMin: appuntamentoDurata(a) }));
+      .map(a => ({ data: a.data, ora: a.ora, operatore: a.operatore, durataMin: appuntamentoDurataLavorazione(a) })); // solo la lavorazione: nel tempo di posa si è libere, come in agenda
     const serviziOnline = serviziCache.servizi.filter(s => s.prenotabileOnline).map(s => {
       const tempi = servizioTempi(s);
       return { id: s.id, nome: nomeServizio(s), durataMin: durataServizioMin(s), tempoLavorazione: tempi.lavorazione, tempoPosa: tempi.posa };
