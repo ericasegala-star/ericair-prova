@@ -1860,7 +1860,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-28.143-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-28.144-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -4282,6 +4282,20 @@
     }
     return null;
   }
+  // Testo del prezzo da mostrare al pubblico: se è stato scritto a parole/intervalli ("30/35/40",
+  // "da 30") si usa quello, aggiungendo la valuta quando è fatto solo di cifre; altrimenti il numero
+  // formattato (o la somma di una combo).
+  function servizioPrezzoTxt(s) {
+    if (!s) return '';
+    const v = s.prezzo;
+    if (typeof v === 'string' && v.trim() && isNaN(Number(v.replace(',', '.')))) {
+      const t = v.trim();
+      const valuta = cfgPaese().valuta;
+      return (/^(da\s+)?[\d\s.,\/+\-–]+$/i.test(t)) ? t + ' ' + valuta : t;
+    }
+    const n = servizioPrezzo(s);
+    return n != null ? fmtPrezzoEuro(n) : '';
+  }
   function creaServizio() {
     const s = { id: uid(), nome: '', tempoLavorazione: 0, tempoPosa: 0, prezzo: null, colore: '#C9A0AE', tipo: 'semplice', comboDi: [], prenotabileOnline: false };
     serviziCache.servizi.push(s);
@@ -4688,8 +4702,7 @@
       .map(a => ({ data: a.data, ora: a.ora, operatore: a.operatore, durataMin: appuntamentoDurataLavorazione(a) })); // solo la lavorazione: nel tempo di posa si è libere, come in agenda
     const serviziOnline = serviziCache.servizi.filter(s => s.prenotabileOnline).map(s => {
       const tempi = servizioTempi(s);
-      const prz = servizioPrezzo(s);
-      return { id: s.id, nome: nomeServizio(s), durataMin: durataServizioMin(s), tempoLavorazione: tempi.lavorazione, tempoPosa: tempi.posa, prezzoTxt: prz != null ? fmtPrezzoEuro(prz) : '' };
+      return { id: s.id, nome: nomeServizio(s), durataMin: durataServizioMin(s), tempoLavorazione: tempi.lavorazione, tempoPosa: tempi.posa, prezzoTxt: servizioPrezzoTxt(s) };
     });
     const assenzePubbliche = assenzeCache.assenze
       .filter(a => a.dataFine >= oggi)
@@ -9498,7 +9511,7 @@
         </div>`}
         <div class="field servizio-field-tempo">
           <label>${t('serv.prezzo', 'Prezzo (€)')}</label>
-          <input type="number" min="0" step="0.5" class="servizio-input" data-id="${s.id}" data-field="prezzo" placeholder="${isCombo && servizioPrezzo({ ...s, prezzo: null }) != null ? String(servizioPrezzo({ ...s, prezzo: null })).replace('.', ',') : ''}" value="${s.prezzo != null && s.prezzo !== '' ? s.prezzo : ''}">
+          <input type="text" inputmode="decimal" class="servizio-input" data-id="${s.id}" data-field="prezzo" placeholder="${isCombo && servizioPrezzo({ ...s, prezzo: null }) != null ? String(servizioPrezzo({ ...s, prezzo: null })).replace('.', ',') : ''}" value="${s.prezzo != null && s.prezzo !== '' ? escapeHtml(String(s.prezzo).replace('.', ',')) : ''}">
           ${isCombo ? `<p class="hint">${t('serv.prezzoCombo', 'Lascia vuoto per usare la somma dei servizi inclusi')}</p>` : ''}
         </div>
         <div class="field servizio-field-colore">
@@ -9534,8 +9547,12 @@
         if (field === 'tempoLavorazione' || field === 'tempoPosa') {
           s[field] = Math.max(0, parseInt(input.value, 10) || 0);
         } else if (field === 'prezzo') {
-          const v = parseFloat(String(input.value).replace(',', '.'));
-          s.prezzo = isNaN(v) || v < 0 ? null : Math.round(v * 100) / 100;
+          // Un numero semplice resta numero (si somma nelle combo); qualsiasi altro testo ("30/35/40",
+          // "da 30") si tiene com'è.
+          const raw = String(input.value).trim();
+          if (!raw) s.prezzo = null;
+          else if (/^\d+([.,]\d+)?$/.test(raw)) s.prezzo = Math.round(parseFloat(raw.replace(',', '.')) * 100) / 100;
+          else s.prezzo = raw.slice(0, 40);
         } else {
           s[field] = input.value;
         }
