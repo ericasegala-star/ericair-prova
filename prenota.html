@@ -708,7 +708,7 @@
     const selServizio = document.getElementById('selServizio');
     (disp.servizi || []).forEach(s => {
       const opt = document.createElement('option');
-      opt.value = s.id; opt.textContent = s.nome + ' (' + s.durataMin + ' min)';
+      opt.value = s.id; opt.textContent = s.nome + ' (' + s.durataMin + ' min)' + (s.prezzoTxt ? ' · ' + s.prezzoTxt : '');
       selServizio.appendChild(opt);
     });
     selServizio.addEventListener('change', () => {
