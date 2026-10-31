@@ -1339,6 +1339,9 @@
   /* Statistiche riordini del Magazzino: grafico a torta dei prodotti più riordinati (fatture
      importate su un prodotto già esistente) nell'anno solare in corso. */
   .mag-stats-card { width: min(640px, 100%); }
+  .mag-riordini-scelta { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 16px; }
+  .mag-riordini-voce { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .mag-riordini-azioni { display: flex; justify-content: flex-end; }
   .mag-stats-empty { color: var(--ink-soft); }
   .mag-stats-wrap { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
   .mag-stats-pie { flex: 0 0 auto; width: 200px; height: 200px; }
@@ -1753,6 +1756,14 @@
   </div>
 </div>
 
+<div class="settings-modal" id="magRiordiniModal" hidden>
+  <div class="settings-card mag-stats-card">
+    <button type="button" class="settings-close" id="magRiordiniClose" aria-label="Chiudi" data-i18n-aria="ui.close">×</button>
+    <h2 data-i18n="mag.scegliFornitori">Scegli i fornitori</h2>
+    <div id="magRiordiniBody"></div>
+  </div>
+</div>
+
 <div class="settings-modal" id="magStatsModal" hidden>
   <div class="settings-card mag-stats-card">
     <button type="button" class="settings-close" id="magStatsClose" aria-label="Chiudi" data-i18n-aria="ui.close">×</button>
@@ -1860,7 +1871,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-28.145-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-31.146-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -1919,6 +1930,7 @@
       'mag.importaFattura': 'Import from invoice', 'mag.scaricaPdf': 'Download PDF',
       'mag.scaricaExcel': 'Download Excel', 'mag.statistiche': 'Reorder statistics',
       'mag.listaRiordini': 'Download reorder list', 'mag.tutti': 'All',
+      'mag.scegliFornitori': 'Choose suppliers', 'mag.scaricaPdf': 'Download PDF',
       'mag.materiePrime': 'Raw materials', 'mag.merciVendita': 'Retail goods',
       'mag.cercaProdotto': 'Search product', 'mag.cercaProdottoPh': 'Search by name or brand…',
       'mag.aggiungiProdotto': '+ Add product', 'mag.deseleziona': 'Deselect all',
@@ -2084,6 +2096,7 @@
       'mag.importaFattura': 'Importar desde factura', 'mag.scaricaPdf': 'Descargar PDF',
       'mag.scaricaExcel': 'Descargar Excel', 'mag.statistiche': 'Estadísticas de reposición',
       'mag.listaRiordini': 'Descargar lista de reposición', 'mag.tutti': 'Todos',
+      'mag.scegliFornitori': 'Elige proveedores', 'mag.scaricaPdf': 'Descargar PDF',
       'mag.materiePrime': 'Materias primas', 'mag.merciVendita': 'Productos de venta',
       'mag.cercaProdotto': 'Buscar producto', 'mag.cercaProdottoPh': 'Buscar por nombre o marca…',
       'mag.aggiungiProdotto': '+ Añadir producto', 'mag.deseleziona': 'Deseleccionar todo',
@@ -2249,6 +2262,7 @@
       'mag.importaFattura': 'Importă din factură', 'mag.scaricaPdf': 'Descarcă PDF',
       'mag.scaricaExcel': 'Descarcă Excel', 'mag.statistiche': 'Statistici reaprovizionare',
       'mag.listaRiordini': 'Descarcă lista de reaprovizionare', 'mag.tutti': 'Toate',
+      'mag.scegliFornitori': 'Alege furnizorii', 'mag.scaricaPdf': 'Descarcă PDF',
       'mag.materiePrime': 'Materii prime', 'mag.merciVendita': 'Produse de vânzare',
       'mag.cercaProdotto': 'Caută produs', 'mag.cercaProdottoPh': 'Caută după nume sau marcă…',
       'mag.aggiungiProdotto': '+ Adaugă produs', 'mag.deseleziona': 'Deselectează tot',
@@ -2414,6 +2428,7 @@
       'mag.importaFattura': 'Importo nga fatura', 'mag.scaricaPdf': 'Shkarko PDF-në',
       'mag.scaricaExcel': 'Shkarko Excel-in', 'mag.statistiche': 'Statistikat e riblerjes',
       'mag.listaRiordini': 'Shkarko listën e riblerjes', 'mag.tutti': 'Të gjitha',
+      'mag.scegliFornitori': 'Zgjidh furnitorët', 'mag.scaricaPdf': 'Shkarko PDF',
       'mag.materiePrime': 'Lëndë të para', 'mag.merciVendita': 'Mallra për shitje',
       'mag.cercaProdotto': 'Kërko produktin', 'mag.cercaProdottoPh': 'Kërko sipas emrit ose markës…',
       'mag.aggiungiProdotto': '+ Shto produkt', 'mag.deseleziona': 'Hiq zgjedhjen e gjithçkaje',
@@ -2579,6 +2594,7 @@
       'mag.importaFattura': 'Importuj z faktury', 'mag.scaricaPdf': 'Pobierz PDF',
       'mag.scaricaExcel': 'Pobierz Excel', 'mag.statistiche': 'Statystyki zamówień',
       'mag.listaRiordini': 'Pobierz listę zamówień', 'mag.tutti': 'Wszystkie',
+      'mag.scegliFornitori': 'Wybierz dostawców', 'mag.scaricaPdf': 'Pobierz PDF',
       'mag.materiePrime': 'Surowce', 'mag.merciVendita': 'Towary na sprzedaż',
       'mag.cercaProdotto': 'Szukaj produktu', 'mag.cercaProdottoPh': 'Szukaj po nazwie lub marce…',
       'mag.aggiungiProdotto': '+ Dodaj produkt', 'mag.deseleziona': 'Odznacz wszystko',
@@ -2768,6 +2784,7 @@
       'mag.scaricaExcel': 'Завантажити Excel',
       'mag.statistiche': 'Статистика поповнення',
       'mag.listaRiordini': 'Завантажити список замовлень',
+      'mag.scegliFornitori': 'Оберіть постачальників', 'mag.scaricaPdf': 'Завантажити PDF',
       'mag.tutti': 'Усі',
       'mag.materiePrime': 'Сировина',
       'mag.merciVendita': 'Товари для продажу',
@@ -2982,6 +2999,7 @@
       'mag.scaricaExcel': 'Preuzmi Excel',
       'mag.statistiche': 'Statistika narudžbi',
       'mag.listaRiordini': 'Preuzmi popis za narudžbu',
+      'mag.scegliFornitori': 'Odaberi dobavljače', 'mag.scaricaPdf': 'Preuzmi PDF',
       'mag.tutti': 'Sve',
       'mag.materiePrime': 'Sirovine',
       'mag.merciVendita': 'Roba za prodaju',
@@ -3196,6 +3214,7 @@
       'mag.scaricaExcel': 'Lataa Excel',
       'mag.statistiche': 'Tilaustilastot',
       'mag.listaRiordini': 'Lataa tilauslista',
+      'mag.scegliFornitori': 'Valitse toimittajat', 'mag.scaricaPdf': 'Lataa PDF',
       'mag.tutti': 'Kaikki',
       'mag.materiePrime': 'Raaka-aineet',
       'mag.merciVendita': 'Myyntituotteet',
@@ -3410,6 +3429,7 @@
       'mag.scaricaExcel': 'Excel herunterladen',
       'mag.statistiche': 'Nachbestellstatistik',
       'mag.listaRiordini': 'Nachbestellliste herunterladen',
+      'mag.scegliFornitori': 'Lieferanten wählen', 'mag.scaricaPdf': 'PDF herunterladen',
       'mag.tutti': 'Alle',
       'mag.materiePrime': 'Rohstoffe',
       'mag.merciVendita': 'Verkaufsware',
@@ -3624,6 +3644,7 @@
       'mag.scaricaExcel': 'تنزيل Excel',
       'mag.statistiche': 'إحصاءات إعادة الطلب',
       'mag.listaRiordini': 'تنزيل قائمة إعادة الطلب',
+      'mag.scegliFornitori': 'اختر الموردين', 'mag.scaricaPdf': 'تنزيل PDF',
       'mag.tutti': 'الكل',
       'mag.materiePrime': 'المواد الخام',
       'mag.merciVendita': 'بضائع للبيع',
@@ -6178,7 +6199,7 @@
   // loro "Quantità minima" (vedi magazzinoDaRiordinare), da portare o mandare al fornitore. Niente
   // dorso verticale per marca come nell'inventario completo: qui basta un elenco semplice, con la
   // marca come colonna, raggruppato comunque per marca/fornitore per comodità.
-  function buildMagazzinoRiordiniPdf(logo) {
+  function buildMagazzinoRiordiniPdf(logo, lista) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const margin = 42;
@@ -6211,7 +6232,7 @@
       doc.setTextColor(30, 24, 20);
     }
     tableHeader();
-    const prodotti = magazzinoDaRiordinare();
+    const prodotti = lista || magazzinoDaRiordinare();
     if (!prodotti.length) {
       doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
       doc.text('Nessun prodotto sotto la quantità minima impostata.', margin, y);
@@ -6254,10 +6275,54 @@
     });
     return doc.output('blob');
   }
-  async function downloadMagazzinoRiordiniPdf() {
+  async function downloadMagazzinoRiordiniPdf(lista, nomeFornitore) {
     const logo = await getMagazzinoPdfLogo();
-    const blob = buildMagazzinoRiordiniPdf(logo);
-    await saveBlobAsFile(blob, 'lista-riordini-' + fmtDate(Date.now()).replace(/\//g, '-') + '.pdf');
+    const blob = buildMagazzinoRiordiniPdf(logo, lista);
+    const suffisso = nomeFornitore ? '-' + String(nomeFornitore).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '';
+    await saveBlobAsFile(blob, 'lista-riordini' + suffisso + '-' + fmtDate(Date.now()).replace(/\//g, '-') + '.pdf');
+  }
+  // Scelta del fornitore (richiesta di Erica, 31/10): se i prodotti da riordinare sono di più
+  // fornitori, prima di scaricare si scelgono quali includere (di default tutti). Con un solo
+  // fornitore si scarica subito, senza chiedere niente.
+  function scaricaListaRiordini() {
+    const gruppi = groupMagazzinoByMarca(magazzinoDaRiordinare());
+    const fine = (lista, nome) => downloadMagazzinoRiordiniPdf(lista, nome)
+      .then(() => notifyTop('Lista riordini scaricata.'))
+      .catch((err) => { if (!(err && err.code === 'declined')) notifyTop('Non sono riuscita a generare il PDF.', true); });
+    if (gruppi.length <= 1) { fine(null, ''); return; }
+    const modal = document.getElementById('magRiordiniModal');
+    const body = document.getElementById('magRiordiniBody');
+    if (!modal || !body) { fine(null, ''); return; }
+    body.innerHTML = `
+      <div class="mag-riordini-scelta">
+        <label class="mag-riordini-voce"><input type="checkbox" id="magRiordiniTutti" checked> <strong>${t('mag.tutti', 'Tutti')}</strong></label>
+        ${gruppi.map((g, i) => `<label class="mag-riordini-voce"><input type="checkbox" class="mag-riordini-check" data-i="${i}" checked> ${escapeHtml(g.marca)} <span class="hint">(${g.prodotti.length})</span></label>`).join('')}
+      </div>
+      <div class="mag-riordini-azioni"><button type="button" class="primary" id="magRiordiniVai">${t('mag.scaricaPdf', 'Scarica PDF')}</button></div>`;
+    const checks = () => Array.from(body.querySelectorAll('.mag-riordini-check'));
+    const vai = body.querySelector('#magRiordiniVai');
+    const tutti = body.querySelector('#magRiordiniTutti');
+    const aggiorna = () => {
+      const sel = checks().filter(c => c.checked).length;
+      vai.disabled = sel === 0;
+      tutti.checked = sel === gruppi.length;
+    };
+    tutti.addEventListener('change', () => { checks().forEach(c => { c.checked = tutti.checked; }); aggiorna(); });
+    checks().forEach(c => c.addEventListener('change', aggiorna));
+    vai.addEventListener('click', () => {
+      const scelti = checks().filter(c => c.checked).map(c => gruppi[Number(c.dataset.i)]);
+      if (!scelti.length) return;
+      const lista = sortMagazzinoProdotti(scelti.reduce((acc, g) => acc.concat(g.prodotti), []));
+      modal.hidden = true;
+      fine(lista, scelti.length === 1 ? scelti[0].marca : '');
+    });
+    if (!modal.dataset.legato) {
+      modal.dataset.legato = '1';
+      document.getElementById('magRiordiniClose').addEventListener('click', () => { modal.hidden = true; });
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) modal.hidden = true; });
+    }
+    modal.hidden = false;
   }
 
   // Salva un Blob sul dispositivo (foto, PDF, backup…).
@@ -9040,9 +9105,7 @@
           notifyTop('Nessun prodotto sotto la quantità minima impostata.');
           return;
         }
-        downloadMagazzinoRiordiniPdf()
-          .then(() => notifyTop('Lista riordini scaricata.'))
-          .catch((err) => { if (!(err && err.code === 'declined')) notifyTop('Non sono riuscita a generare il PDF.', true); });
+        scaricaListaRiordini();
       });
     }
   }
