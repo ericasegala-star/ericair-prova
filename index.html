@@ -1341,7 +1341,13 @@
   .mag-stats-card { width: min(640px, 100%); }
   .mag-riordini-scelta { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 16px; }
   .mag-riordini-voce { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-  .mag-riordini-azioni { display: flex; justify-content: flex-end; }
+  .mag-riordini-azioni { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+  .mag-fornitore { border: 1px solid var(--line, #e2d5c6); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+  .mag-fornitore .field { margin: 0; }
+  .mag-fornitore .mag-fornitore-nome, .mag-fornitore .mag-fornitore-azioni { grid-column: 1 / -1; }
+  .mag-fornitore .mag-fornitore-azioni { display: flex; justify-content: flex-end; }
+  .mag-fornitori-suggerimenti { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+  @media (max-width: 520px) { .mag-fornitore { grid-template-columns: 1fr; } }
   .mag-stats-empty { color: var(--ink-soft); }
   .mag-stats-wrap { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
   .mag-stats-pie { flex: 0 0 auto; width: 200px; height: 200px; }
@@ -1756,6 +1762,14 @@
   </div>
 </div>
 
+<div class="settings-modal" id="magFornitoriModal" hidden>
+  <div class="settings-card mag-stats-card">
+    <button type="button" class="settings-close" id="magFornitoriClose" aria-label="Chiudi" data-i18n-aria="ui.close">×</button>
+    <h2 data-i18n="mag.fornitori">Fornitori</h2>
+    <div id="magFornitoriBody"></div>
+  </div>
+</div>
+
 <div class="settings-modal" id="magRiordiniModal" hidden>
   <div class="settings-card mag-stats-card">
     <button type="button" class="settings-close" id="magRiordiniClose" aria-label="Chiudi" data-i18n-aria="ui.close">×</button>
@@ -1871,7 +1885,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-31.146-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-10-31.147-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -1930,7 +1944,8 @@
       'mag.importaFattura': 'Import from invoice', 'mag.scaricaPdf': 'Download PDF',
       'mag.scaricaExcel': 'Download Excel', 'mag.statistiche': 'Reorder statistics',
       'mag.listaRiordini': 'Download reorder list', 'mag.tutti': 'All',
-      'mag.scegliFornitori': 'Choose suppliers', 'mag.scaricaPdf': 'Download PDF',
+      'mag.scegliFornitori': 'Choose suppliers',
+      'mag.fornitori': 'Suppliers', 'mag.inviaEmail': 'Email', 'mag.inviaWhatsapp': 'WhatsApp',
       'mag.materiePrime': 'Raw materials', 'mag.merciVendita': 'Retail goods',
       'mag.cercaProdotto': 'Search product', 'mag.cercaProdottoPh': 'Search by name or brand…',
       'mag.aggiungiProdotto': '+ Add product', 'mag.deseleziona': 'Deselect all',
@@ -2096,7 +2111,8 @@
       'mag.importaFattura': 'Importar desde factura', 'mag.scaricaPdf': 'Descargar PDF',
       'mag.scaricaExcel': 'Descargar Excel', 'mag.statistiche': 'Estadísticas de reposición',
       'mag.listaRiordini': 'Descargar lista de reposición', 'mag.tutti': 'Todos',
-      'mag.scegliFornitori': 'Elige proveedores', 'mag.scaricaPdf': 'Descargar PDF',
+      'mag.scegliFornitori': 'Elige proveedores',
+      'mag.fornitori': 'Proveedores', 'mag.inviaEmail': 'Email', 'mag.inviaWhatsapp': 'WhatsApp',
       'mag.materiePrime': 'Materias primas', 'mag.merciVendita': 'Productos de venta',
       'mag.cercaProdotto': 'Buscar producto', 'mag.cercaProdottoPh': 'Buscar por nombre o marca…',
       'mag.aggiungiProdotto': '+ Añadir producto', 'mag.deseleziona': 'Deseleccionar todo',
@@ -2262,7 +2278,8 @@
       'mag.importaFattura': 'Importă din factură', 'mag.scaricaPdf': 'Descarcă PDF',
       'mag.scaricaExcel': 'Descarcă Excel', 'mag.statistiche': 'Statistici reaprovizionare',
       'mag.listaRiordini': 'Descarcă lista de reaprovizionare', 'mag.tutti': 'Toate',
-      'mag.scegliFornitori': 'Alege furnizorii', 'mag.scaricaPdf': 'Descarcă PDF',
+      'mag.scegliFornitori': 'Alege furnizorii',
+      'mag.fornitori': 'Furnizori', 'mag.inviaEmail': 'Email', 'mag.inviaWhatsapp': 'WhatsApp',
       'mag.materiePrime': 'Materii prime', 'mag.merciVendita': 'Produse de vânzare',
       'mag.cercaProdotto': 'Caută produs', 'mag.cercaProdottoPh': 'Caută după nume sau marcă…',
       'mag.aggiungiProdotto': '+ Adaugă produs', 'mag.deseleziona': 'Deselectează tot',
@@ -2428,7 +2445,8 @@
       'mag.importaFattura': 'Importo nga fatura', 'mag.scaricaPdf': 'Shkarko PDF-në',
       'mag.scaricaExcel': 'Shkarko Excel-in', 'mag.statistiche': 'Statistikat e riblerjes',
       'mag.listaRiordini': 'Shkarko listën e riblerjes', 'mag.tutti': 'Të gjitha',
-      'mag.scegliFornitori': 'Zgjidh furnitorët', 'mag.scaricaPdf': 'Shkarko PDF',
+      'mag.scegliFornitori': 'Zgjidh furnitorët',
+      'mag.fornitori': 'Furnitorët', 'mag.inviaEmail': 'Email', 'mag.inviaWhatsapp': 'WhatsApp',
       'mag.materiePrime': 'Lëndë të para', 'mag.merciVendita': 'Mallra për shitje',
       'mag.cercaProdotto': 'Kërko produktin', 'mag.cercaProdottoPh': 'Kërko sipas emrit ose markës…',
       'mag.aggiungiProdotto': '+ Shto produkt', 'mag.deseleziona': 'Hiq zgjedhjen e gjithçkaje',
@@ -2594,7 +2612,8 @@
       'mag.importaFattura': 'Importuj z faktury', 'mag.scaricaPdf': 'Pobierz PDF',
       'mag.scaricaExcel': 'Pobierz Excel', 'mag.statistiche': 'Statystyki zamówień',
       'mag.listaRiordini': 'Pobierz listę zamówień', 'mag.tutti': 'Wszystkie',
-      'mag.scegliFornitori': 'Wybierz dostawców', 'mag.scaricaPdf': 'Pobierz PDF',
+      'mag.scegliFornitori': 'Wybierz dostawców',
+      'mag.fornitori': 'Dostawcy', 'mag.inviaEmail': 'Email', 'mag.inviaWhatsapp': 'WhatsApp',
       'mag.materiePrime': 'Surowce', 'mag.merciVendita': 'Towary na sprzedaż',
       'mag.cercaProdotto': 'Szukaj produktu', 'mag.cercaProdottoPh': 'Szukaj po nazwie lub marce…',
       'mag.aggiungiProdotto': '+ Dodaj produkt', 'mag.deseleziona': 'Odznacz wszystko',
@@ -2784,7 +2803,8 @@
       'mag.scaricaExcel': 'Завантажити Excel',
       'mag.statistiche': 'Статистика поповнення',
       'mag.listaRiordini': 'Завантажити список замовлень',
-      'mag.scegliFornitori': 'Оберіть постачальників', 'mag.scaricaPdf': 'Завантажити PDF',
+      'mag.scegliFornitori': 'Оберіть постачальників',
+      'mag.fornitori': 'Постачальники', 'mag.inviaEmail': 'Email', 'mag.inviaWhatsapp': 'WhatsApp',
       'mag.tutti': 'Усі',
       'mag.materiePrime': 'Сировина',
       'mag.merciVendita': 'Товари для продажу',
@@ -2999,7 +3019,8 @@
       'mag.scaricaExcel': 'Preuzmi Excel',
       'mag.statistiche': 'Statistika narudžbi',
       'mag.listaRiordini': 'Preuzmi popis za narudžbu',
-      'mag.scegliFornitori': 'Odaberi dobavljače', 'mag.scaricaPdf': 'Preuzmi PDF',
+      'mag.scegliFornitori': 'Odaberi dobavljače',
+      'mag.fornitori': 'Dobavljači', 'mag.inviaEmail': 'Email', 'mag.inviaWhatsapp': 'WhatsApp',
       'mag.tutti': 'Sve',
       'mag.materiePrime': 'Sirovine',
       'mag.merciVendita': 'Roba za prodaju',
@@ -3214,7 +3235,8 @@
       'mag.scaricaExcel': 'Lataa Excel',
       'mag.statistiche': 'Tilaustilastot',
       'mag.listaRiordini': 'Lataa tilauslista',
-      'mag.scegliFornitori': 'Valitse toimittajat', 'mag.scaricaPdf': 'Lataa PDF',
+      'mag.scegliFornitori': 'Valitse toimittajat',
+      'mag.fornitori': 'Toimittajat', 'mag.inviaEmail': 'Sähköposti', 'mag.inviaWhatsapp': 'WhatsApp',
       'mag.tutti': 'Kaikki',
       'mag.materiePrime': 'Raaka-aineet',
       'mag.merciVendita': 'Myyntituotteet',
@@ -3429,7 +3451,8 @@
       'mag.scaricaExcel': 'Excel herunterladen',
       'mag.statistiche': 'Nachbestellstatistik',
       'mag.listaRiordini': 'Nachbestellliste herunterladen',
-      'mag.scegliFornitori': 'Lieferanten wählen', 'mag.scaricaPdf': 'PDF herunterladen',
+      'mag.scegliFornitori': 'Lieferanten wählen',
+      'mag.fornitori': 'Lieferanten', 'mag.inviaEmail': 'E-Mail', 'mag.inviaWhatsapp': 'WhatsApp',
       'mag.tutti': 'Alle',
       'mag.materiePrime': 'Rohstoffe',
       'mag.merciVendita': 'Verkaufsware',
@@ -3644,7 +3667,8 @@
       'mag.scaricaExcel': 'تنزيل Excel',
       'mag.statistiche': 'إحصاءات إعادة الطلب',
       'mag.listaRiordini': 'تنزيل قائمة إعادة الطلب',
-      'mag.scegliFornitori': 'اختر الموردين', 'mag.scaricaPdf': 'تنزيل PDF',
+      'mag.scegliFornitori': 'اختر الموردين',
+      'mag.fornitori': 'الموردون', 'mag.inviaEmail': 'بريد إلكتروني', 'mag.inviaWhatsapp': 'واتساب',
       'mag.tutti': 'الكل',
       'mag.materiePrime': 'المواد الخام',
       'mag.merciVendita': 'بضائع للبيع',
@@ -3910,7 +3934,7 @@
   // "storicoRiordini": una riga per ogni volta che una fattura importata aggiorna la quantità
   // di un prodotto già esistente (un vero riordino, non la prima volta che si aggiunge un
   // prodotto nuovo). Serve solo per le statistiche "prodotti più riordinati nell'anno".
-  let magazzinoCache = { prodotti: [], storicoRiordini: [] };
+  let magazzinoCache = { prodotti: [], storicoRiordini: [], fornitori: [] };
   let magazzinoSearchTerm = "";
   let magazzinoFiltroTipo = 'tutti'; // 'tutti' | 'materiaPrima' | 'vendita'
   let magazzinoFiltroFornitore = ''; // '' = tutti i fornitori, altrimenti chiave normalizzata (o "__nomarca__")
@@ -4238,6 +4262,7 @@
     db.doc('app/magazzino').get().then(doc => {
       magazzinoCache.prodotti = (doc.exists && doc.data() && doc.data().prodotti) || [];
       magazzinoCache.storicoRiordini = (doc.exists && doc.data() && doc.data().storicoRiordini) || [];
+      magazzinoCache.fornitori = (doc.exists && doc.data() && doc.data().fornitori) || [];
       hideStorageError();
       if (viewingMagazzino) renderSheet();
       if (viewingSearchApp) renderSearchAppResults();
@@ -4245,7 +4270,7 @@
   }
   function saveMagazzino() {
     if (!db) { showStorageError(); return Promise.resolve(false); }
-    return db.doc('app/magazzino').set({ prodotti: magazzinoCache.prodotti, storicoRiordini: magazzinoCache.storicoRiordini })
+    return db.doc('app/magazzino').set({ prodotti: magazzinoCache.prodotti, storicoRiordini: magazzinoCache.storicoRiordini, fornitori: magazzinoCache.fornitori || [] })
       .then(() => { hideStorageError(); return true; })
       .catch(() => { showStorageError('Non sono riuscita a salvare il magazzino. Riprova tra poco.'); return false; });
   }
@@ -6281,6 +6306,78 @@
     const suffisso = nomeFornitore ? '-' + String(nomeFornitore).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '';
     await saveBlobAsFile(blob, 'lista-riordini' + suffisso + '-' + fmtDate(Date.now()).replace(/\//g, '-') + '.pdf');
   }
+  // ---- Anagrafica fornitori (Erica, 31/10): nome (uguale alla marca in magazzino), email,
+  // WhatsApp e referente, per preparare in un tocco la mail o il messaggio di riordino. Si salva
+  // dentro lo stesso documento del magazzino (app/magazzino, campo "fornitori"). ----
+  function fornitoreDiMarca(marca) {
+    const key = normalizzaMarca(marca);
+    if (!key) return null;
+    return (magazzinoCache.fornitori || []).find(f => normalizzaMarca(f.nome) === key) || null;
+  }
+  function messaggioOrdineFornitore(f, prodotti) {
+    const salone = appSettingsCache.nome || DEFAULT_NOME;
+    const ref = (f.referente || '').trim();
+    // Quantità indicativa: quanto manca per tornare alla soglia minima (almeno 1). La si può
+    // correggere prima di inviare, il testo si apre già scritto nell'app di posta/WhatsApp.
+    const righe = prodotti.map(p => '- ' + (p.nome || 'Senza nome') + ' × ' + Math.max(1, (p.quantitaMinima || 0) - (p.quantita || 0))).join('\n');
+    const T = {
+      it: { subj: 'Riordino – ' + salone, body: 'Buongiorno' + (ref ? ' ' + ref : '') + '! ☀️\nSono ' + salone + ': qualche prodotto sta finendo e vorrei riordinare.\n\n' + righe + '\n\nMi confermi disponibilità e tempi di consegna? Grazie mille e buona giornata! 😊' },
+      en: { subj: 'Reorder – ' + salone, body: 'Good morning' + (ref ? ' ' + ref : '') + '! ☀️\nThis is ' + salone + ': a few products are running low and I would like to reorder.\n\n' + righe + '\n\nCould you confirm availability and delivery time? Thank you so much, have a lovely day! 😊' },
+      es: { subj: 'Pedido – ' + salone, body: '¡Buenos días' + (ref ? ' ' + ref : '') + '! ☀️\nLe escribe ' + salone + ': se nos están acabando algunos productos y querría reponerlos.\n\n' + righe + '\n\n¿Me confirma disponibilidad y plazo de entrega? ¡Muchas gracias y que tenga un buen día! 😊' },
+      de: { subj: 'Nachbestellung – ' + salone, body: 'Guten Tag' + (ref ? ' ' + ref : '') + '! ☀️\nHier ist ' + salone + ': Einige Produkte gehen zur Neige und ich möchte nachbestellen.\n\n' + righe + '\n\nKönnen Sie mir Verfügbarkeit und Lieferzeit bestätigen? Vielen Dank und einen schönen Tag! 😊' }
+    };
+    return T[linguaCorrente()] || T.en;
+  }
+  function renderFornitoriModal() {
+    const body = document.getElementById('magFornitoriBody');
+    if (!body) return;
+    const lista = magazzinoCache.fornitori || [];
+    const senza = groupMagazzinoByMarca(magazzinoCache.prodotti).filter(g => g.marca !== 'Senza marca' && !fornitoreDiMarca(g.marca));
+    body.innerHTML = `
+      ${senza.length ? `<p class="hint">${t('mag.fornitoriAggiungiDa', 'Aggiungi da una marca già in magazzino:')}</p>
+        <div class="mag-fornitori-suggerimenti">${senza.map(g => `<button type="button" class="ghost small mag-fornitore-sug" data-marca="${escapeHtml(g.marca)}">+ ${escapeHtml(g.marca)}</button>`).join('')}</div>` : ''}
+      ${lista.map(f => `
+        <div class="mag-fornitore" data-id="${f.id}">
+          <div class="field mag-fornitore-nome"><label>${t('mag.fornitoreNome', 'Nome fornitore (come la marca in magazzino)')}</label><input type="text" class="mag-fornitore-input" data-id="${f.id}" data-field="nome" value="${escapeHtml(f.nome || '')}"></div>
+          <div class="field"><label>Email</label><input type="text" inputmode="email" autocapitalize="off" class="mag-fornitore-input" data-id="${f.id}" data-field="email" value="${escapeHtml(f.email || '')}"></div>
+          <div class="field"><label>WhatsApp</label><input type="text" inputmode="tel" class="mag-fornitore-input" data-id="${f.id}" data-field="whatsapp" value="${escapeHtml(f.whatsapp || '')}"></div>
+          <div class="field mag-fornitore-nome"><label>${t('mag.fornitoreReferente', 'Referente (facoltativo)')}</label><input type="text" class="mag-fornitore-input" data-id="${f.id}" data-field="referente" value="${escapeHtml(f.referente || '')}"></div>
+          <div class="mag-fornitore-azioni"><button type="button" class="magazzino-delete mag-fornitore-del" data-id="${f.id}">${t('agenda.elimina', 'Elimina')}</button></div>
+        </div>`).join('') || `<p class="hint">${t('mag.fornitoriVuoto', 'Nessun fornitore ancora.')}</p>`}
+      <div class="mag-riordini-azioni"><button type="button" class="ghost small" id="magFornitoreAdd">${t('mag.fornitoreNuovo', 'Aggiungi fornitore')}</button></div>`;
+    const aggiungi = (nome) => { magazzinoCache.fornitori = (magazzinoCache.fornitori || []).concat([{ id: uid(), nome: nome || '', email: '', whatsapp: '', referente: '' }]); saveMagazzino(); renderFornitoriModal(); };
+    body.querySelector('#magFornitoreAdd').addEventListener('click', () => aggiungi(''));
+    body.querySelectorAll('.mag-fornitore-sug').forEach(b => b.addEventListener('click', () => aggiungi(b.dataset.marca)));
+    body.querySelectorAll('.mag-fornitore-input').forEach(inp => inp.addEventListener('change', () => {
+      const f = (magazzinoCache.fornitori || []).find(x => x.id === inp.dataset.id);
+      if (!f) return;
+      f[inp.dataset.field] = inp.value.trim();
+      saveMagazzino();
+      if (inp.dataset.field === 'nome') renderFornitoriModal(); // aggiorna i suggerimenti
+    }));
+    body.querySelectorAll('.mag-fornitore-del').forEach(btn => btn.addEventListener('click', () => {
+      if (!btn.classList.contains('armed')) {
+        btn.classList.add('armed'); btn.textContent = t('agenda.confermi', 'Confermi?');
+        clearTimeout(btn._armTimer);
+        btn._armTimer = setTimeout(() => { btn.classList.remove('armed'); btn.textContent = t('agenda.elimina', 'Elimina'); }, 4000);
+        return;
+      }
+      magazzinoCache.fornitori = (magazzinoCache.fornitori || []).filter(x => x.id !== btn.dataset.id);
+      saveMagazzino(); renderFornitoriModal();
+    }));
+  }
+  function openFornitoriModal() {
+    const modal = document.getElementById('magFornitoriModal');
+    if (!modal) return;
+    if (!modal.dataset.legato) {
+      modal.dataset.legato = '1';
+      document.getElementById('magFornitoriClose').addEventListener('click', () => { modal.hidden = true; });
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) modal.hidden = true; });
+    }
+    renderFornitoriModal();
+    modal.hidden = false;
+  }
   // Scelta del fornitore (richiesta di Erica, 31/10): se i prodotti da riordinare sono di più
   // fornitori, prima di scaricare si scelgono quali includere (di default tutti). Con un solo
   // fornitore si scarica subito, senza chiedere niente.
@@ -6289,7 +6386,8 @@
     const fine = (lista, nome) => downloadMagazzinoRiordiniPdf(lista, nome)
       .then(() => notifyTop('Lista riordini scaricata.'))
       .catch((err) => { if (!(err && err.code === 'declined')) notifyTop('Non sono riuscita a generare il PDF.', true); });
-    if (gruppi.length <= 1) { fine(null, ''); return; }
+    const haContatti = (g) => { const f = fornitoreDiMarca(g.marca); return !!(f && (f.email || f.whatsapp)); };
+    if (gruppi.length <= 1 && !(gruppi.length === 1 && haContatti(gruppi[0]))) { fine(null, ''); return; }
     const modal = document.getElementById('magRiordiniModal');
     const body = document.getElementById('magRiordiniBody');
     if (!modal || !body) { fine(null, ''); return; }
@@ -6298,17 +6396,42 @@
         <label class="mag-riordini-voce"><input type="checkbox" id="magRiordiniTutti" checked> <strong>${t('mag.tutti', 'Tutti')}</strong></label>
         ${gruppi.map((g, i) => `<label class="mag-riordini-voce"><input type="checkbox" class="mag-riordini-check" data-i="${i}" checked> ${escapeHtml(g.marca)} <span class="hint">(${g.prodotti.length})</span></label>`).join('')}
       </div>
-      <div class="mag-riordini-azioni"><button type="button" class="primary" id="magRiordiniVai">${t('mag.scaricaPdf', 'Scarica PDF')}</button></div>`;
+      <p class="hint" id="magRiordiniNota"></p>
+      <div class="mag-riordini-azioni">
+        <button type="button" class="ghost" id="magRiordiniEmail">${t('mag.inviaEmail', 'Invia email')}</button>
+        <button type="button" class="ghost" id="magRiordiniWa">${t('mag.inviaWhatsapp', 'Invia WhatsApp')}</button>
+        <button type="button" class="primary" id="magRiordiniVai">${t('mag.scaricaPdf', 'Scarica PDF')}</button>
+      </div>`;
     const checks = () => Array.from(body.querySelectorAll('.mag-riordini-check'));
     const vai = body.querySelector('#magRiordiniVai');
     const tutti = body.querySelector('#magRiordiniTutti');
+    const btnEmail = body.querySelector('#magRiordiniEmail'), btnWa = body.querySelector('#magRiordiniWa'), nota = body.querySelector('#magRiordiniNota');
+    const scelteOra = () => checks().filter(c => c.checked).map(c => gruppi[Number(c.dataset.i)]);
     const aggiorna = () => {
-      const sel = checks().filter(c => c.checked).length;
-      vai.disabled = sel === 0;
-      tutti.checked = sel === gruppi.length;
+      const sel = scelteOra();
+      vai.disabled = sel.length === 0;
+      tutti.checked = sel.length === gruppi.length;
+      // Email/WhatsApp solo con UN fornitore scelto che abbia il contatto in anagrafica.
+      const f = sel.length === 1 ? fornitoreDiMarca(sel[0].marca) : null;
+      btnEmail.hidden = !(f && f.email);
+      btnWa.hidden = !(f && telefonoPerWhatsapp(f.whatsapp));
+      if (sel.length > 1) nota.textContent = t('mag.unSoloFornitore', 'Per inviare email o WhatsApp scegli un solo fornitore.');
+      else if (sel.length === 1 && !f) nota.textContent = t('mag.fornitoreManca', 'Per inviare direttamente aggiungi questo fornitore in "Fornitori".');
+      else nota.textContent = '';
     };
+    btnEmail.addEventListener('click', () => {
+      const g = scelteOra()[0]; const f = g && fornitoreDiMarca(g.marca); if (!f || !f.email) return;
+      const m = messaggioOrdineFornitore(f, sortMagazzinoProdotti(g.prodotti));
+      window.location.href = 'mailto:' + encodeURIComponent(f.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(m.subj) + '&body=' + encodeURIComponent(m.body);
+    });
+    btnWa.addEventListener('click', () => {
+      const g = scelteOra()[0]; const f = g && fornitoreDiMarca(g.marca); const n = f && telefonoPerWhatsapp(f.whatsapp); if (!n) return;
+      const m = messaggioOrdineFornitore(f, sortMagazzinoProdotti(g.prodotti));
+      window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(m.body), '_blank');
+    });
     tutti.addEventListener('change', () => { checks().forEach(c => { c.checked = tutti.checked; }); aggiorna(); });
     checks().forEach(c => c.addEventListener('change', aggiorna));
+    aggiorna();
     vai.addEventListener('click', () => {
       const scelti = checks().filter(c => c.checked).map(c => gruppi[Number(c.dataset.i)]);
       if (!scelti.length) return;
@@ -7989,6 +8112,7 @@
             <button class="ghost small" id="magazzinoExcelBtn">${t('mag.scaricaExcel', 'Scarica Excel')}</button>
             <button class="ghost small" id="magazzinoStatsBtn">${t('mag.statistiche', 'Statistiche riordini')}</button>
             <button class="ghost small" id="magazzinoRiordiniBtn">${t('mag.listaRiordini', 'Scarica lista riordini')}</button>
+            <button class="ghost small" id="magazzinoFornitoriBtn">${t('mag.fornitori', 'Fornitori')}</button>
             <!-- "Business Plan" nascosto per ora (la titolare, 15/10: "non mi serve"): il codice resta,
                  così si può rimettere facilmente il tasto se dovesse servire di nuovo. -->
           </div>
@@ -9108,6 +9232,8 @@
         scaricaListaRiordini();
       });
     }
+    const fornitoriBtn = document.getElementById('magazzinoFornitoriBtn');
+    if (fornitoriBtn) fornitoriBtn.addEventListener('click', openFornitoriModal);
   }
 
   // ---- Statistiche riordini: grafico a torta dei prodotti più riordinati nell'anno solare ----
@@ -11800,6 +11926,8 @@
     const isTextField = (el.tagName === 'INPUT' && (el.type === 'text' || !el.type)) || el.tagName === 'TEXTAREA';
     if (!isTextField) return;
     if (el.id === 'f-nome' || el.id === 'searchAppInput' || el.classList.contains('ins-book-cover-title')) return;
+    // email, telefono e prezzo non vanno toccati (niente maiuscole né spazi automatici)
+    if (el.inputMode === 'email' || el.inputMode === 'tel' || el.inputMode === 'decimal') return;
     addSpaceAfterPunctuation(el);
     capitalizeFirstLetter(el);
     // L'evidenziazione (grande/grassetto) si aggiorna quando si esce dal campo, non lettera per
