@@ -1904,7 +1904,7 @@
     return /^it/i.test(navigator.language || '') ? 'it' : 'en';
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
-  const APP_BUILD = "2026-11-03.151-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-03.152-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3815,7 +3815,7 @@
 
     const groupsHtml = line.groups.map(g => `
       <div class="dose-group">
-        <div class="dose-title">${trDose(g.title)}</div>
+        ${g.title ? `<div class="dose-title">${trDose(g.title)}</div>` : ''}
         <div class="dose-table-wrap">
           <table class="dose-table">
             <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}</th>`).join('')}</tr></thead>
@@ -3976,8 +3976,11 @@
   function parseTabellePosa(txt) {
     return String(txt || '').split(/\n\s*\n/).map((blocco, gi) => {
       const righe = blocco.split('\n').map(r => r.trim()).filter(Boolean);
-      if (righe.length < 2) return null;
-      return { key: 'g' + gi, title: righe[0], cols: righe.slice(1).map((r, ci) => {
+      if (!righe.length) return null;
+      // La prima riga è il titolo solo se c'è altro sotto e non contiene "|": altrimenti è già
+      // una voce (anche una voce sola, senza titolo).
+      const conTitolo = righe.length >= 2 && !righe[0].includes('|');
+      return { key: 'g' + gi, title: conTitolo ? righe[0] : '', cols: (conTitolo ? righe.slice(1) : righe).map((r, ci) => {
         const p = r.split('|');
         return { key: 'c' + ci, label: p[0].trim(), hint: (p[1] || '').trim() };
       }) };
@@ -5564,7 +5567,7 @@
 
     const groupsHtml = line.groups.map(g => `
       <div class="dose-group">
-        <div class="dose-title">${trDose(g.title)}</div>
+        ${g.title ? `<div class="dose-title">${trDose(g.title)}</div>` : ''}
         <div class="dose-table-wrap">
           <table class="dose-table">
             <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}</th>`).join('')}</tr></thead>
