@@ -1897,7 +1897,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-11-03.148-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-03.149-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -5274,6 +5274,13 @@
   function bootstrapStorage() {
     let initPromise;
     try {
+      if (/INCOLLA/.test(firebaseConfig.projectId || '')) {
+        // Prima configurazione non ancora fatta: invece di un'app che non salva niente, si spiega cosa manca.
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;z-index:2000;background:#faf6f3;display:flex;align-items:center;justify-content:center;padding:24px;font-family:inherit;';
+        ov.innerHTML = '<div style="max-width:420px;background:#fff;border:1px solid #e2d5c6;border-radius:14px;padding:24px;"><h2 style="margin:0 0 8px;">Manca un passaggio</h2><p style="margin:0;line-height:1.5;">Questa copia di Ericair non è ancora collegata al tuo database. Segui la guida di installazione, al passo 4 (incollare la configurazione Firebase nel file), poi ricarica la pagina.</p></div>';
+        document.body.appendChild(ov);
+      }
       firebase.initializeApp(firebaseConfig);
       // Accesso come "app vera" (non anonimo): distingue questo file dalla pagina pubblica di
       // prenotazione, che è invece anonima. Se l'utente admin non è stato ancora creato in

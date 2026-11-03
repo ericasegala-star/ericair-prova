@@ -813,6 +813,10 @@
     });
   }
 
+  if (/INCOLLA/.test(firebaseConfig.projectId || '')) {
+    document.body.innerHTML = '<div style="max-width:420px;margin:60px auto;padding:24px;font-family:sans-serif;border:1px solid #e2d5c6;border-radius:14px;"><h2 style="margin:0 0 8px;">Pagina non ancora attiva</h2><p style="margin:0;line-height:1.5;">Manca il collegamento al database: segui la guida di installazione (passo 4) e ricarica la pagina.</p></div>';
+    throw new Error('Configurazione Firebase mancante');
+  }
   firebase.initializeApp(firebaseConfig);
   firebase.auth().signInAnonymously().catch(() => {}).then(() => {
     db = firebase.firestore();
