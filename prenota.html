@@ -205,10 +205,14 @@
 
   function paeseSalvato() { try { return localStorage.getItem('prenotaPaese') || ''; } catch (e) { return ''; } }
   var paesePag = paeseSalvato();
-  function lingPag() { return 'en'; }
+  function lingPag() {
+    // Lingua: ?lang=it|en nel link, altrimenti quella del browser (italiano se il browser è in italiano).
+    try { const q = new URLSearchParams(location.search).get('lang'); if (q === 'it' || q === 'en') return q; } catch (e) {}
+    return /^it/i.test(navigator.language || '') ? 'it' : 'en';
+  }
   function inglese() { return lingPag() === 'en'; }
-    function dizionarioPag() { return EN; }
-  function L(it, en) { return en; }
+    function dizionarioPag() { return lingPag() === 'en' ? EN : null; }
+  function L(it, en) { return lingPag() === 'en' ? en : it; }
   function T(it) { const d = dizionarioPag(); return d && d[it] ? d[it] : it; }
   function traduciPagina() {
     const D = dizionarioPag();
@@ -302,7 +306,7 @@
   function miaNelPassato() { return new Date(mia.d + 'T' + mia.o + ':00').getTime() < Date.now(); }
   function descrizioneMia() {
     return new Date(mia.d + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
-      (' at ') + mia.o + (' with ') + (NOME_OPERATORE[mia.op] || mia.op) + (mia.sn ? (' for ') + mia.sn : '') + '.';
+      L(' alle ', ' at ') + mia.o + L(' da ', ' with ') + (NOME_OPERATORE[mia.op] || mia.op) + (mia.sn ? L(' per ', ' for ') + mia.sn : '') + '.';
   }
   function mostraTua() {
     const box = document.getElementById('tuaBox');
@@ -312,7 +316,7 @@
     box.hidden = false;
   }
   let disp = null; // dati pubblici letti da app/disponibilitaPubblica
-  function LOCALE_DATE() { const p = disp && disp.paese; return p === 'US' ? 'en-US' : p === 'DE' ? 'en-DE' : p === 'FI' ? 'en-FI' : 'en-GB'; }
+  function LOCALE_DATE() { const p = disp && disp.paese; return lingPag() === 'it' ? 'it-IT' : p === 'US' ? 'en-US' : p === 'DE' ? 'en-DE' : p === 'FI' ? 'en-FI' : 'en-GB'; }
   let db = null;
   let servizioScelto = null;
   let operatoreScelto = null;
@@ -397,7 +401,7 @@
     aggiornaTastoInvia();
     if (!servizioScelto || !operatoreScelto || !data) { fs.hidden = true; return; }
     fs.hidden = false;
-    hint.textContent = ('One moment…');
+    hint.textContent = L('Un attimo…', 'One moment…');
     cont.innerHTML = '';
     // Ricarico le prenotazioni "appena fatte" da altri ogni volta, così chi sta scegliendo in
     // questo momento vede anche quello che altri hanno prenotato un minuto fa.
@@ -410,8 +414,8 @@
     cont.innerHTML = '';
     if (!slots.length) {
       hint.textContent = operatoreScelto === QUALSIASI
-        ? ('No times available that day: try another date.')
-        : ('{n} has no times available that day: try another date or another team member.').replace('{n}', NOME_OPERATORE[operatoreScelto]);
+        ? L('Non ci sono orari liberi quel giorno: prova un\'altra data.', 'No times available that day: try another date.')
+        : L('{n} non ha orari liberi quel giorno: prova un\'altra data o un\'altra operatrice.', '{n} has no times available that day: try another date or another team member.').replace('{n}', NOME_OPERATORE[operatoreScelto]);
       return;
     }
     hint.textContent = '';
@@ -466,7 +470,7 @@
     });
     if (operatriciAttive().length > 1) {
       const bq = document.createElement('button');
-      bq.type = 'button'; bq.className = 'op-btn'; bq.textContent = ('Any');
+      bq.type = 'button'; bq.className = 'op-btn'; bq.textContent = L('Qualsiasi', 'Any');
       bq.addEventListener('click', () => {
         operatoreScelto = QUALSIASI;
         opCont.querySelectorAll('.op-btn').forEach(b => b.classList.toggle('scelto', b === bq));
@@ -487,7 +491,7 @@
     document.getElementById('campoConsenso').addEventListener('change', aggiornaTastoInvia);
 
     if (disp.generatoAt) {
-      document.getElementById('aggiornatoTxt').textContent = ('Availability updated on ') + new Date(disp.generatoAt).toLocaleString(LOCALE_DATE());
+      document.getElementById('aggiornatoTxt').textContent = L('Disponibilità aggiornata al ', 'Availability updated on ') + new Date(disp.generatoAt).toLocaleString(LOCALE_DATE());
     }
 
     document.getElementById('formPrenota').addEventListener('submit', (e) => {
@@ -502,7 +506,7 @@
       const scelta = operatoreScelto, slot = slotScelto, servizio = servizioScelto;
       let operatore = scelta;
       const btn = document.getElementById('btnInvia');
-      btn.disabled = true; btn.textContent = ('Sending…');
+      btn.disabled = true; btn.textContent = L('Invio…', 'Sending…');
       const testoBtn = modifica ? T('Conferma modifica') : T('Richiedi appuntamento');
       // Ultimo controllo, appena prima di inviare: nel caso qualcun altro abbia preso proprio
       // questo orario nei pochi secondi da quando è stata disegnata la lista.
@@ -511,7 +515,7 @@
         operatore = operatriceDelloSlot(scelta, data, slot, durataOcc(servizio));
         if (!ancoraLibero || !operatore) {
           btn.disabled = false; btn.textContent = testoBtn;
-          mostraErrore(('This time was just taken by someone else: please choose another one from those left.'));
+          mostraErrore(L('Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.', 'This time was just taken by someone else: please choose another one from those left.'));
           disegnaSlot(data);
           return Promise.reject(new Error('slot-appena-preso'));
         }
@@ -536,16 +540,16 @@
         document.getElementById('modificaIntro').hidden = true;
         document.getElementById('formPrenota').hidden = true;
         document.getElementById('confermaBox').hidden = false;
-        document.querySelector('#confermaBox h2').textContent = eraModifica ? ('Change sent!') : T('Richiesta inviata!');
+        document.querySelector('#confermaBox h2').textContent = eraModifica ? L('Modifica inviata!', 'Change sent!') : T('Richiesta inviata!');
         const lk = document.getElementById('linkModifica');
-        lk.href = linkPersonale(); lk.textContent = ('Your link to change your booking');
+        lk.href = linkPersonale(); lk.textContent = L('Il tuo link per modificare la prenotazione', 'Your link to change your booking');
         document.getElementById('confermaTesto').textContent =
-          ('We look forward to seeing you on ') + new Date(data + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
-          ((' at ') + slot + (' with ') + NOME_OPERATORE[operatore] + (' for ') + servizio.nome + '.');
+          L('Ti aspettiamo ', 'We look forward to seeing you on ') + new Date(data + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
+          (L(' alle ', ' at ') + slot + L(' da ', ' with ') + NOME_OPERATORE[operatore] + L(' per ', ' for ') + servizio.nome + '.');
       }).catch((err) => {
         if (err && err.message === 'slot-appena-preso') return;
         btn.disabled = false; btn.textContent = testoBtn;
-        mostraErrore(('Sorry, we could not send your request. Check your connection and try again, or call us.'));
+        mostraErrore(L('Non sono riuscita a inviare la richiesta. Controlla la connessione e riprova, oppure chiamaci.', 'Sorry, we could not send your request. Check your connection and try again, or call us.'));
       });
     });
   }
@@ -630,7 +634,7 @@
       document.getElementById('annullatoBox').hidden = false;
     }).catch(() => {
       b.disabled = false;
-      mostraErrore(('Sorry, we could not cancel. Check your connection and try again, or call us.'));
+      mostraErrore(L('Non sono riuscita ad annullare. Controlla la connessione e riprova, oppure chiamaci.', 'Sorry, we could not cancel. Check your connection and try again, or call us.'));
     });
   });
   document.getElementById('btnRiprenota').addEventListener('click', () => location.reload());
