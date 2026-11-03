@@ -1341,6 +1341,18 @@
   .mag-stats-card { width: min(640px, 100%); }
   .mag-riordini-scelta { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 16px; }
   .mag-riordini-voce { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .primi-passi { border: 1px solid var(--line, #e2d5c6); border-radius: 12px; padding: 14px 16px; margin: 0 0 18px; background: #fff; }
+  .primi-passi-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .primi-passi-head h3 { margin: 0; font-size: 16px; }
+  .primi-passi-head .hint { margin: 0; }
+  .primi-passo { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line, #e2d5c6); }
+  .primi-passo:first-of-type { border-top: none; }
+  .primi-passo-spunta { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--berry); display: inline-flex; align-items: center; justify-content: center; flex: none; color: #fff; font-size: 13px; }
+  .primi-passo.fatto .primi-passo-spunta { background: var(--berry); }
+  .primi-passo.fatto .primi-passo-testo { color: var(--ink-soft, #6b5f57); text-decoration: line-through; }
+  .primi-passo-testo { flex: 1; }
+  .primi-passi-link { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; font-size: 13px; }
+  .primi-passi-link code { word-break: break-all; background: var(--bg, #faf6f3); padding: 3px 6px; border-radius: 6px; }
   .mag-riordini-azioni { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
   .mag-fornitore { border: 1px solid var(--line, #e2d5c6); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
   .mag-fornitore .field { margin: 0; }
@@ -1885,7 +1897,7 @@
 
 <script>
 (function () {
-  const APP_BUILD = "2026-10-31.147-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-03.148-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3985,6 +3997,7 @@
     };
   }
   let agendaTurniCache = defaultAgendaTurni();
+  let agendaTurniImpostati = false; // true quando i turni sono stati salvati almeno una volta (serve alla lista "Primi passi")
   // Ferie e permessi: per operatore, a giornata intera (oraInizio/oraFine assenti) o su una
   // fascia oraria di un singolo giorno.
   let assenzeCache = { assenze: [] };
@@ -4503,14 +4516,14 @@
   function loadAgendaTurniFromDb() {
     if (!db) return;
     db.doc('app/agendaTurni').get().then(doc => {
-      if (doc.exists && doc.data() && doc.data().turni) agendaTurniCache = doc.data().turni;
+      if (doc.exists && doc.data() && doc.data().turni) { agendaTurniCache = doc.data().turni; agendaTurniImpostati = true; }
       if (viewingHome || viewingAgenda) renderSheet();
     }).catch(() => { /* resta il predefinito: si riprova riaprendo la sezione */ });
   }
   function saveAgendaTurni() {
     if (!db) { showStorageError(); return Promise.resolve(false); }
     return db.doc('app/agendaTurni').set({ turni: agendaTurniCache })
-      .then(() => { hideStorageError(); pubblicaDisponibilitaOnline(); return true; })
+      .then(() => { agendaTurniImpostati = true; hideStorageError(); pubblicaDisponibilitaOnline(); return true; })
       .catch(() => { showStorageError('Non sono riuscita a salvare i turni. Riprova tra poco.'); return false; });
   }
   // Operatori che lavorano in un certo giorno (in ordine: la titolare prima di un'altra operatrice), secondo i turni.
@@ -5303,7 +5316,7 @@
         // Agenda: caricata subito all'avvio (non solo aprendo una sezione dedicata), perché ora
         // vive sotto la schermata iniziale, sempre visibile.
         agendaCache.appuntamenti = (agenda.exists && agenda.data() && agenda.data().appuntamenti) || [];
-        if (turni.exists && turni.data() && turni.data().turni) agendaTurniCache = turni.data().turni;
+        if (turni.exists && turni.data() && turni.data().turni) { agendaTurniCache = turni.data().turni; agendaTurniImpostati = true; }
         assenzeCache.assenze = (assenze.exists && assenze.data() && assenze.data().assenze) || [];
         serviziCache.servizi = (servizi.exists && servizi.data() && servizi.data().servizi) || [];
         const aspettoData = aspetto.exists ? aspetto.data() : {};
@@ -7951,6 +7964,90 @@
       if (nuovoGrid && scrollGridTop != null) nuovoGrid.scrollTop = scrollGridTop;
     });
   }
+  // ---- "Primi passi" (la titolare, 3/11): per un salone nuovo, una lista di cose da impostare,
+  // ciascuna con un tasto che apre la schermata giusta; si spunta da sola e sparisce quando è
+  // tutto fatto (o con "Nascondi"). ----
+  const PRIMI_PASSI_T = {
+    it: { titolo: 'Primi passi', apri: 'Apri', nascondi: 'Nascondi', link: 'Link della prenotazione online da condividere:', copia: 'Copia', copiato: 'Copiato',
+      passi: ['Nome, logo, paese e lingua del salone', 'Orari e turni di lavoro', 'I servizi, con tempi e prezzi', 'Link per le recensioni Google', 'Prenotazione online: scegli i servizi da mostrare'] },
+    en: { titolo: 'Getting started', apri: 'Open', nascondi: 'Hide', link: 'Online booking link to share:', copia: 'Copy', copiato: 'Copied',
+      passi: ['Salon name, logo, country and language', 'Opening hours and shifts', 'Services, with times and prices', 'Google reviews link', 'Online booking: choose which services to show'] },
+    es: { titolo: 'Primeros pasos', apri: 'Abrir', nascondi: 'Ocultar', link: 'Enlace de reserva online para compartir:', copia: 'Copiar', copiato: 'Copiado',
+      passi: ['Nombre, logo, país e idioma del salón', 'Horarios y turnos', 'Servicios, con tiempos y precios', 'Enlace de reseñas de Google', 'Reserva online: elige qué servicios mostrar'] },
+    de: { titolo: 'Erste Schritte', apri: 'Öffnen', nascondi: 'Ausblenden', link: 'Link zur Online-Buchung zum Teilen:', copia: 'Kopieren', copiato: 'Kopiert',
+      passi: ['Salonname, Logo, Land und Sprache', 'Öffnungszeiten und Schichten', 'Leistungen mit Zeiten und Preisen', 'Link für Google-Bewertungen', 'Online-Buchung: Leistungen auswählen'] }
+  };
+  function primiPassiTesti() { return PRIMI_PASSI_T[linguaCorrente()] || PRIMI_PASSI_T.en; }
+  function primiPassiNascosti() { try { return localStorage.getItem('ericair:primiPassiNascosti') === '1'; } catch (e) { return false; } }
+  function primiPassiLinkPrenota() { try { return new URL('prenota.html', location.href).href; } catch (e) { return ''; } }
+  function primiPassiStato() {
+    return [
+      !!appSettingsCache.nome,
+      !!agendaTurniImpostati,
+      serviziCache.servizi.length > 0,
+      !!(appSettingsCache.linkRecensioni || DEFAULT_LINK_RECENSIONI),
+      serviziCache.servizi.some(sv => sv.prenotabileOnline)
+    ];
+  }
+  function primiPassiHtml() {
+    const stato = primiPassiStato();
+    if (primiPassiNascosti() || stato.every(Boolean)) return '';
+    const T = primiPassiTesti();
+    const fatti = stato.filter(Boolean).length;
+    const link = primiPassiLinkPrenota();
+    return `
+      <div class="primi-passi" id="primiPassi">
+        <div class="primi-passi-head"><h3>${T.titolo}</h3><span class="hint">${fatti} / ${stato.length}</span></div>
+        ${T.passi.map((txt, i) => `
+          <div class="primi-passo ${stato[i] ? 'fatto' : ''}">
+            <span class="primi-passo-spunta" aria-hidden="true">${stato[i] ? '✓' : ''}</span>
+            <span class="primi-passo-testo">${escapeHtml(txt)}</span>
+            <button type="button" class="ghost small" data-primo-passo="${i}">${T.apri}</button>
+          </div>`).join('')}
+        ${link ? `<div class="primi-passi-link"><span>${T.link}</span> <code>${escapeHtml(link)}</code> <button type="button" class="ghost small" id="primiPassiCopia">${T.copia}</button></div>` : ''}
+        <div class="mag-riordini-azioni" style="margin-top:8px"><button type="button" class="ghost small" id="primiPassiNascondi">${T.nascondi}</button></div>
+      </div>`;
+  }
+  function bindPrimiPassi() {
+    const box = document.getElementById('primiPassi');
+    if (!box) return;
+    const T = primiPassiTesti();
+    box.querySelectorAll('[data-primo-passo]').forEach(btn => btn.addEventListener('click', () => {
+      const i = Number(btn.dataset.primoPasso);
+      if (i === 0 || i === 3) openSettingsModal();
+      else if (i === 1) openAgendaTurniModal();
+      else { const e = document.getElementById('serviziEntry'); if (e) e.click(); }
+    }));
+    const copia = box.querySelector('#primiPassiCopia');
+    if (copia) copia.addEventListener('click', () => {
+      const link = primiPassiLinkPrenota();
+      const ok = () => { copia.textContent = T.copiato; setTimeout(() => { copia.textContent = T.copia; }, 1500); };
+      try { navigator.clipboard.writeText(link).then(ok, () => {}); } catch (e) { /* senza appunti: il link resta comunque visibile da copiare a mano */ }
+    });
+    const nascondi = box.querySelector('#primiPassiNascondi');
+    if (nascondi) nascondi.addEventListener('click', () => { try { localStorage.setItem('ericair:primiPassiNascosti', '1'); } catch (e) {} box.remove(); });
+  }
+  // Servizi d'esempio (stessa occasione): i più comuni, da modificare dopo; si propongono solo
+  // quando il catalogo è vuoto. I nomi seguono la lingua scelta.
+  const SERVIZI_ESEMPIO = [
+    { nomi: { it: 'Taglio', en: 'Haircut', es: 'Corte', de: 'Schnitt' }, lav: 30, posa: 0, colore: '#C9A0AE' },
+    { nomi: { it: 'Piega', en: 'Blow-dry', es: 'Peinado', de: 'Föhnen' }, lav: 30, posa: 0, colore: '#D9B189' },
+    { nomi: { it: 'Colore ricrescita', en: 'Root colour', es: 'Color de raíz', de: 'Ansatzfarbe' }, lav: 30, posa: 30, colore: '#7A3B56' },
+    { nomi: { it: 'Colore completo', en: 'Full colour', es: 'Color completo', de: 'Komplettfarbe' }, lav: 45, posa: 30, colore: '#A8433C' },
+    { nomi: { it: 'Schiariture', en: 'Highlights', es: 'Mechas', de: 'Strähnen' }, lav: 60, posa: 30, colore: '#6B8F71' },
+    { nomi: { it: 'Trattamento', en: 'Treatment', es: 'Tratamiento', de: 'Pflegebehandlung' }, lav: 15, posa: 10, colore: '#5C7A99' }
+  ];
+  const SERVIZI_ESEMPIO_BTN = { it: 'Aggiungi servizi d\'esempio', en: 'Add example services', es: 'Añadir servicios de ejemplo', de: 'Beispielleistungen hinzufügen' };
+  function aggiungiServiziEsempio() {
+    if (serviziCache.servizi.length) return;
+    const lang = ['it', 'en', 'es', 'de'].includes(linguaCorrente()) ? linguaCorrente() : 'en';
+    const creati = SERVIZI_ESEMPIO.map(e => ({ id: uid(), nome: e.nomi[lang], tempoLavorazione: e.lav, tempoPosa: e.posa, prezzo: null, colore: e.colore, tipo: 'semplice', comboDi: [], prenotabileOnline: false }));
+    // una combo Taglio + Piega, per mostrare come funzionano (il nome si compone da solo)
+    creati.push({ id: uid(), nome: '', tempoLavorazione: 0, tempoPosa: 0, prezzo: null, colore: '#C9A0AE', tipo: 'combo', comboDi: [creati[0].id, creati[1].id], prenotabileOnline: false });
+    serviziCache.servizi = creati;
+    saveServizi();
+    renderSheet();
+  }
   function renderSheet() {
     const panel = document.getElementById('sheetPanel');
     const floatingSave = document.getElementById('floatingSaveBtn');
@@ -8202,6 +8299,7 @@
             ${renderServiziListHtml(serviziCache.servizi, t('serv.vuoto', 'Nessun servizio ancora: aggiungine uno con il tasto qui sotto.'))}
           </div>
           <button type="button" class="ghost small" id="servizioAddBtn">${t('serv.aggiungi', '+ Aggiungi servizio')}</button>
+          ${serviziCache.servizi.length ? '' : `<button type="button" class="ghost small" id="servizioEsempiBtn">${escapeHtml(SERVIZI_ESEMPIO_BTN[linguaCorrente()] || SERVIZI_ESEMPIO_BTN.en)}</button>`}
           <p class="hint">${t('serv.hint', "Si salva da solo mentre scrivi. Scegliendo un servizio nell'Agenda si userà automaticamente il suo tempo e il suo colore in cella.")}</p>
         </fieldset>
         <div class="sheet-footer">
@@ -8446,6 +8544,7 @@
                 </li>`).join('')}
             </ul>
           </div>` : ''}
+          ${primiPassiHtml()}
           <div class="home-quote-card">
             <div class="home-quote-mark">“</div>
             <p class="home-quote-text">${escapeHtml(quoteOfTheDay())}</p>
@@ -8468,6 +8567,7 @@
       `;
       const homeNewBtn = document.getElementById('homeNewBtn');
       if (homeNewBtn) homeNewBtn.addEventListener('click', () => createNewClient());
+      bindPrimiPassi();
       document.querySelectorAll('.home-online-conflitto-elimina').forEach(btn => {
         btn.addEventListener('click', () => eliminaRichiestaOnlineConflitto(btn.dataset.id));
       });
@@ -9728,6 +9828,8 @@
     return list.map(renderServizioRowHtml).join('');
   }
   function bindServiziEvents() {
+    const esempiBtn = document.getElementById('servizioEsempiBtn');
+    if (esempiBtn) esempiBtn.addEventListener('click', aggiungiServiziEsempio);
     const addBtn = document.getElementById('servizioAddBtn');
     if (addBtn) addBtn.addEventListener('click', () => { creaServizio(); renderSheet(); });
 
