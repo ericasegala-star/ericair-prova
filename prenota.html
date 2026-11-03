@@ -203,281 +203,18 @@
     'Hai bisogno di cambiare giorno, orario o servizio? Salva questo link tra i preferiti: con quello puoi modificare la prenotazione quando vuoi.': 'Need to change the day, time or service? Save this link in your bookmarks: you can use it to change your booking at any time.'
   };
 
-  const UKD = {
-    'Prenota un appuntamento': 'Запис на прийом',
-    'La prenotazione online non è ancora attiva. Chiamaci per fissare un appuntamento.': 'Онлайн-запис поки що недоступний. Зателефонуйте нам, щоб записатися.',
-    'La tua prenotazione': 'Ваш запис',
-    'Sposta o modifica': 'Перенести або змінити',
-    'Annulla appuntamento': 'Скасувати запис',
-    'Vuoi davvero annullare?': 'Ви справді хочете скасувати?',
-    'Sì, annulla': 'Так, скасувати',
-    'No, lo tengo': 'Ні, залишаю',
-    'Appuntamento annullato': 'Запис скасовано',
-    'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Дякуємо, що повідомили. Ви можете записатися знову, коли забажаєте.',
-    'Lascia una recensione su Google': 'Залиште відгук у Google',
-    'Prenota di nuovo': 'Записатися знову',
-    'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'Ви змінюєте свій запис: оберіть іншу послугу, день чи час і підтвердьте.',
-    "Lascia com'è": 'Залишити як є',
-    'Servizio': 'Послуга', 'Con chi': 'До кого', 'Quando': 'Коли', 'Orario': 'Час', 'I tuoi dati': 'Ваші дані',
-    '— scegli —': '— оберіть —',
-    'Nome e cognome': 'Імʼя та прізвище',
-    'Numero di telefono (anche WhatsApp)': 'Номер телефону (також WhatsApp)',
-    'Note (facoltativo)': 'Нотатки (за бажанням)',
-    'I dati che scrivi qui sono trattati da': 'Дані, які ви вказуєте тут, обробляє',
-    'il salone': 'салон',
-    'solo per gestire la tua richiesta di appuntamento e per contattarti (anche su WhatsApp) per promemoria o variazioni di orario. Non vengono condivisi con terzi per scopi commerciali e si conservano solo per il tempo necessario a questo scopo. In qualsiasi momento puoi chiedere di vederli, correggerli o farli cancellare, scrivendo o chiamando il salone.': 'лише для обробки вашого запиту на прийом і для звʼязку з вами (зокрема у WhatsApp) щодо нагадувань або зміни часу. Їх не передають третім особам у комерційних цілях і зберігають лише стільки, скільки потрібно для цієї мети. У будь-який момент ви можете попросити переглянути, виправити чи видалити їх, написавши салону або зателефонувавши йому.',
-    "Leggi l'informativa completa sulla privacy": 'Прочитати повну політику конфіденційності',
-    "Ho letto l'": 'Я прочитав(ла) ',
-    'informativa': 'політику конфіденційності',
-    'e acconsento al trattamento dei miei dati per gestire la richiesta di appuntamento.': 'і погоджуюся на обробку моїх даних для опрацювання запиту на прийом.',
-    'Richiedi appuntamento': 'Надіслати запит на прийом',
-    'Conferma modifica': 'Підтвердити зміну',
-    'Richiesta inviata!': 'Запит надіслано!',
-    "Se per qualche motivo quell'orario non fosse più disponibile, ti contattiamo noi al numero che hai scritto.": 'Якщо з якоїсь причини цей час стане недоступним, ми звʼяжемося з вами за вказаним номером.',
-    'Hai bisogno di cambiare giorno, orario o servizio? Salva questo link tra i preferiti: con quello puoi modificare la prenotazione quando vuoi.': 'Потрібно змінити день, час чи послугу? Збережіть це посилання у закладках: за ним ви можете змінити свій запис будь-коли.'
-  };
   function paeseSalvato() { try { return localStorage.getItem('prenotaPaese') || ''; } catch (e) { return ''; } }
   var paesePag = paeseSalvato();
-  // Altre lingue: ogni lingua ha S (testi fissi, chiave = italiano) e D (frasi dinamiche, chiave = italiano).
-  const LANGDATA = {};
-  LANGDATA.hr = {
-    S: {
-      'Prenota un appuntamento': 'Rezervirajte termin',
-      'La prenotazione online non è ancora attiva. Chiamaci per fissare un appuntamento.': 'Online rezervacija još nije aktivna. Nazovite nas kako biste dogovorili termin.',
-      'La tua prenotazione': 'Vaša rezervacija',
-      'Sposta o modifica': 'Premjesti ili promijeni',
-      'Annulla appuntamento': 'Otkaži termin',
-      'Vuoi davvero annullare?': 'Želite li zaista otkazati?',
-      'Sì, annulla': 'Da, otkaži',
-      'No, lo tengo': 'Ne, zadržavam ga',
-      'Appuntamento annullato': 'Termin je otkazan',
-      'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Hvala što ste nam javili. Kad želite, možete rezervirati novi.',
-      'Lascia una recensione su Google': 'Ostavite recenziju na Googleu',
-      'Prenota di nuovo': 'Rezerviraj ponovno',
-      'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'Mijenjate svoju rezervaciju: promijenite uslugu, dan ili vrijeme i potvrdite.',
-      'Lascia com\'è': 'Ostavi kako jest',
-      'Servizio': 'Usluga',
-      'Con chi': 'S kim',
-      'Quando': 'Kada',
-      'Orario': 'Vrijeme',
-      'I tuoi dati': 'Vaši podaci',
-      '— scegli —': '— odaberite —',
-      'Nome e cognome': 'Ime i prezime',
-      'Numero di telefono (anche WhatsApp)': 'Broj telefona (i WhatsApp)',
-      'Note (facoltativo)': 'Napomene (neobavezno)',
-      'I dati che scrivi qui sono trattati da': 'Podatke koje ovdje upišete obrađuje',
-      'il salone': 'salon',
-      'solo per gestire la tua richiesta di appuntamento e per contattarti (anche su WhatsApp) per promemoria o variazioni di orario. Non vengono condivisi con terzi per scopi commerciali e si conservano solo per il tempo necessario a questo scopo. In qualsiasi momento puoi chiedere di vederli, correggerli o farli cancellare, scrivendo o chiamando il salone.': 'isključivo radi obrade vašeg zahtjeva za termin i kontaktiranja (i putem WhatsAppa) zbog podsjetnika ili promjena termina. Ne dijele se s trećim stranama u komercijalne svrhe i čuvaju se samo onoliko koliko je potrebno za tu svrhu. U svakom trenutku možete zatražiti uvid, ispravak ili brisanje podataka pisanjem salonu ili pozivom.',
-      'Leggi l\'informativa completa sulla privacy': 'Pročitajte cjelovitu politiku privatnosti',
-      'Ho letto l\'': 'Pročitao/pročitala sam ',
-      'informativa': 'politiku privatnosti',
-      'e acconsento al trattamento dei miei dati per gestire la richiesta di appuntamento.': 'i pristajem na obradu svojih podataka radi obrade zahtjeva za termin.',
-      'Richiedi appuntamento': 'Zatraži termin',
-      'Conferma modifica': 'Potvrdi promjenu',
-      'Richiesta inviata!': 'Zahtjev je poslan!',
-      'Se per qualche motivo quell\'orario non fosse più disponibile, ti contattiamo noi al numero che hai scritto.': 'Ako taj termin iz bilo kojeg razloga više ne bude dostupan, javit ćemo vam se na broj koji ste upisali.',
-      'Hai bisogno di cambiare giorno, orario o servizio? Salva questo link tra i preferiti: con quello puoi modificare la prenotazione quando vuoi.': 'Trebate promijeniti dan, vrijeme ili uslugu? Spremite ovu poveznicu u favorite: njome možete mijenjati rezervaciju kad god želite.'
-    },
-    D: {
-      ' alle ': ' u ',
-      ' da ': ', kod ',
-      ' per ': ', usluga ',
-      'Un attimo…': 'Trenutak…',
-      'Non ci sono orari liberi quel giorno: prova un\'altra data.': 'Nema slobodnih termina taj dan: pokušajte s drugim datumom.',
-      '{n} non ha orari liberi quel giorno: prova un\'altra data o un\'altra operatrice.': '{n} nema slobodnih termina taj dan: pokušajte s drugim datumom ili drugom osobom.',
-      'Qualsiasi': 'Bilo tko',
-      'Disponibilità aggiornata al ': 'Dostupnost ažurirana: ',
-      'Invio…': 'Slanje…',
-      'Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.': 'Ovaj termin je upravo zauzela druga osoba: odaberite neki od preostalih.',
-      'Modifica inviata!': 'Promjena je poslana!',
-      'Il tuo link per modificare la prenotazione': 'Vaša poveznica za promjenu rezervacije',
-      'Ti aspettiamo ': 'Očekujemo vas: ',
-      'Non sono riuscita a inviare la richiesta. Controlla la connessione e riprova, oppure chiamaci.': 'Nismo uspjeli poslati zahtjev. Provjerite vezu i pokušajte ponovno ili nas nazovite.',
-      'Non sono riuscita ad annullare. Controlla la connessione e riprova, oppure chiamaci.': 'Nismo uspjeli otkazati. Provjerite vezu i pokušajte ponovno ili nas nazovite.'
-    }
-  };
-  LANGDATA.fi = {
-    S: {
-      'Prenota un appuntamento': 'Varaa aika',
-      'La prenotazione online non è ancora attiva. Chiamaci per fissare un appuntamento.': 'Verkkovaraus ei ole vielä käytössä. Soita meille varataksesi ajan.',
-      'La tua prenotazione': 'Varauksesi',
-      'Sposta o modifica': 'Siirrä tai muuta',
-      'Annulla appuntamento': 'Peruuta aika',
-      'Vuoi davvero annullare?': 'Haluatko varmasti peruuttaa?',
-      'Sì, annulla': 'Kyllä, peruuta',
-      'No, lo tengo': 'Ei, pidän sen',
-      'Appuntamento annullato': 'Aika peruutettu',
-      'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Kiitos, kun kerroit meille. Voit varata uuden ajan milloin haluat.',
-      'Lascia una recensione su Google': 'Jätä arvostelu Googlessa',
-      'Prenota di nuovo': 'Varaa uudelleen',
-      'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'Muokkaat varaustasi: vaihda palvelu, päivä tai aika ja vahvista.',
-      'Lascia com\'è': 'Jätä ennalleen',
-      'Servizio': 'Palvelu',
-      'Con chi': 'Kenelle',
-      'Quando': 'Milloin',
-      'Orario': 'Aika',
-      'I tuoi dati': 'Yhteystietosi',
-      '— scegli —': '— valitse —',
-      'Nome e cognome': 'Etu- ja sukunimi',
-      'Numero di telefono (anche WhatsApp)': 'Puhelinnumero (myös WhatsApp)',
-      'Note (facoltativo)': 'Huomiot (valinnainen)',
-      'I dati che scrivi qui sono trattati da': 'Tähän kirjoittamiasi tietoja käsittelee',
-      'il salone': 'salonki',
-      'solo per gestire la tua richiesta di appuntamento e per contattarti (anche su WhatsApp) per promemoria o variazioni di orario. Non vengono condivisi con terzi per scopi commerciali e si conservano solo per il tempo necessario a questo scopo. In qualsiasi momento puoi chiedere di vederli, correggerli o farli cancellare, scrivendo o chiamando il salone.': 'vain ajanvarauspyyntösi hoitamiseksi ja yhteydenottoon (myös WhatsAppissa) muistutusten tai aikamuutosten vuoksi. Tietoja ei luovuteta kolmansille osapuolille kaupallisiin tarkoituksiin, ja niitä säilytetään vain niin kauan kuin tähän tarkoitukseen tarvitaan. Voit milloin tahansa pyytää nähdä, korjata tai poistaa tietosi kirjoittamalla salongille tai soittamalla sinne.',
-      'Leggi l\'informativa completa sulla privacy': 'Lue koko tietosuojaseloste',
-      'Ho letto l\'': 'Olen lukenut ',
-      'informativa': 'tietosuojaselosteen',
-      'e acconsento al trattamento dei miei dati per gestire la richiesta di appuntamento.': 'ja hyväksyn tietojeni käsittelyn ajanvarauspyyntöni hoitamiseksi.',
-      'Richiedi appuntamento': 'Pyydä aikaa',
-      'Conferma modifica': 'Vahvista muutos',
-      'Richiesta inviata!': 'Pyyntö lähetetty!',
-      'Se per qualche motivo quell\'orario non fosse più disponibile, ti contattiamo noi al numero che hai scritto.': 'Jos aika ei jostain syystä olisikaan enää vapaana, otamme sinuun yhteyttä antamaasi numeroon.',
-      'Hai bisogno di cambiare giorno, orario o servizio? Salva questo link tra i preferiti: con quello puoi modificare la prenotazione quando vuoi.': 'Haluatko vaihtaa päivää, aikaa tai palvelua? Tallenna tämä linkki kirjanmerkkeihin: sen avulla voit muokata varaustasi milloin tahansa.'
-    },
-    D: {
-      ' alle ': ' klo ',
-      ' da ': ', ',
-      ' per ': ', palvelu ',
-      'Un attimo…': 'Hetki…',
-      'Non ci sono orari liberi quel giorno: prova un\'altra data.': 'Ei vapaita aikoja sinä päivänä: kokeile toista päivää.',
-      '{n} non ha orari liberi quel giorno: prova un\'altra data o un\'altra operatrice.': '{n}:lla ei ole vapaita aikoja sinä päivänä: kokeile toista päivää tai toista tekijää.',
-      'Qualsiasi': 'Kuka tahansa',
-      'Disponibilità aggiornata al ': 'Saatavuus päivitetty: ',
-      'Invio…': 'Lähetetään…',
-      'Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.': 'Joku toinen otti tämän ajan juuri: valitse jokin jäljellä olevista.',
-      'Modifica inviata!': 'Muutos lähetetty!',
-      'Il tuo link per modificare la prenotazione': 'Linkkisi varauksen muuttamiseen',
-      'Ti aspettiamo ': 'Odotamme sinua: ',
-      'Non sono riuscita a inviare la richiesta. Controlla la connessione e riprova, oppure chiamaci.': 'Pyynnön lähettäminen epäonnistui. Tarkista yhteys ja yritä uudelleen tai soita meille.',
-      'Non sono riuscita ad annullare. Controlla la connessione e riprova, oppure chiamaci.': 'Peruuttaminen epäonnistui. Tarkista yhteys ja yritä uudelleen tai soita meille.'
-    }
-  };
-  LANGDATA.de = {
-    S: {
-      'Prenota un appuntamento': 'Termin buchen',
-      'La prenotazione online non è ancora attiva. Chiamaci per fissare un appuntamento.': 'Die Online-Buchung ist noch nicht aktiv. Rufen Sie uns an, um einen Termin zu vereinbaren.',
-      'La tua prenotazione': 'Ihre Buchung',
-      'Sposta o modifica': 'Verschieben oder ändern',
-      'Annulla appuntamento': 'Termin absagen',
-      'Vuoi davvero annullare?': 'Möchten Sie wirklich absagen?',
-      'Sì, annulla': 'Ja, absagen',
-      'No, lo tengo': 'Nein, behalten',
-      'Appuntamento annullato': 'Termin abgesagt',
-      'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Danke, dass Sie uns Bescheid gesagt haben. Sie können jederzeit einen neuen Termin buchen.',
-      'Lascia una recensione su Google': 'Hinterlassen Sie eine Bewertung bei Google',
-      'Prenota di nuovo': 'Erneut buchen',
-      'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'Sie ändern Ihre Buchung: Wählen Sie Leistung, Tag oder Uhrzeit neu und bestätigen Sie.',
-      'Lascia com\'è': 'Unverändert lassen',
-      'Servizio': 'Leistung',
-      'Con chi': 'Bei wem',
-      'Quando': 'Wann',
-      'Orario': 'Uhrzeit',
-      'I tuoi dati': 'Ihre Daten',
-      '— scegli —': '— auswählen —',
-      'Nome e cognome': 'Vor- und Nachname',
-      'Numero di telefono (anche WhatsApp)': 'Telefonnummer (auch WhatsApp)',
-      'Note (facoltativo)': 'Anmerkungen (optional)',
-      'I dati che scrivi qui sono trattati da': 'Die Daten, die Sie hier eingeben, verarbeitet',
-      'il salone': 'der Salon',
-      'solo per gestire la tua richiesta di appuntamento e per contattarti (anche su WhatsApp) per promemoria o variazioni di orario. Non vengono condivisi con terzi per scopi commerciali e si conservano solo per il tempo necessario a questo scopo. In qualsiasi momento puoi chiedere di vederli, correggerli o farli cancellare, scrivendo o chiamando il salone.': 'ausschließlich, um Ihre Terminanfrage zu bearbeiten und Sie (auch über WhatsApp) für Erinnerungen oder Terminänderungen zu kontaktieren. Sie werden nicht zu kommerziellen Zwecken an Dritte weitergegeben und nur so lange gespeichert, wie es für diesen Zweck nötig ist. Sie können jederzeit Auskunft, Berichtigung oder Löschung verlangen, indem Sie dem Salon schreiben oder ihn anrufen.',
-      'Leggi l\'informativa completa sulla privacy': 'Vollständige Datenschutzerklärung lesen',
-      'Ho letto l\'': 'Ich habe die ',
-      'informativa': 'Datenschutzerklärung',
-      'e acconsento al trattamento dei miei dati per gestire la richiesta di appuntamento.': 'gelesen und stimme der Verarbeitung meiner Daten zur Bearbeitung der Terminanfrage zu.',
-      'Richiedi appuntamento': 'Termin anfragen',
-      'Conferma modifica': 'Änderung bestätigen',
-      'Richiesta inviata!': 'Anfrage gesendet!',
-      'Se per qualche motivo quell\'orario non fosse più disponibile, ti contattiamo noi al numero che hai scritto.': 'Falls dieser Termin aus irgendeinem Grund nicht mehr verfügbar sein sollte, melden wir uns unter der angegebenen Nummer bei Ihnen.',
-      'Hai bisogno di cambiare giorno, orario o servizio? Salva questo link tra i preferiti: con quello puoi modificare la prenotazione quando vuoi.': 'Müssen Sie Tag, Uhrzeit oder Leistung ändern? Speichern Sie diesen Link in Ihren Lesezeichen: Damit können Sie Ihre Buchung jederzeit ändern.'
-    },
-    D: {
-      ' alle ': ' um ',
-      ' da ': ', bei ',
-      ' per ': ', Leistung: ',
-      'Un attimo…': 'Einen Moment…',
-      'Non ci sono orari liberi quel giorno: prova un\'altra data.': 'An diesem Tag sind keine Zeiten frei: Versuchen Sie ein anderes Datum.',
-      '{n} non ha orari liberi quel giorno: prova un\'altra data o un\'altra operatrice.': '{n} hat an diesem Tag keine freien Zeiten: Versuchen Sie ein anderes Datum oder eine andere Person.',
-      'Qualsiasi': 'Beliebig',
-      'Disponibilità aggiornata al ': 'Verfügbarkeit aktualisiert am ',
-      'Invio…': 'Wird gesendet…',
-      'Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.': 'Dieser Termin wurde gerade von jemand anderem gebucht: Bitte wählen Sie einen der verbleibenden.',
-      'Modifica inviata!': 'Änderung gesendet!',
-      'Il tuo link per modificare la prenotazione': 'Ihr Link zum Ändern der Buchung',
-      'Ti aspettiamo ': 'Wir erwarten Sie am ',
-      'Non sono riuscita a inviare la richiesta. Controlla la connessione e riprova, oppure chiamaci.': 'Die Anfrage konnte nicht gesendet werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut oder rufen Sie uns an.',
-      'Non sono riuscita ad annullare. Controlla la connessione e riprova, oppure chiamaci.': 'Die Absage hat nicht funktioniert. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut oder rufen Sie uns an.'
-    }
-  };
-  LANGDATA.ar = {
-    S: {
-      'Prenota un appuntamento': 'احجز موعدًا',
-      'La prenotazione online non è ancora attiva. Chiamaci per fissare un appuntamento.': 'الحجز عبر الإنترنت غير متاح بعد. اتصل بنا لتحديد موعد.',
-      'La tua prenotazione': 'حجزك',
-      'Sposta o modifica': 'نقل أو تعديل',
-      'Annulla appuntamento': 'إلغاء الموعد',
-      'Vuoi davvero annullare?': 'هل تريد الإلغاء فعلًا؟',
-      'Sì, annulla': 'نعم، إلغاء',
-      'No, lo tengo': 'لا، سأحتفظ به',
-      'Appuntamento annullato': 'تم إلغاء الموعد',
-      'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'شكرًا لإخبارنا. يمكنك حجز موعد آخر وقتما تشاء.',
-      'Lascia una recensione su Google': 'اترك تقييمًا على Google',
-      'Prenota di nuovo': 'احجز مرة أخرى',
-      'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'أنت تعدّل حجزك: غيّر الخدمة أو اليوم أو الوقت ثم أكّد.',
-      'Lascia com\'è': 'اتركه كما هو',
-      'Servizio': 'الخدمة',
-      'Con chi': 'مع مَن',
-      'Quando': 'متى',
-      'Orario': 'الوقت',
-      'I tuoi dati': 'بياناتك',
-      '— scegli —': '— اختر —',
-      'Nome e cognome': 'الاسم الكامل',
-      'Numero di telefono (anche WhatsApp)': 'رقم الهاتف (واتساب أيضًا)',
-      'Note (facoltativo)': 'ملاحظات (اختياري)',
-      'I dati che scrivi qui sono trattati da': 'البيانات التي تكتبها هنا يعالجها',
-      'il salone': 'الصالون',
-      'solo per gestire la tua richiesta di appuntamento e per contattarti (anche su WhatsApp) per promemoria o variazioni di orario. Non vengono condivisi con terzi per scopi commerciali e si conservano solo per il tempo necessario a questo scopo. In qualsiasi momento puoi chiedere di vederli, correggerli o farli cancellare, scrivendo o chiamando il salone.': 'فقط لإدارة طلب موعدك والتواصل معك (بما في ذلك عبر واتساب) للتذكير أو لتغيير الموعد. لا تُشارك مع أطراف ثالثة لأغراض تجارية، ولا تُحفظ إلا للمدة اللازمة لهذا الغرض. يمكنك في أي وقت طلب الاطلاع عليها أو تصحيحها أو حذفها بمراسلة الصالون أو الاتصال به.',
-      'Leggi l\'informativa completa sulla privacy': 'اقرأ سياسة الخصوصية كاملة',
-      'Ho letto l\'': 'لقد قرأت ',
-      'informativa': 'سياسة الخصوصية',
-      'e acconsento al trattamento dei miei dati per gestire la richiesta di appuntamento.': 'وأوافق على معالجة بياناتي لإدارة طلب الموعد.',
-      'Richiedi appuntamento': 'اطلب الموعد',
-      'Conferma modifica': 'تأكيد التعديل',
-      'Richiesta inviata!': 'تم إرسال الطلب!',
-      'Se per qualche motivo quell\'orario non fosse più disponibile, ti contattiamo noi al numero che hai scritto.': 'إذا لم يعد هذا الموعد متاحًا لأي سبب، فسنتصل بك على الرقم الذي كتبته.',
-      'Hai bisogno di cambiare giorno, orario o servizio? Salva questo link tra i preferiti: con quello puoi modificare la prenotazione quando vuoi.': 'هل تحتاج إلى تغيير اليوم أو الوقت أو الخدمة؟ احفظ هذا الرابط في المفضلة: يمكنك من خلاله تعديل حجزك في أي وقت.'
-    },
-    D: {
-      ' alle ': ' الساعة ',
-      ' da ': ' مع ',
-      ' per ': ' للخدمة: ',
-      'Un attimo…': 'لحظة…',
-      'Non ci sono orari liberi quel giorno: prova un\'altra data.': 'لا توجد أوقات متاحة في ذلك اليوم: جرّب تاريخًا آخر.',
-      '{n} non ha orari liberi quel giorno: prova un\'altra data o un\'altra operatrice.': 'لا توجد أوقات متاحة لدى {n} في ذلك اليوم: جرّب تاريخًا آخر أو شخصًا آخر.',
-      'Qualsiasi': 'أي شخص',
-      'Disponibilità aggiornata al ': 'تم تحديث التوفر في ',
-      'Invio…': 'جارٍ الإرسال…',
-      'Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.': 'حجز شخص آخر هذا الوقت للتو: اختر وقتًا آخر من المتبقي.',
-      'Modifica inviata!': 'تم إرسال التعديل!',
-      'Il tuo link per modificare la prenotazione': 'رابطك لتعديل الحجز',
-      'Ti aspettiamo ': 'بانتظارك يوم ',
-      'Non sono riuscita a inviare la richiesta. Controlla la connessione e riprova, oppure chiamaci.': 'تعذّر إرسال الطلب. تحقق من الاتصال وحاول مرة أخرى أو اتصل بنا.',
-      'Non sono riuscita ad annullare. Controlla la connessione e riprova, oppure chiamaci.': 'تعذّر الإلغاء. تحقق من الاتصال وحاول مرة أخرى أو اتصل بنا.'
-    }
-  };
-  // @@LANGDATA@@
-  const LINGUA_PAESE = { US: 'en', UA: 'uk', HR: 'hr', FI: 'fi', DE: 'de', EG: 'ar' };
-  function lingPag() { return LINGUA_PAESE[paesePag] || 'it'; }
+  function lingPag() { return 'en'; }
   function inglese() { return lingPag() === 'en'; }
-  function ucraino() { return lingPag() === 'uk'; }
-  function dizionarioPag() { const c = lingPag(); return c === 'en' ? EN : c === 'uk' ? UKD : (LANGDATA[c] ? LANGDATA[c].S : null); }
-  function L(it, en, uk) { const c = lingPag(); if (c === 'en') return en; if (c === 'uk') return uk; const d = LANGDATA[c]; return (d && d.D[it]) || it; }
+    function dizionarioPag() { return EN; }
+  function L(it, en) { return en; }
   function T(it) { const d = dizionarioPag(); return d && d[it] ? d[it] : it; }
   function traduciPagina() {
     const D = dizionarioPag();
     if (!D) return;
     document.documentElement.lang = lingPag();
-    document.documentElement.dir = lingPag() === 'ar' ? 'rtl' : 'ltr';
-    document.title = document.title.replace('Prenota un appuntamento', D['Prenota un appuntamento']);
+        document.title = document.title.replace('Prenota un appuntamento', D['Prenota un appuntamento']);
     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const nodi = []; while (w.nextNode()) nodi.push(w.currentNode);
     nodi.forEach(n => {
@@ -565,7 +302,7 @@
   function miaNelPassato() { return new Date(mia.d + 'T' + mia.o + ':00').getTime() < Date.now(); }
   function descrizioneMia() {
     return new Date(mia.d + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
-      L(' alle ', ' at ', ' о ') + mia.o + L(' da ', ' with ', ', майстер ') + (NOME_OPERATORE[mia.op] || mia.op) + (mia.sn ? L(' per ', ' for ', ', послуга ') + mia.sn : '') + '.';
+      (' at ') + mia.o + (' with ') + (NOME_OPERATORE[mia.op] || mia.op) + (mia.sn ? (' for ') + mia.sn : '') + '.';
   }
   function mostraTua() {
     const box = document.getElementById('tuaBox');
@@ -575,7 +312,7 @@
     box.hidden = false;
   }
   let disp = null; // dati pubblici letti da app/disponibilitaPubblica
-  function LOCALE_DATE() { return (disp && disp.paese === 'US') ? 'en-US' : (disp && disp.paese === 'UA') ? 'uk-UA' : (disp && disp.paese === 'HR') ? 'hr-HR' : (disp && disp.paese === 'FI') ? 'fi-FI' : (disp && disp.paese === 'DE') ? 'de-DE' : (disp && disp.paese === 'EG') ? 'ar-EG-u-nu-latn' : 'it-IT'; }
+  function LOCALE_DATE() { const p = disp && disp.paese; return p === 'US' ? 'en-US' : p === 'DE' ? 'en-DE' : p === 'FI' ? 'en-FI' : 'en-GB'; }
   let db = null;
   let servizioScelto = null;
   let operatoreScelto = null;
@@ -660,7 +397,7 @@
     aggiornaTastoInvia();
     if (!servizioScelto || !operatoreScelto || !data) { fs.hidden = true; return; }
     fs.hidden = false;
-    hint.textContent = L('Un attimo…', 'One moment…', 'Хвилинку…');
+    hint.textContent = ('One moment…');
     cont.innerHTML = '';
     // Ricarico le prenotazioni "appena fatte" da altri ogni volta, così chi sta scegliendo in
     // questo momento vede anche quello che altri hanno prenotato un minuto fa.
@@ -673,8 +410,8 @@
     cont.innerHTML = '';
     if (!slots.length) {
       hint.textContent = operatoreScelto === QUALSIASI
-        ? L('Non ci sono orari liberi quel giorno: prova un\'altra data.', 'No times available that day: try another date.', 'Немає вільного часу цього дня: оберіть іншу дату.')
-        : L('{n} non ha orari liberi quel giorno: prova un\'altra data o un\'altra operatrice.', '{n} has no times available that day: try another date or another team member.', '{n} не має вільного часу цього дня: оберіть іншу дату або іншого майстра.').replace('{n}', NOME_OPERATORE[operatoreScelto]);
+        ? ('No times available that day: try another date.')
+        : ('{n} has no times available that day: try another date or another team member.').replace('{n}', NOME_OPERATORE[operatoreScelto]);
       return;
     }
     hint.textContent = '';
@@ -729,7 +466,7 @@
     });
     if (operatriciAttive().length > 1) {
       const bq = document.createElement('button');
-      bq.type = 'button'; bq.className = 'op-btn'; bq.textContent = L('Qualsiasi', 'Any', 'Будь-хто');
+      bq.type = 'button'; bq.className = 'op-btn'; bq.textContent = ('Any');
       bq.addEventListener('click', () => {
         operatoreScelto = QUALSIASI;
         opCont.querySelectorAll('.op-btn').forEach(b => b.classList.toggle('scelto', b === bq));
@@ -750,7 +487,7 @@
     document.getElementById('campoConsenso').addEventListener('change', aggiornaTastoInvia);
 
     if (disp.generatoAt) {
-      document.getElementById('aggiornatoTxt').textContent = L('Disponibilità aggiornata al ', 'Availability updated on ', 'Доступність оновлено: ') + new Date(disp.generatoAt).toLocaleString(LOCALE_DATE());
+      document.getElementById('aggiornatoTxt').textContent = ('Availability updated on ') + new Date(disp.generatoAt).toLocaleString(LOCALE_DATE());
     }
 
     document.getElementById('formPrenota').addEventListener('submit', (e) => {
@@ -765,7 +502,7 @@
       const scelta = operatoreScelto, slot = slotScelto, servizio = servizioScelto;
       let operatore = scelta;
       const btn = document.getElementById('btnInvia');
-      btn.disabled = true; btn.textContent = L('Invio…', 'Sending…', 'Надсилання…');
+      btn.disabled = true; btn.textContent = ('Sending…');
       const testoBtn = modifica ? T('Conferma modifica') : T('Richiedi appuntamento');
       // Ultimo controllo, appena prima di inviare: nel caso qualcun altro abbia preso proprio
       // questo orario nei pochi secondi da quando è stata disegnata la lista.
@@ -774,7 +511,7 @@
         operatore = operatriceDelloSlot(scelta, data, slot, durataOcc(servizio));
         if (!ancoraLibero || !operatore) {
           btn.disabled = false; btn.textContent = testoBtn;
-          mostraErrore(L('Questo orario è stato appena preso da un\'altra persona: scegline un altro tra quelli rimasti.', 'This time was just taken by someone else: please choose another one from those left.', 'Цей час щойно зайняла інша людина: оберіть інший із тих, що залишилися.'));
+          mostraErrore(('This time was just taken by someone else: please choose another one from those left.'));
           disegnaSlot(data);
           return Promise.reject(new Error('slot-appena-preso'));
         }
@@ -799,16 +536,16 @@
         document.getElementById('modificaIntro').hidden = true;
         document.getElementById('formPrenota').hidden = true;
         document.getElementById('confermaBox').hidden = false;
-        document.querySelector('#confermaBox h2').textContent = eraModifica ? L('Modifica inviata!', 'Change sent!', 'Зміну надіслано!') : T('Richiesta inviata!');
+        document.querySelector('#confermaBox h2').textContent = eraModifica ? ('Change sent!') : T('Richiesta inviata!');
         const lk = document.getElementById('linkModifica');
-        lk.href = linkPersonale(); lk.textContent = L('Il tuo link per modificare la prenotazione', 'Your link to change your booking', 'Ваше посилання для зміни запису');
+        lk.href = linkPersonale(); lk.textContent = ('Your link to change your booking');
         document.getElementById('confermaTesto').textContent =
-          L('Ti aspettiamo ', 'We look forward to seeing you on ', 'Чекаємо на вас: ') + new Date(data + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
-          (L(' alle ', ' at ', ' о ') + slot + L(' da ', ' with ', ', майстер ') + NOME_OPERATORE[operatore] + L(' per ', ' for ', ', послуга ') + servizio.nome + '.');
+          ('We look forward to seeing you on ') + new Date(data + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
+          ((' at ') + slot + (' with ') + NOME_OPERATORE[operatore] + (' for ') + servizio.nome + '.');
       }).catch((err) => {
         if (err && err.message === 'slot-appena-preso') return;
         btn.disabled = false; btn.textContent = testoBtn;
-        mostraErrore(L('Non sono riuscita a inviare la richiesta. Controlla la connessione e riprova, oppure chiamaci.', 'Sorry, we could not send your request. Check your connection and try again, or call us.', 'Не вдалося надіслати запит. Перевірте зʼєднання та спробуйте ще раз або зателефонуйте нам.'));
+        mostraErrore(('Sorry, we could not send your request. Check your connection and try again, or call us.'));
       });
     });
   }
@@ -893,7 +630,7 @@
       document.getElementById('annullatoBox').hidden = false;
     }).catch(() => {
       b.disabled = false;
-      mostraErrore(L('Non sono riuscita ad annullare. Controlla la connessione e riprova, oppure chiamaci.', 'Sorry, we could not cancel. Check your connection and try again, or call us.', 'Не вдалося скасувати. Перевірте зʼєднання та спробуйте ще раз або зателефонуйте нам.'));
+      mostraErrore(('Sorry, we could not cancel. Check your connection and try again, or call us.'));
     });
   });
   document.getElementById('btnRiprenota').addEventListener('click', () => location.reload());
