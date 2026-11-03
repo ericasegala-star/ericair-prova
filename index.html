@@ -1904,7 +1904,7 @@
     return /^it/i.test(navigator.language || '') ? 'it' : 'en';
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
-  const APP_BUILD = "2026-11-03.152-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-03.153-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3977,9 +3977,9 @@
     return String(txt || '').split(/\n\s*\n/).map((blocco, gi) => {
       const righe = blocco.split('\n').map(r => r.trim()).filter(Boolean);
       if (!righe.length) return null;
-      // La prima riga è il titolo solo se c'è altro sotto e non contiene "|": altrimenti è già
-      // una voce (anche una voce sola, senza titolo).
-      const conTitolo = righe.length >= 2 && !righe[0].includes('|');
+      // La prima riga è il titolo solo se non contiene "|" e le righe sotto sì ("etichetta | tempo"):
+      // altrimenti ogni riga è una voce (anche una voce sola, senza titolo).
+      const conTitolo = righe.length >= 2 && !righe[0].includes('|') && righe.slice(1).some(r => r.includes('|'));
       return { key: 'g' + gi, title: conTitolo ? righe[0] : '', cols: (conTitolo ? righe.slice(1) : righe).map((r, ci) => {
         const p = r.split('|');
         return { key: 'c' + ci, label: p[0].trim(), hint: (p[1] || '').trim() };
