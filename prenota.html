@@ -561,6 +561,9 @@
     throw new Error('Configurazione Firebase mancante');
   }
   firebase.initializeApp(firebaseConfig);
+  // Connessione al database in modalita' "long polling": su Safari/iPad la connessione standard a volte resta in attesa
+  // per decine di secondi prima di ripiegare da sola su questa; cosi' si parte subito.
+  try { firebase.firestore().settings({ experimentalForceLongPolling: true, merge: true }); } catch (e) {}
   firebase.auth().signInAnonymously().catch(() => {}).then(() => {
     db = firebase.firestore();
     return db.doc('app/disponibilitaPubblica').get();
