@@ -515,6 +515,20 @@
   .line-block.lc2 .line-block-head { background: var(--glicine-soft); color: var(--glicine); }
   .line-block.lc3 .line-block-head { background: var(--copper-soft); color: var(--ink); }
   #settingsModal .settings-card { width: min(680px, 100%); }
+  .col-sub { color: var(--ink-soft); margin: 4px 0 18px; }
+  .col-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 18px; }
+  .col-card { border: 1px solid var(--line); border-radius: 12px; background: var(--paper-raised); padding: 16px 18px; }
+  .col-card.wide { grid-column: 1 / -1; }
+  .col-card h3 { margin: 0 0 4px; font-size: 17px; color: var(--berry); }
+  .col-card .col-lead { margin: 0 0 12px; color: var(--ink-soft); font-size: 14px; }
+  .col-card p, .col-card li { font-size: 14.5px; line-height: 1.5; }
+  .col-card ul { margin: 6px 0 0; padding-left: 20px; }
+  .col-fig { display: block; margin: 8px auto 10px; max-width: 100%; height: auto; }
+  .col-tbl { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 6px; }
+  .col-tbl th, .col-tbl td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .col-tbl th { font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
+  .col-chip { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: -2px; margin-right: 6px; border: 1px solid rgba(0,0,0,.15); }
+  .col-note { background: var(--copper-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-top: 10px; }
   .linea-nome { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
   .line-name-input { flex: 1; min-width: 0; background: transparent; border: 0; border-bottom: 1px dashed transparent; border-radius: 0; padding: 2px 0; font: inherit; color: inherit; }
   .line-name-input::placeholder { color: inherit; opacity: 0.55; }
@@ -1597,6 +1611,12 @@
             <span class="name" data-i18n="nav.servizi" data-it="Crea servizio">Create service</span>
           </div>
         </aside>
+        <aside class="panel notes-banner">
+          <div class="notes-banner-item" id="colorimetriaEntry">
+            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.4 6.4"/><circle cx="8" cy="9" r="1.2"/><circle cx="16" cy="8" r="1.2"/></svg></span>
+            <span class="name" data-it="Colorimetria">Colour theory</span>
+          </div>
+        </aside>
         <aside class="panel notes-banner" data-sezione-generica="1">
           <div class="notes-banner-item" id="consigliGenericiEntry">
             <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></svg></span>
@@ -1904,7 +1924,7 @@
     return /^it/i.test(navigator.language || '') ? 'it' : 'en';
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
-  const APP_BUILD = "2026-11-04.154-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.155-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3642,6 +3662,7 @@
 
   let viewingConsigliGenerici = false; // true quando il pannello principale mostra "Consigli generici"
   let viewingSchedaGenerica = false; // true quando il pannello principale mostra "Scheda generica"
+  let viewingColorimetria = false; // true quando il pannello principale mostra "Colorimetria"
 
   function contentSnapshot(c) {
     return JSON.parse(JSON.stringify({
@@ -3691,7 +3712,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     renderAll();
@@ -5318,7 +5339,7 @@
     ul.innerHTML = '';
     filtered.forEach(c => {
       const li = document.createElement('li');
-      li.className = (!viewingNotes && !viewingIspirazione && !viewingMagazzino && !viewingServizi && !viewingAnagrafica && !viewingAgenda && !viewingSearchApp && !viewingBlankSheet && !viewingOstwald && !viewingCatalogoHp && !viewingConsigliGenerici && !viewingSchedaGenerica && !viewingHome && c.id === activeId) ? 'active' : '';
+      li.className = (!viewingNotes && !viewingIspirazione && !viewingMagazzino && !viewingServizi && !viewingAnagrafica && !viewingAgenda && !viewingSearchApp && !viewingBlankSheet && !viewingOstwald && !viewingCatalogoHp && !viewingConsigliGenerici && !viewingSchedaGenerica && !viewingColorimetria && !viewingHome && c.id === activeId) ? 'active' : '';
       const mesiRic = appSettingsCache.mesiRicontatto;
       const daRicontattare = mesiRic && (Date.now() - c.updatedAt) >= mesiRic * 30 * 24 * 3600 * 1000;
       li.innerHTML = `<span class="name">${escapeHtml(c.nome || I("Senza nome", "Unnamed"))}${daRicontattare ? I("<span class=\"recontact-badge\">Da ricontattare</span>", "<span class=\"recontact-badge\">To follow up</span>") : ''}</span><span class="date">${fmtDate(c.updatedAt)}</span>`;
@@ -5348,6 +5369,8 @@
     if (catalogoHpEntry) catalogoHpEntry.className = 'notes-banner-item' + (viewingCatalogoHp ? ' active' : '');
     const consigliGenericiEntry = document.getElementById('consigliGenericiEntry');
     if (consigliGenericiEntry) consigliGenericiEntry.className = 'notes-banner-item' + (viewingConsigliGenerici ? ' active' : '');
+    const colorimetriaEntry = document.getElementById('colorimetriaEntry');
+    if (colorimetriaEntry) colorimetriaEntry.className = 'notes-banner-item' + (viewingColorimetria ? ' active' : '');
     const schedaGenericaEntry = document.getElementById('schedaGenericaEntry');
     if (schedaGenericaEntry) schedaGenericaEntry.className = 'notes-banner-item' + (viewingSchedaGenerica ? ' active' : '');
   }
@@ -5424,6 +5447,7 @@
     viewingCatalogoHp = false;
     viewingConsigliGenerici = flagDaAttivare === 'consigliGenerici';
     viewingSchedaGenerica = flagDaAttivare === 'schedaGenerica';
+    viewingColorimetria = flagDaAttivare === 'colorimetria';
     viewingHome = false;
     closeMobileMenu();
     renderAll();
@@ -6192,6 +6216,140 @@
     saveServizi();
     renderSheet();
   }
+
+  // ---- Colorimetria: pagina di consultazione (testi e disegni originali) ----
+  function colorimetriaHtml() {
+    const LIV = ['#1d1511','#2e1f16','#43301d','#5c4022','#7a5a2f','#9c7a41','#bf9c58','#d9ba76','#ebd596','#f6ebbb'];
+    const PIG = ['#8a2a1c','#9b2f1c','#b73a1c','#d2491c','#e0601c','#ee7f1c','#f4a21e','#f6c224','#f7da4a','#fbeb96'];
+    const PIGN = [I("rosso scuro", "dark red"), I("rosso scuro", "dark red"), I("rosso", "red"), I("rosso-arancio", "red-orange"), I("arancio", "orange"), I("arancio", "orange"), I("arancio-giallo", "orange-yellow"), I("giallo", "yellow"), I("giallo chiaro", "light yellow"), I("giallo pallido", "pale yellow")];
+    const LIVN = [I("Nero", "Black"), I("Castano scurissimo", "Very dark brown"), I("Castano scuro", "Dark brown"), I("Castano", "Brown"), I("Castano chiaro", "Light brown"), I("Biondo scuro", "Dark blonde"), I("Biondo", "Blonde"), I("Biondo chiaro", "Light blonde"), I("Biondo chiarissimo", "Very light blonde"), I("Biondo platino", "Platinum blonde")];
+    // scala dei livelli: 10 riquadri
+    const sw = 56, scala = `<svg class="col-fig" viewBox="0 0 ${sw * 10} 150" width="560" role="img" aria-label="${I("Scala dei livelli da 1 a 10", "Scale of levels 1 to 10")}">` +
+      LIV.map((c, i) => `<rect x="${i * sw}" y="0" width="${sw - 3}" height="56" rx="6" fill="${c}"/><text x="${i * sw + (sw - 3) / 2}" y="76" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor">${i + 1}</text><rect x="${i * sw}" y="88" width="${sw - 3}" height="34" rx="6" fill="${PIG[i]}"/>`).join('') +
+      `<text x="0" y="144" font-size="11" fill="currentColor" opacity=".7">${I("sopra: livello · sotto: pigmento che compare quando schiarisci", "top: level · bottom: pigment that shows when you lighten")}</text></svg>`;
+    // sezione del capello
+    const sezione = `<svg class="col-fig" viewBox="0 0 300 170" width="300" role="img" aria-label="${I("Sezione del capello: cuticola, corteccia, midollo", "Hair cross-section: cuticle, cortex, medulla")}">
+      <circle cx="90" cy="85" r="74" fill="#e8d9cc" stroke="#9c7a41" stroke-width="3" stroke-dasharray="6 4"/>
+      <circle cx="90" cy="85" r="60" fill="#c98f6a"/>
+      <circle cx="90" cy="85" r="18" fill="#f6efe8" stroke="#9c7a41" stroke-width="1.5"/>
+      ${[[70,70],[110,68],[62,98],[116,100],[90,50],[90,120],[74,84],[104,86]].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3.2" fill="#6b3b22"/>`).join('')}
+      <g font-size="12.5" fill="currentColor"><line x1="150" y1="30" x2="125" y2="38" stroke="currentColor" opacity=".5"/><text x="156" y="34">${I("cuticola (la porta)", "cuticle (the door)")}</text>
+      <line x1="150" y1="85" x2="130" y2="100" stroke="currentColor" opacity=".5"/><text x="160" y="89">${I("corteccia (il colore)", "cortex (the colour)")}</text>
+      <line x1="150" y1="140" x2="100" y2="92" stroke="currentColor" opacity=".5"/><text x="156" y="144">${I("midollo (non conta)", "medulla (rarely matters)")}</text></g></svg>`;
+    // cerchio cromatico
+    const H = ['#f2d21b','#f3b21b','#ef8a1c','#e5502a','#d42a3c','#b02a6b','#7d3a95','#4a4aa8','#2f6fb5','#2a9a9a','#3fa74b','#9cc43a'];
+    const pt = (r, a) => [100 + r * Math.sin(a * Math.PI / 180), 100 - r * Math.cos(a * Math.PI / 180)];
+    const spicchio = (i) => { const a0 = i * 30 - 15, a1 = i * 30 + 15, [x0,y0] = pt(92, a0), [x1,y1] = pt(92, a1), [x2,y2] = pt(38, a1), [x3,y3] = pt(38, a0); return `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} A92 92 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)} A38 38 0 0 0 ${x3.toFixed(1)} ${y3.toFixed(1)} Z" fill="${H[i]}" stroke="#fff" stroke-width="2"/>`; };
+    const ruota = `<svg class="col-fig" viewBox="0 0 200 200" width="230" role="img" aria-label="${I("Cerchio cromatico a 12 colori", "12-colour colour wheel")}">${H.map((_, i) => spicchio(i)).join('')}
+      <line x1="${pt(38,0)[0]}" y1="${pt(38,0)[1]}" x2="${pt(38,180)[0]}" y2="${pt(38,180)[1]}" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="${pt(38,120)[0].toFixed(1)}" y1="${pt(38,120)[1].toFixed(1)}" x2="${pt(38,300)[0].toFixed(1)}" y2="${pt(38,300)[1].toFixed(1)}" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="${pt(38,60)[0].toFixed(1)}" y1="${pt(38,60)[1].toFixed(1)}" x2="${pt(38,240)[0].toFixed(1)}" y2="${pt(38,240)[1].toFixed(1)}" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3"/></svg>`;
+    const chip = (c) => `<span class="col-chip" style="background:${c}"></span>`;
+    const riga2 = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
+    const riga = (a, b, c) => `<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`;
+    return `
+      <div class="sheet-head"><div class="name-field">
+        <div class="notes-title">${I("Colorimetria", "Colour theory")}</div>
+        <div class="sub col-sub">${I("Le nozioni di base, in una pagina da consultare quando serve. Valgono con qualsiasi marca.", "The essentials on one page to check whenever you need it. They apply to any brand.")}</div>
+      </div></div>
+      <div class="col-grid">
+        <section class="col-card">
+          <h3>${I("Com’è fatto il capello", "What a hair is made of")}</h3>
+          <p class="col-lead">${I("Non è un filo pieno: sono tre strati e il colore lavora in uno solo.", "It is not a solid thread: it has three layers and colour only works in one.")}</p>
+          ${sezione}
+          <ul>
+            <li>${I("La <b>cuticola</b> è fatta di scaglie sovrapposte, come le tegole di un tetto: se si aprono, il colore entra e può uscire.", "The <b>cuticle</b> is made of overlapping scales, like roof tiles: when they open, colour can get in and out.")}</li>
+            <li>${I("La <b>corteccia</b> contiene la melanina, cioè il colore naturale: è qui che si schiarisce e si depositano i pigmenti.", "The <b>cortex</b> holds the melanin, the natural colour: this is where lightening and deposit happen.")}</li>
+            <li>${I("Un capello poroso ha le scaglie sollevate: prende colore in fretta ma lo perde in fretta.", "Porous hair has raised scales: it takes colour quickly but loses it quickly.")}</li>
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Altezza di tono: da 1 a 10", "Level: from 1 to 10")}</h3>
+          <p class="col-lead">${I("1 è il nero, 10 il biondo più chiaro. Si guarda sempre il capello asciutto, alla luce naturale.", "1 is black, 10 is the lightest blonde. Always check dry hair in natural light.")}</p>
+          ${scala}
+          <table class="col-tbl"><thead><tr><th>${I("Livello", "Level")}</th><th>${I("Nome", "Name")}</th><th>${I("Fondo che esce", "Underlying pigment")}</th></tr></thead><tbody>
+          ${LIV.map((c, i) => riga(`${chip(c)}${i + 1}`, LIVN[i], `${chip(PIG[i])}${PIGN[i]}`)).join('')}
+          </tbody></table>
+          <div class="col-note">${I("Schiarendo, il capello non diventa subito biondo: attraversa questi fondi. Se ti fermi prima, il fondo resta e si vede.", "When you lighten, hair does not go straight to blonde: it passes through these underlying pigments. Stop too early and the pigment stays visible.")}</div>
+        </section>
+        <section class="col-card">
+          <h3>${I("Il cerchio dei colori", "The colour wheel")}</h3>
+          <p class="col-lead">${I("Ti dice quale colore ne cancella un altro.", "It tells you which colour cancels another.")}</p>
+          ${ruota}
+          <ul>
+            <li>${I("<b>Primari</b>: giallo, rosso, blu. Non si ottengono mescolando altri colori.", "<b>Primary</b>: yellow, red, blue. They cannot be made by mixing others.")}</li>
+            <li>${I("<b>Secondari</b>: arancio, viola, verde: nascono dall’unione di due primari.", "<b>Secondary</b>: orange, violet, green: each is a mix of two primaries.")}</li>
+            <li>${I("<b>Complementari</b>: stanno uno di fronte all’altro. Mescolati si annullano e danno un tono neutro.", "<b>Complementary</b>: they sit opposite each other. Mixed together they cancel out and give a neutral tone.")}</li>
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Neutralizzare un riflesso indesiderato", "Neutralising an unwanted tone")}</h3>
+          <p class="col-lead">${I("Si usa il colore opposto a quello che vuoi togliere.", "Use the opposite of the colour you want to remove.")}</p>
+          <table class="col-tbl"><thead><tr><th>${I("Se vedi", "If you see")}</th><th>${I("Usa", "Use")}</th><th>${I("Riflesso tipico", "Typical tone")}</th></tr></thead><tbody>
+          ${riga(`${chip('#f2d21b')}${I("giallo", "yellow")}`, `${chip('#7d3a95')}${I("viola", "violet")}`, I("viola / perla", "violet / pearl"))}
+          ${riga(`${chip('#ef8a1c')}${I("arancio", "orange")}`, `${chip('#2f6fb5')}${I("blu", "blue")}`, I("cenere / blu", "ash / blue"))}
+          ${riga(`${chip('#d42a3c')}${I("rosso", "red")}`, `${chip('#3fa74b')}${I("verde", "green")}`, I("opaco / verde", "matte / green"))}
+          ${riga(`${chip('#9cc43a')}${I("verde", "green")}`, `${chip('#d42a3c')}${I("rosso", "red")}`, I("rosso / rame", "red / copper"))}
+          </tbody></table>
+          <div class="col-note">${I("Il riflesso neutralizzante è più forte di quanto sembra: su un fondo molto chiaro una punta basta, di più sporca.", "A neutralising tone is stronger than it looks: on a very light base a touch is enough, more will muddy it.")}</div>
+        </section>
+        <section class="col-card">
+          <h3>${I("Ossigeno e volumi", "Developer and volumes")}</h3>
+          <p class="col-lead">${I("Più volumi, più schiarisce. Per colorare senza schiarire se ne usano pochi.", "More volumes, more lift. To colour without lightening, use fewer.")}</p>
+          <table class="col-tbl"><thead><tr><th>${I("Volumi", "Volumes")}</th><th>%</th><th>${I("Quando", "When")}</th></tr></thead><tbody>
+          ${riga('10', '3%', I("tono su tono, riflessi, capelli delicati", "tone on tone, glossing, delicate hair"))}
+          ${riga('20', '6%', I("copertura dei bianchi, 1–2 toni di schiaritura", "grey coverage, 1–2 levels of lift"))}
+          ${riga('30', '9%', I("circa 2–3 toni di schiaritura", "about 2–3 levels of lift"))}
+          ${riga('40', '12%', I("circa 3–4 toni, solo su capelli sani", "about 3–4 levels, healthy hair only"))}
+          </tbody></table>
+          <div class="col-note">${I("I numeri sono indicativi: leggi sempre le istruzioni della marca che stai usando.", "These numbers are approximate: always read the instructions of the brand you use.")}</div>
+        </section>
+        <section class="col-card">
+          <h3>${I("I riflessi: a cosa corrispondono", "Tones: what they stand for")}</h3>
+          <p class="col-lead">${I("La numerazione dopo il punto cambia da marca a marca: controlla la cartella colori.", "The numbers after the dot change from brand to brand: check your shade chart.")}</p>
+          <table class="col-tbl"><thead><tr><th>${I("Famiglia", "Family")}</th><th>${I("Effetto", "Effect")}</th></tr></thead><tbody>
+          ${riga2(I("Cenere / blu", "Ash / blue"), I("raffredda, toglie il caldo", "cools, removes warmth"))}
+          ${riga2(I("Perla / viola", "Pearl / violet"), I("toglie il giallo, effetto perlato", "removes yellow, pearly effect"))}
+          ${riga2(I("Dorato / giallo", "Gold / yellow"), I("scalda e dà luce", "warms and brightens"))}
+          ${riga2(I("Rame / arancio", "Copper / orange"), I("riflesso vivace e caldo", "bright, warm tone"))}
+          ${riga2(I("Rosso / mogano", "Red / mahogany"), I("intenso, tende a sbiadire prima", "intense, tends to fade sooner"))}
+          ${riga2(I("Opaco / verde", "Matte / green"), I("neutralizza il rosso", "neutralises red"))}
+          ${riga2(I("Beige / naturale", "Beige / natural"), I("neutro, resa naturale", "neutral, natural result"))}
+          </tbody></table>
+        </section>
+        <section class="col-card">
+          <h3>${I("Capelli bianchi", "Grey hair")}</h3>
+          <ul>
+            <li>${I("Il bianco non è un colore: è assenza di pigmento, e le scaglie sono spesso più chiuse.", "Grey is not a colour: it is missing pigment, and the scales are often more closed.")}</li>
+            <li>${I("Fino al 30% circa basta di solito la tinta normale; oltre, serve una base naturale del livello giusto.", "Up to about 30% a normal formula usually works; beyond that you need a natural base at the right level.")}</li>
+            <li>${I("Per i toni molto chiari o freddi, prepara il capello prima, altrimenti il bianco prende male.", "For very light or cool tones, pre-pigment first, otherwise the grey will not take.")}</li>
+            <li>${I("Davanti e dietro possono avere percentuali diverse: valutale separatamente.", "Front and back can have different percentages: assess them separately.")}</li>
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Quando il colore esce storto", "When the colour goes wrong")}</h3>
+          <table class="col-tbl"><thead><tr><th>${I("Problema", "Problem")}</th><th>${I("Causa probabile", "Likely cause")}</th></tr></thead><tbody>
+          ${riga2(I("Troppo caldo / arancio", "Too warm / orange"), I("schiaritura ferma troppo presto o riflesso freddo troppo debole", "lightening stopped too early or cool tone too weak"))}
+          ${riga2(I("Radici più chiare delle lunghezze", "Roots lighter than lengths"), I("il calore della testa schiarisce di più alla radice", "scalp heat lifts more at the root"))}
+          ${riga2(I("Punte più scure", "Darker ends"), I("capello poroso che assorbe troppo", "porous hair absorbing too much"))}
+          ${riga2(I("Verdognolo", "Greenish"), I("base troppo cenere su capello senza fondo caldo", "ash base on hair without warm undertone"))}
+          ${riga2(I("Colore che sbiadisce subito", "Colour fades fast"), I("scaglie aperte, acqua molto calda, shampoo aggressivi", "open scales, very hot water, harsh shampoos"))}
+          </tbody></table>
+        </section>
+        <section class="col-card wide">
+          <h3>${I("Prima di mescolare, chiediti", "Before you mix, ask yourself")}</h3>
+          <ul>
+            <li>${I("Che livello ho adesso, alla radice, nelle lunghezze e nelle punte?", "What level am I at now, at the root, lengths and ends?")}</li>
+            <li>${I("Che livello voglio ottenere, e di quanti toni devo schiarire?", "What level do I want, and how many levels do I need to lift?")}</li>
+            <li>${I("Quale fondo uscirà, e quale riflesso mi serve per neutralizzarlo?", "Which underlying pigment will show, and which tone cancels it?")}</li>
+            <li>${I("Ci sono colori vecchi, henné o trattamenti che cambiano il risultato?", "Is there old colour, henna or treatment that changes the result?")}</li>
+            <li>${I("Quanti bianchi ci sono e dove?", "How much grey is there, and where?")}</li>
+            <li>${I("Il capello è sano abbastanza per reggere il trattamento?", "Is the hair healthy enough for the service?")}</li>
+          </ul>
+        </section>
+      </div>`;
+  }
+
   function renderSheet() {
     const panel = document.getElementById('sheetPanel');
     const floatingSave = document.getElementById('floatingSaveBtn');
@@ -6436,6 +6594,12 @@
       panel.innerHTML = `${I("\n        <div class=\"sheet-head\">\n          <div class=\"name-field\">\n            <div class=\"notes-title\">Consigli generici</div>\n            <div class=\"sub\">Nozioni di colorimetria di base, valide con qualsiasi marca.</div>\n          </div>\n        </div>\n        <div class=\"notes-static\">\n          ", "\n        <div class=\"sheet-head\">\n          <div class=\"name-field\">\n            <div class=\"notes-title\">Generic tips</div>\n            <div class=\"sub\">Basic colour theory, valid with any brand.</div>\n          </div>\n        </div>\n        <div class=\"notes-static\">\n          ")}${GENERIC_TIPS_HTML}
         </div>
       `;
+      return;
+    }
+
+    if (viewingColorimetria) {
+      if (floatingSave) floatingSave.hidden = true;
+      panel.innerHTML = colorimetriaHtml();
       return;
     }
 
@@ -8709,7 +8873,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     searchTerm = "";
@@ -8779,7 +8943,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -8797,7 +8961,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -8816,7 +8980,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     magazzinoSearchTerm = "";
@@ -8840,7 +9004,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -8851,7 +9015,7 @@
   // Consigli generici: contenuto fisso, come "Disco di Newton" — nessun caricamento da db.
   document.querySelectorAll('[data-sezione-generica]').forEach(el => { el.style.display = SEZIONI_GENERICHE_VISIBILI ? '' : 'none'; });
   document.getElementById('consigliGenericiEntry').addEventListener('click', () => {
-    viewingConsigliGenerici = true;
+    viewingConsigliGenerici = true; viewingColorimetria = false;
     viewingServizi = false; viewingAnagrafica = false;
     viewingMagazzino = false;
     viewingNotes = false;
@@ -8866,9 +9030,13 @@
     renderAll();
   });
 
+  document.getElementById('colorimetriaEntry').addEventListener('click', () => {
+    chiudiAltreSezioniEApri('colorimetria');
+  });
+
   // Scheda generica: stesso comportamento di "Crea servizio" (si salva da sola)
   document.getElementById('schedaGenericaEntry').addEventListener('click', () => {
-    viewingSchedaGenerica = true;
+    viewingSchedaGenerica = true; viewingColorimetria = false;
     viewingServizi = false; viewingAnagrafica = false;
     viewingMagazzino = false;
     viewingNotes = false;
@@ -8877,7 +9045,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingHome = false;
     closeMobileMenu();
     renderAll();
@@ -8899,7 +9067,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -8920,7 +9088,7 @@
     viewingSearchApp = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -8938,7 +9106,7 @@
     viewingSearchApp = false;
     viewingBlankSheet = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -8949,7 +9117,7 @@
   // stesso comportamento delle altre voci fisse del menu.
   document.getElementById('catalogoHpEntry').addEventListener('click', () => {
     viewingCatalogoHp = true;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingNotes = false;
     viewingIspirazione = false;
@@ -8977,7 +9145,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = true;
     closeMobileMenu();
@@ -9003,7 +9171,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false;
     viewingSchedaGenerica = false;
     viewingHome = true;
     closeMobileMenu();
@@ -9043,6 +9211,7 @@
         viewingCatalogoHp = tecnicoViewSnapshot.viewingCatalogoHp;
         viewingConsigliGenerici = tecnicoViewSnapshot.viewingConsigliGenerici;
         viewingSchedaGenerica = tecnicoViewSnapshot.viewingSchedaGenerica;
+        viewingColorimetria = !!tecnicoViewSnapshot.viewingColorimetria;
         viewingHome = tecnicoViewSnapshot.viewingHome;
         activeId = tecnicoViewSnapshot.activeId;
         tecnicoViewSnapshot = null;
@@ -9054,7 +9223,7 @@
   if (modeTricologoBtn) {
     modeTricologoBtn.addEventListener('click', () => {
       viewingTricologo = true;
-      tecnicoViewSnapshot = { viewingNotes, viewingIspirazione, viewingMagazzino, viewingServizi, viewingAnagrafica, viewingAgenda, viewingSearchApp, viewingBlankSheet, viewingOstwald, viewingCatalogoHp, viewingConsigliGenerici, viewingSchedaGenerica, viewingHome, activeId };
+      tecnicoViewSnapshot = { viewingNotes, viewingIspirazione, viewingMagazzino, viewingServizi, viewingAnagrafica, viewingAgenda, viewingSearchApp, viewingBlankSheet, viewingOstwald, viewingCatalogoHp, viewingConsigliGenerici, viewingSchedaGenerica, viewingColorimetria, viewingHome, activeId };
       viewingNotes = false;
       viewingIspirazione = false;
       viewingMagazzino = false;
@@ -9063,7 +9232,7 @@
       viewingBlankSheet = false;
       viewingOstwald = false;
       viewingCatalogoHp = false;
-      viewingConsigliGenerici = false;
+      viewingConsigliGenerici = false; viewingColorimetria = false;
       viewingSchedaGenerica = false;
       viewingHome = false;
       viewingAgenda = true; // Tricologia riparte sempre sull'Agenda
