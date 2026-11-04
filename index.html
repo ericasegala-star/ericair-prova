@@ -1582,6 +1582,12 @@
           </div>
         </aside>
         <aside class="panel notes-banner">
+          <div class="notes-banner-item" id="colorimetriaEntry">
+            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.4 6.4"/><circle cx="8" cy="9" r="1.2"/><circle cx="16" cy="8" r="1.2"/></svg></span>
+            <span class="name" data-it="Colorimetria">Colour theory</span>
+          </div>
+        </aside>
+        <aside class="panel notes-banner">
           <div class="notes-banner-item" id="ostwaldEntry">
             <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v8.5l6 4.5"/></svg></span>
             <span class="name" data-i18n="nav.discoNewton" data-it="Disco di Newton">Color wheel</span>
@@ -1609,12 +1615,6 @@
           <div class="notes-banner-item" id="serviziEntry">
             <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><path d="M8 7.5 19 18M8 16.5 19 6"/></svg></span>
             <span class="name" data-i18n="nav.servizi" data-it="Crea servizio">Create service</span>
-          </div>
-        </aside>
-        <aside class="panel notes-banner">
-          <div class="notes-banner-item" id="colorimetriaEntry">
-            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.4 6.4"/><circle cx="8" cy="9" r="1.2"/><circle cx="16" cy="8" r="1.2"/></svg></span>
-            <span class="name" data-it="Colorimetria">Colour theory</span>
           </div>
         </aside>
         <aside class="panel notes-banner" data-sezione-generica="1">
@@ -1924,7 +1924,7 @@
     return /^it/i.test(navigator.language || '') ? 'it' : 'en';
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
-  const APP_BUILD = "2026-11-04.155-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.156-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
