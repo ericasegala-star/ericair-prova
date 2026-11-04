@@ -1766,6 +1766,8 @@
       <p class="hint" data-i18n="settings.recontact.hint" data-it="Chi non ha una scheda compilata o salvata da più di così tanto tempo riceve un bollino &quot;Da ricontattare&quot; nell'elenco a sinistra.">Anyone without a record filled in or saved for longer than this gets a "Follow up" tag in the list on the left.</p>
     </div>
 
+    <details id="settingsDiagnostica" style="margin:14px 0"><summary data-i18n="settings.diag" data-it="Diagnostica">Diagnostics</summary><div class="storage-usage" id="appDiagnosticsFull" style="margin-top:8px"></div></details>
+
     <div class="settings-actions">
       <button type="button" class="ghost small" id="settingsResetBtn" data-i18n="settings.reset" data-it="Ripristina aspetto predefinito">Restore default appearance</button>
       <button type="button" class="ghost small" id="settingsLogoutBtn" hidden data-it="Esci dall'account">Sign out</button>
@@ -1927,7 +1929,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-04.162-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.163-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -2316,9 +2318,12 @@
 
   function renderDiagnostics(extra) {
     const el = document.getElementById('appDiagnostics');
-    if (!el) return;
-    el.textContent = I("Diagnostica — versione: ", "Diagnostics — version: ") + APP_BUILD + I(" · salvataggio: ", " · saving: ") + (db ? I("attivo", "active") : I("NON disponibile", "NOT available")) +
-      I(" · schede: ", " · cards: ") + clients.length +
+    const full = document.getElementById('appDiagnosticsFull');
+    if (el) el.textContent = I("Versione: ", "Version: ") + APP_BUILD;
+    if (!full) return;
+    const tecniche = clients.filter(c => !c.soloAnagrafica).length;
+    full.textContent = I("Versione: ", "Version: ") + APP_BUILD + I(" · salvataggio: ", " · saving: ") + (db ? I("attivo", "active") : I("NON disponibile", "NOT available")) +
+      I(" · Clienti in anagrafica ", " · Clients in the directory ") + clients.length + I(" di cui ", ", of which ") + tecniche + I(" schede tecniche", " technical cards") +
       I(" · ultimo backup: ", " · last backup: ") + (appBackupCache.ultimoBackupAt ? fmtDate(appBackupCache.ultimoBackupAt) : I("mai", "never")) +
       (__marks.pronto ? I(' · avvio (s): ', ' · startup (s): ') + Object.keys(__marks).map(k => k + ' ' + (__marks[k] / 1000).toFixed(1)).join(', ') : '') +
       (extra ? ' · ' + extra : '');
