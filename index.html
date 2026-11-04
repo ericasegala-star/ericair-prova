@@ -1929,7 +1929,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-04.164-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.165-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -2514,17 +2514,9 @@
   function appuntiDocPath(section) {
     return 'appunti/' + section;
   }
-  // In precedenza gli appunti erano separati per persona (appunti/{sezione}-la titolare,
-  // appunti/{sezione}-un'altra operatrice). Li si riporta in un unico posto condiviso, una volta, senza
-  // perdere nulla: si prendono quelli di "la titolare" (dove di fatto finivano comunque, visto che
-  // ogni dispositivo si registrava come "la titolare") più eventuali appunti scritti sotto "un'altra operatrice".
+  // Gli appunti sono del salone, chiunque li scriva: un unico posto condiviso.
   function migrateLegacyAppuntiIfNeeded(docs) {
-    const sections = ['time', 'green', 'gloss'];
-    // Si controllano i vecchi appunti separati solo se quelli condivisi risultano ancora vuoti:
-    // una volta migrati (o appena si scrive qualcosa nel posto condiviso), non si deve più
-    // tornare a leggerli, altrimenti un vecchio appunto "zombie" rimasto sotto "-la titolare"
-    // continuerebbe a sovrascrivere quello che si scrive dopo nel posto condiviso.
-    return Promise.resolve(docs); // nessuna migrazione: installazione nuova
+    return Promise.resolve(docs);
   }
   function loadAppunti(section) { return appuntiCache[section] || []; }
   function saveAppunti(section, list) {
@@ -4145,7 +4137,7 @@
 
   // Normalizza un nome di marca/fornitore per il confronto: minuscolo, senza accenti/punteggiatura
   // e senza le sigle societarie più comuni (SpA, Srl, Sas, Snc, S.p.A., S.r.l., & C., ecc.), così
-  // "Davines" e "Davines SpA" vengono riconosciuti come la stessa azienda.
+  // "Marca A" e "Marca A SpA" vengono riconosciuti come la stessa azienda.
   function normalizzaMarca(s) {
     let n = (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     n = n.replace(/[.·]/g, '').replace(/&\s*c\b/g, '');
@@ -4542,7 +4534,7 @@
     const suffisso = nomeFornitore ? '-' + String(nomeFornitore).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '';
     await saveBlobAsFile(blob, 'lista-riordini' + suffisso + '-' + fmtDate(Date.now()).replace(/\//g, '-') + '.pdf');
   }
-  // ---- Anagrafica fornitori (Erica, 31/10): nome (uguale alla marca in magazzino), email,
+  // ---- Anagrafica fornitori : nome (uguale alla marca in magazzino), email,
   // WhatsApp e referente, per preparare in un tocco la mail o il messaggio di riordino. Si salva
   // dentro lo stesso documento del magazzino (app/magazzino, campo "fornitori"). ----
   function fornitoreDiMarca(marca) {
@@ -4612,7 +4604,7 @@
     renderFornitoriModal();
     modal.hidden = false;
   }
-  // Scelta del fornitore (richiesta di Erica, 31/10): se i prodotti da riordinare sono di più
+  // Scelta del fornitore : se i prodotti da riordinare sono di più
   // fornitori, prima di scaricare si scelgono quali includere (di default tutti). Con un solo
   // fornitore si scarica subito, senza chiedere niente.
   function scaricaListaRiordini() {
@@ -5721,7 +5713,7 @@
         <div class="magazzino-row-check-col">
           <input type="checkbox" class="magazzino-row-check" data-id="${p.id}" ${selezionato ? 'checked' : ''}${I(" title=\"Seleziona per eliminare\">\n        </div>\n        <div class=\"field magazzino-field-nome\">\n          <textarea class=\"magazzino-input magazzino-nome-area\" rows=\"1\" wrap=\"off\" data-id=\"", " title=\"Select to delete\">\n        </div>\n        <div class=\"field magazzino-field-nome\">\n          <textarea class=\"magazzino-input magazzino-nome-area\" rows=\"1\" wrap=\"off\" data-id=\"")}${p.id}${I("\" data-field=\"nome\" placeholder=\"Es. Shampoo ricostruttore\">", "\" data-field=\"nome\" placeholder=\"E.g. Repair shampoo\">")}${escapeHtml(p.nome || '')}</textarea>
           ${sottoSoglia ? I("<span class=\"magazzino-sotto-soglia-badge\" title=\"Sotto la quantità minima impostata\">Da riordinare</span>", "<span class=\"magazzino-sotto-soglia-badge\" title=\"Below the minimum quantity set\">To reorder</span>") : ''}${I("\n          <div class=\"magazzino-nome-resizer\" title=\"Trascina per allargare o stringere la colonna Prodotto (su tutte le righe)\"></div>\n        </div>\n        <div class=\"field magazzino-field-tipo\">\n          <select class=\"magazzino-input magazzino-select", "\n          <div class=\"magazzino-nome-resizer\" title=\"Drag to widen or narrow the Product column (on all rows)\"></div>\n        </div>\n        <div class=\"field magazzino-field-tipo\">\n          <select class=\"magazzino-input magazzino-select")}${p.tipo ? '' : ' magazzino-select-unset'}" data-id="${p.id}" data-field="tipo">
-            <option value="" ${!p.tipo ? 'selected' : ''}${I(">— da scegliere —</option>\n            <option value=\"materiaPrima\" ", ">— choose —</option>\n            <option value=\"materiaPrima\" ")}${p.tipo === 'materiaPrima' ? 'selected' : ''}${I(">Materie prime</option>\n            <option value=\"vendita\" ", ">Raw materials</option>\n            <option value=\"vendita\" ")}${p.tipo === 'vendita' ? 'selected' : ''}${I(">Merci vendita</option>\n          </select>\n        </div>\n        <div class=\"field magazzino-field-marca\">\n          <input type=\"text\" class=\"magazzino-input\" data-id=\"", ">Retail goods</option>\n          </select>\n        </div>\n        <div class=\"field magazzino-field-marca\">\n          <input type=\"text\" class=\"magazzino-input\" data-id=\"")}${p.id}${I("\" data-field=\"marca\" placeholder=\"Es. Wella\" value=\"", "\" data-field=\"marca\" placeholder=\"E.g. Wella\" value=\"")}${escapeHtml(p.marca || '')}">
+            <option value="" ${!p.tipo ? 'selected' : ''}${I(">— da scegliere —</option>\n            <option value=\"materiaPrima\" ", ">— choose —</option>\n            <option value=\"materiaPrima\" ")}${p.tipo === 'materiaPrima' ? 'selected' : ''}${I(">Materie prime</option>\n            <option value=\"vendita\" ", ">Raw materials</option>\n            <option value=\"vendita\" ")}${p.tipo === 'vendita' ? 'selected' : ''}${I(">Merci vendita</option>\n          </select>\n        </div>\n        <div class=\"field magazzino-field-marca\">\n          <input type=\"text\" class=\"magazzino-input\" data-id=\"", ">Retail goods</option>\n          </select>\n        </div>\n        <div class=\"field magazzino-field-marca\">\n          <input type=\"text\" class=\"magazzino-input\" data-id=\"")}${p.id}${I("\" data-field=\"marca\" placeholder=\"Es. Marca A\" value=\"", "\" data-field=\"marca\" placeholder=\"E.g. Brand A\" value=\"")}${escapeHtml(p.marca || '')}">
         </div>
         <div class="field magazzino-field-prezzo${(p.storicoPrezzi && p.storicoPrezzi.length) ? ' ha-storico' : ''}">
           <input type="number" class="magazzino-input" data-id="${p.id}" data-field="prezzo" min="0" step="0.01" placeholder="—" value="${p.prezzo != null ? p.prezzo : ''}">
