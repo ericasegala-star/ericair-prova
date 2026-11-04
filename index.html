@@ -1924,7 +1924,7 @@
     return /^it/i.test(navigator.language || '') ? 'it' : 'en';
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
-  const APP_BUILD = "2026-11-04.156-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.157-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -6264,6 +6264,15 @@
           </ul>
         </section>
         <section class="col-card">
+          <h3>${I("I pigmenti naturali", "Natural pigments")}</h3>
+          <p class="col-lead">${I("Il colore naturale nasce da due famiglie di melanina, in quantità diverse.", "Natural colour comes from two families of melanin, in different amounts.")}</p>
+          <table class="col-tbl"><thead><tr><th>${I("Pigmento", "Pigment")}</th><th>${I("Colore", "Colour")}</th><th>${I("Cosa fa", "What it does")}</th></tr></thead><tbody>
+          ${riga(I("Eumelanina", "Eumelanin"), `${chip('#2e1f16')}${I("bruno / nero", "brown / black")}`, I("decide l’altezza di tono: più ce n’è, più il capello è scuro. Schiarisce abbastanza in fretta.", "sets the level: the more there is, the darker the hair. It lightens fairly quickly."))}
+          ${riga(I("Feomelanina", "Pheomelanin"), `${chip('#e0601c')}${I("rosso / giallo", "red / yellow")}`, I("è il fondo caldo: resiste di più alla schiaritura e, se domina, dà riflessi rame o rossi.", "is the warm undertone: it resists lightening more and, when dominant, gives copper or red tones."))}
+          </tbody></table>
+          <div class="col-note">${I("Per questo i capelli scuri, schiarendo, passano per il rosso e l’arancio prima di arrivare al giallo.", "That is why dark hair goes through red and orange before it reaches yellow when it lightens.")}</div>
+        </section>
+        <section class="col-card">
           <h3>${I("Altezza di tono: da 1 a 10", "Level: from 1 to 10")}</h3>
           <p class="col-lead">${I("1 è il nero, 10 il biondo più chiaro. Si guarda sempre il capello asciutto, alla luce naturale.", "1 is black, 10 is the lightest blonde. Always check dry hair in natural light.")}</p>
           ${scala}
@@ -6302,7 +6311,21 @@
           ${riga('30', '9%', I("circa 2–3 toni di schiaritura", "about 2–3 levels of lift"))}
           ${riga('40', '12%', I("circa 3–4 toni, solo su capelli sani", "about 3–4 levels, healthy hair only"))}
           </tbody></table>
+          <ul>
+            <li>${I("L’ossidante ha due effetti insieme: fa sviluppare il colore e schiarisce la melanina del capello.", "The developer does two things at once: it develops the dye and lightens the natural melanin.")}</li>
+            <li>${I("A decidere il risultato sono i volumi, non la marca di colore: scegli i volumi in base a quanto devi schiarire.", "The volumes decide the result: pick them according to how much lift you need.")}</li>
+            <li>${I("Non è vero che solo il 20 volumi copre i bianchi, né che il 40 volumi vada sempre evitato: conta l’obiettivo e la salute del capello.", "It is a myth that only 20 volume covers grey, or that 40 volume must always be avoided: what matters is the goal and the condition of the hair.")}</li>
+            <li>${I("Il rapporto di miscela (per esempio 1 parte di colore + 1, 1,5 o 2 di ossidante) cambia la forza e i tempi: segui sempre l’indicazione della marca.", "The mixing ratio (for example 1 part colour + 1, 1.5 or 2 of developer) changes strength and timing: always follow the brand’s guidance.")}</li>
+          </ul>
           <div class="col-note">${I("I numeri sono indicativi: leggi sempre le istruzioni della marca che stai usando.", "These numbers are approximate: always read the instructions of the brand you use.")}</div>
+        </section>
+        <section class="col-card">
+          <h3>${I("Come il colore entra nel capello", "How colour gets into the hair")}</h3>
+          <ul>
+            <li>${I("Serve un prodotto alcalino (ammoniaca o, in molte formule, una sostanza simile come la monoetanolammina) che dilata la cuticola e fa passare il colore.", "An alkaline agent (ammonia or, in many formulas, a similar substance such as monoethanolamine) swells the cuticle and lets the colour in.")}</li>
+            <li>${I("L’ammoniaca agisce forte nei primi minuti ed è molto efficace; le alternative sono più delicate sull’odore ma possono lasciare più residui.", "Ammonia acts strongly in the first minutes and is very effective; the alternatives are gentler on the smell but can leave more residue.")}</li>
+            <li>${I("Dopo il servizio riporta il capello al suo pH naturale con un prodotto acido: richiude le scaglie e aiuta il colore a durare.", "After the service bring the hair back to its natural pH with an acidic product: it closes the scales and helps colour last.")}</li>
+          </ul>
         </section>
         <section class="col-card">
           <h3>${I("I riflessi: a cosa corrispondono", "Tones: what they stand for")}</h3>
@@ -6319,11 +6342,43 @@
         </section>
         <section class="col-card">
           <h3>${I("Capelli bianchi", "Grey hair")}</h3>
+          <table class="col-tbl"><thead><tr><th>${I("Quantità", "Amount")}</th><th>%</th></tr></thead><tbody>
+          ${riga2(I("Bassa", "Low"), '0–40%')}
+          ${riga2(I("Media", "Medium"), '40–70%')}
+          ${riga2(I("Alta", "High"), '70–90%')}
+          </tbody></table>
           <ul>
-            <li>${I("Il bianco non è un colore: è assenza di pigmento, e le scaglie sono spesso più chiuse.", "Grey is not a colour: it is missing pigment, and the scales are often more closed.")}</li>
-            <li>${I("Fino al 30% circa basta di solito la tinta normale; oltre, serve una base naturale del livello giusto.", "Up to about 30% a normal formula usually works; beyond that you need a natural base at the right level.")}</li>
-            <li>${I("Per i toni molto chiari o freddi, prepara il capello prima, altrimenti il bianco prende male.", "For very light or cool tones, pre-pigment first, otherwise the grey will not take.")}</li>
+            <li>${I("Il bianco non è un colore: è assenza di pigmento, e le scaglie sono spesso più chiuse, quindi il colore fa più fatica a entrare.", "Grey is not a colour: it is missing pigment, and the scales are often more closed, so colour has more trouble getting in.")}</li>
+            <li>${I("Con i bianchi, scegli un livello più scuro del risultato che vuoi: il bianco schiarisce l’effetto finale.", "With grey, choose one level darker than the result you want: grey lightens the final effect.")}</li>
+            <li>${I("Sulla ricrescita resistente, prima prepigmenta: applica il colore puro (senza ossidante), di un tono più chiaro, e lascialo agire poco prima di colorare.", "On resistant regrowth, pre-pigment first: apply the colour undiluted (no developer), one level lighter, and let it work briefly before colouring.")}</li>
             <li>${I("Davanti e dietro possono avere percentuali diverse: valutale separatamente.", "Front and back can have different percentages: assess them separately.")}</li>
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Schiarire con metodo", "Lightening with method")}</h3>
+          <ul>
+            <li>${I("Non fare lo shampoo prima: il sebo protegge cute e capello dal prodotto.", "Do not shampoo first: natural oils protect scalp and hair from the product.")}</li>
+            <li>${I("Alla radice schiarisce più in fretta, perché il calore della testa accelera la reazione: applica prima su lunghezze e punte e solo dopo sulla radice.", "Roots lift faster because scalp heat speeds up the reaction: apply on lengths and ends first and on the roots last.")}</li>
+            <li>${I("Non tutti i capelli schiariscono allo stesso modo: i capelli molto pigmentati richiedono più volumi o più tempo, quelli chiari si schiariscono facilmente.", "Not all hair lightens the same way: heavily pigmented hair needs more volume or more time, light hair lifts easily.")}</li>
+            <li>${I("Schiarire rende il capello più poroso: dopo il servizio ripristina il pH e nutri.", "Lightening makes hair more porous: restore the pH and nourish afterwards.")}</li>
+            <li>${I("Per togliere un colore cosmetico sbagliato si usa lo stesso principio (decapaggio): scegli il prodotto meno aggressivo che porta al risultato.", "To remove an unwanted artificial colour the same principle applies (colour removal): choose the gentlest product that gets there.")}</li>
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Ripigmentare", "Re-pigmenting")}</h3>
+          <p class="col-lead">${I("Serve quando devi scurire un capello che ha perso il fondo.", "It is needed when you darken hair that has lost its underlying pigment.")}</p>
+          <ul>
+            <li>${I("Quando: scurire di 3 toni o più un capello già colorato, o colorare capelli molto schiariti o sfruttati, che rifiutano il colore o lo prendono a macchie.", "When: darkening already coloured hair by 3 levels or more, or colouring heavily lightened or damaged hair that rejects colour or takes it unevenly.")}</li>
+            <li>${I("Come: aggiungi prima i toni caldi mancanti (dorato, rame, rosso), poi il colore scelto.", "How: first put back the missing warm tones (gold, copper, red), then apply the chosen colour.")}</li>
+            <li>${I("Evita di andare subito su un riflesso cenere: su un capello senza fondo esce verdastro.", "Avoid going straight to an ash tone: on hair with no underlying pigment it turns greenish.")}</li>
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Prima di iniziare: tocco di prova", "Before you start: patch test")}</h3>
+          <ul>
+            <li>${I("Alla prima colorazione di una cliente fai il test di sensibilità: applica una piccola quantità nell’incavo del gomito.", "At a client’s first colour, do a sensitivity test: apply a small amount on the inner elbow.")}</li>
+            <li>${I("Controlla la pelle dopo 48 ore: se compare rossore, prurito o gonfiore, non colorare e consiglia di sentire il medico.", "Check the skin after 48 hours: if there is redness, itching or swelling, do not colour and advise seeing a doctor.")}</li>
+            <li>${I("Segui sempre le istruzioni del prodotto per tempi e modalità del test.", "Always follow the product instructions for timing and method.")}</li>
           </ul>
         </section>
         <section class="col-card">
