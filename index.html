@@ -1927,7 +1927,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-04.161-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.162-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3534,7 +3534,7 @@
       firebase.initializeApp(firebaseConfig);
       // Connessione al database in modalita' "long polling": su Safari/iPad la connessione standard a volte resta in attesa
       // per decine di secondi prima di ripiegare da sola su questa; cosi' si parte subito.
-      try { firebase.firestore().settings({ experimentalForceLongPolling: true, merge: true }); } catch (e) {}
+      try { firebase.firestore().settings({ experimentalForceLongPolling: true, experimentalLongPollingOptions: { timeoutSeconds: 5 }, merge: true }); } catch (e) {}
       // Accesso come "app vera" (non anonimo): distingue questo file dalla pagina pubblica di
       // prenotazione, che è invece anonima. Se l'utente admin non è stato ancora creato in
       // Firebase (prima configurazione) — o il metodo non esiste, come nei test — si ripiega
