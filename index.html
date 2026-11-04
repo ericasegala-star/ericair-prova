@@ -1926,7 +1926,8 @@
     return /^it/i.test(navigator.language || '') ? 'it' : 'en';
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
-  const APP_BUILD = "2026-11-04.158-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const __T0 = performance.now(); const __marks = {};
+  const APP_BUILD = "2026-11-04.159-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -2319,6 +2320,7 @@
     el.textContent = I("Diagnostica — versione: ", "Diagnostics — version: ") + APP_BUILD + I(" · salvataggio: ", " · saving: ") + (db ? I("attivo", "active") : I("NON disponibile", "NOT available")) +
       I(" · schede: ", " · cards: ") + clients.length +
       I(" · ultimo backup: ", " · last backup: ") + (appBackupCache.ultimoBackupAt ? fmtDate(appBackupCache.ultimoBackupAt) : I("mai", "never")) +
+      (__marks.pronto ? I(' · avvio: accesso ', ' · startup: sign-in ') + (__marks.accesso / 1000).toFixed(1) + 's, ' + I('schede', 'cards') + ' ' + (__marks.schede / 1000).toFixed(1) + 's, ' + I('totale', 'total') + ' ' + (__marks.pronto / 1000).toFixed(1) + 's' : '') +
       (extra ? ' · ' + extra : '');
   }
 
@@ -3484,11 +3486,13 @@
       document.body.appendChild(ov);
       const msg = ov.querySelector('#loginMsg');
       if (messaggioIniziale) msg.textContent = messaggioIniziale;
-      const ok = (u) => accountAutorizzato().then(buono => {
+      const bloccaForm = (si) => ov.querySelectorAll('button, input').forEach(x => { x.disabled = si; });
+      const ok = (u) => { bloccaForm(true); msg.style.color = '#6b5f57'; msg.textContent = I("Accesso in corso…", "Signing in…"); return accountAutorizzato().then(buono => {
+        bloccaForm(false);
         if (buono) { window.__staffEmail = (u && u.email) || ''; ov.remove(); resolve(u); return; }
         Promise.resolve(authObj.signOut()).catch(() => {});
         err(null, messaggioNonAutorizzato(u));
-      });
+      }); };
       const err = (e, info) => { msg.style.color = '#a5483f'; msg.textContent = info || messaggioErroreAccesso(e); };
       ov.querySelector('#loginGoogle').addEventListener('click', () => {
         msg.textContent = '';
@@ -3540,7 +3544,7 @@
       initPromise = Promise.reject(e);
     }
     return Promise.resolve(initPromise).then(() => {
-      db = firebase.firestore();
+      db = firebase.firestore(); __marks.accesso = performance.now() - __T0;
     }).catch(() => {
       db = null;
     }).then(() => {
@@ -3561,6 +3565,7 @@
       return db.collection('clients').get().then(snap => snap.empty ? migrateLegacyLocalStorageIfNeeded().then(() => db.collection('clients').get()) : snap).then(snap => {
         clients = snap.docs.map(d => clientFromDbDoc(d.id, d.data()));
         clients.forEach(c => { lastWrittenUpdatedAt[c.id] = c.updatedAt || Date.now(); });
+        __marks.schede = performance.now() - __T0;
         return altreLetture;
       }).then(([aTime, aGreen, aGloss, aspetto, backup, agenda, turni, assenze, servizi]) => migrateLegacyAppuntiIfNeeded([aTime, aGreen, aGloss]).then(migrated => migrated.concat([aspetto, backup, agenda, turni, assenze, servizi]))).then(([aTime, aGreen, aGloss, aspetto, backup, agenda, turni, assenze, servizi]) => {
         ispirazioneCache = { libri: [] };
@@ -10316,6 +10321,7 @@
     renderAll();
     agendaScrollA830();
     if (appSplashEl) appSplashEl.hidden = true;
+    __marks.pronto = performance.now() - __T0; try { renderDiagnostics(); } catch (e) {}
     window.__schedarioReady = true; // segnale per i test automatici: i dati sono caricati e la pagina è disegnata
   });
 })();
