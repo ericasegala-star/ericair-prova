@@ -1978,7 +1978,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.185-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.186-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -7159,7 +7159,7 @@
     panel.innerHTML = `
       <div class="launcher">
         <div class="launcher-tiles">
-          <button type="button" class="launcher-tile" id="launchTecnico"><svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(32 50 50)"><path d="M50 -2L54 12H46Z"/><rect x="45" y="11" width="10" height="40" rx="5"/><rect x="39" y="49" width="22" height="11" rx="2.5"/><rect x="39.5" y="62" width="3.4" height="26" rx="1.7"/><rect x="44.2" y="62" width="3.4" height="30" rx="1.7"/><rect x="48.9" y="62" width="3.4" height="32" rx="1.7"/><rect x="53.6" y="62" width="3.4" height="30" rx="1.7"/><rect x="58.3" y="62" width="3.4" height="26" rx="1.7"/></g></svg><span class="lt-title">${I("Tecnico", "Stylist")}</span><span class="lt-sub">${I("Schede colore, formule, ispirazione", "Colour cards, formulas, inspiration")}</span></button>
+          <button type="button" class="launcher-tile" id="launchTecnico"><svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-32 50 52)"><path d="M39 14Q50 6 61 14L62 27H38Z"/><path fill-opacity=".55" d="M40 29H60L56 66H44Z"/><rect x="40.5" y="66" width="19" height="11" rx="3"/><path fill-opacity=".55" d="M44 79H56L50 106Z"/></g></svg><span class="lt-title">${I("Tecnico", "Stylist")}</span><span class="lt-sub">${I("Schede colore, formule, ispirazione", "Colour cards, formulas, inspiration")}</span></button>
           <button type="button" class="launcher-tile" id="launchTricologo"><svg viewBox="0 0 100 100" aria-hidden="true"><path fill-rule="evenodd" d="M66 8a28 28 0 1 0 0.01 0ZM66 14a22 22 0 1 1-0.01 0Z"/><path d="M48 52q18-9 36 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M56 49q-3-12 1-18M66 47q0-14 4-20M76 49q3-10 0-16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><g transform="rotate(-45 30 74)"><rect x="6" y="67" width="46" height="14" rx="7"/><rect x="46" y="64" width="9" height="20" rx="3"/></g><path d="M12 92C6 94 4 98 8 99" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span class="lt-title">${I("Tricologo", "Trichologist")}</span><span class="lt-sub">${I("Cute e capelli, tricocamera", "Scalp and hair, trichoscope")}</span></button>
         </div>
         <div class="home-agenda launcher-agenda">
