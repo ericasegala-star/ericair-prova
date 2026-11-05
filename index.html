@@ -1197,6 +1197,10 @@
      da più tempo di quanto scelto in Impostazioni. */
   .scheda-switch { margin-top: 6px; }
   .launcher { display: flex; flex-direction: column; gap: 22px; }
+  .launcher-saluto { position: relative; }
+  .launcher-saluto .home-greeting { margin-bottom: 12px; }
+  .launcher-saluto-x { position: absolute; top: -4px; right: 0; width: 34px; height: 34px; border: 0; background: none; font-size: 26px; line-height: 1; color: var(--ink-soft); cursor: pointer; border-radius: 50%; z-index: 2; }
+  .launcher-saluto-x:hover { background: var(--berry-soft); color: var(--berry); }
   .launcher-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .launcher-tile { position: relative; overflow: hidden; text-align: left; padding: 22px; min-height: 112px; display: flex; flex-direction: column; justify-content: center; gap: 4px;
     border: 1px solid var(--line); border-radius: 14px; background: var(--paper); color: var(--berry); cursor: pointer; font: inherit; }
@@ -1978,7 +1982,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.188-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.189-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -7154,10 +7158,37 @@
     vaiAllAgenda();
     aggiornaModeSwitch();
   }
+  function salutoChiuso() { try { return localStorage.getItem('ericair_saluto_chiuso') === fmtDateISO(new Date()); } catch (e) { return !!salutoChiusoMem; } }
+  let salutoChiusoMem = false;
+  function conflittiOnlineHtml() {
+    if (!richiesteOnlineConflitto.length) return '';
+    return `<div class="home-online-conflitti">
+      <p class="home-online-conflitti-titolo">⚠️ ${richiesteOnlineConflitto.length} ${I("richieste di prenotazione online in conflitto o annullate — contatta la cliente per un altro orario:", "online booking requests in conflict or cancelled — contact the client for another time:")}</p>
+      <ul class="home-online-conflitti-lista">${richiesteOnlineConflitto.map(r => `
+        <li><span>${r.tipo === 'modifica' ? I("MODIFICA · ", "CHANGED · ") : (r.tipo === 'annulla' ? I("ANNULLATA DALLA CLIENTE · ", "CANCELLED BY THE CLIENT · ") : '')}${escapeHtml(r.nome || I("Senza nome", "Unnamed"))} · ${escapeHtml(r.telefono || I("senza telefono", "no phone"))} · ${escapeHtml(fmtDateISOBreve(r.data))} ${escapeHtml(r.ora || '')}</span>
+        <button type="button" class="ghost small home-online-conflitto-elimina" data-id="${r.id}">${I("Ho risolto, elimina", "Resolved, delete")}</button></li>`).join('')}</ul>
+    </div>`;
+  }
   function renderLauncher(panel) {
     aggiornaModeSwitch();
+    const todayLong = new Date().toLocaleDateString(localeFmt(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const todayCap = todayLong.charAt(0).toUpperCase() + todayLong.slice(1);
+    const salutoHtml = salutoChiuso() ? '' : `
+        <div class="launcher-saluto">
+          <button type="button" class="launcher-saluto-x" id="salutoChiudi" aria-label="${I("Chiudi", "Close")}" title="${I("Chiudi", "Close")}">×</button>
+        <div class="home-date-row">
+            <div class="home-date">${escapeHtml(todayCap)}</div>
+          </div>
+          <h2 class="home-greeting">Ciao!</h2>
+          <div class="home-quote-card">
+            <div class="home-quote-mark">“</div>
+            <p class="home-quote-text">${escapeHtml(quoteOfTheDay())}</p>
+          </div>
+        </div>`;
     panel.innerHTML = `
       <div class="launcher">
+        ${salutoHtml}
+        ${conflittiOnlineHtml()}
         <div class="launcher-tiles">
           <button type="button" class="launcher-tile" id="launchTecnico"><span class="lt-title">${I("Tecnico", "Stylist")}</span><span class="lt-sub">${I("Schede colore, formule, ispirazione", "Colour cards, formulas, inspiration")}</span></button>
           <button type="button" class="launcher-tile" id="launchTricologo"><span class="lt-title">${I("Tricologo", "Trichologist")}</span><span class="lt-sub">${I("Cute e capelli, tricocamera", "Scalp and hair, trichoscope")}</span></button>
@@ -7177,10 +7208,15 @@
             <button type="button" class="launcher-link" data-entry="cercaAppEntry">${I("Cerca nell'app", "Search the app")}</button>
           </div>
         </div>
+        ${primiPassiHtml()}
       </div>`;
     document.getElementById('launchTecnico').addEventListener('click', () => modeTecnicoBtn.click());
     document.getElementById('launchTricologo').addEventListener('click', () => modeTricologoBtn.click());
     panel.querySelectorAll('[data-entry]').forEach(b => b.addEventListener('click', () => { const e = document.getElementById(b.dataset.entry); if (e) e.click(); }));
+    const sx = document.getElementById('salutoChiudi');
+    if (sx) sx.addEventListener('click', () => { salutoChiusoMem = true; try { localStorage.setItem('ericair_saluto_chiuso', fmtDateISO(new Date())); } catch (e) {} renderSheet(); });
+    bindPrimiPassi();
+    document.querySelectorAll('.home-online-conflitto-elimina').forEach(btn => btn.addEventListener('click', () => eliminaRichiestaOnlineConflitto(btn.dataset.id)));
     renderAgendaApptModal();
     bindAgendaEvents();
   }
@@ -7623,10 +7659,6 @@
       const op = currentOperator();
       panel.innerHTML = `
         <div class="home-view">
-          <div class="home-date-row">
-            <div class="home-date">${escapeHtml(todayCap)}</div>
-          </div>
-          <h2 class="home-greeting">Ciao!</h2>
           ${richiesteOnlineConflitto.length ? `
           <div class="home-online-conflitti">
             <p class="home-online-conflitti-titolo">⚠️ ${richiesteOnlineConflitto.length} richiest${richiesteOnlineConflitto.length === 1 ? 'a' : 'e'}${I(" di prenotazione online in conflitto o annullate — se in conflitto l'orario scelto si è occupato nel frattempo, contatta la cliente per un altro orario:</p>\n            <ul class=\"home-online-conflitti-lista\">\n              ", " online bookings in conflict or cancelled — if in conflict, the chosen time was taken in the meantime; contact the client for another time:</p>\n            <ul class=\"home-online-conflitti-lista\">\n              ")}${richiesteOnlineConflitto.map(r => `
@@ -7636,9 +7668,7 @@
             </ul>
           </div>` : ''}
           ${primiPassiHtml()}
-          <div class="home-quote-card">
-            <div class="home-quote-mark">“</div>
-            <p class="home-quote-text">${escapeHtml(quoteOfTheDay())}${I("</p>\n          </div>\n          <p class=\"home-hint\">Scegli una scheda dall'elenco a sinistra, oppure iniziane una nuova.</p>\n          <button type=\"button\" class=\"primary\" id=\"homeNewBtn\">+ Nuova scheda</button>\n\n          <div class=\"home-agenda\">\n            <div class=\"home-agenda-head\">\n              <div class=\"notes-title\">Agenda</div>\n            </div>\n            ", "</p>\n          </div>\n          <p class=\"home-hint\">Choose a card from the list on the left, or start a new one.</p>\n          <button type=\"button\" class=\"primary\" id=\"homeNewBtn\">+ New card</button>\n\n          <div class=\"home-agenda\">\n            <div class=\"home-agenda-head\">\n              <div class=\"notes-title\">Calendar</div>\n            </div>\n            ")}${agendaDateNavHtml()}
+          ${I("\n          <p class=\"home-hint\">Scegli una scheda dall'elenco a sinistra, oppure iniziane una nuova.</p>\n          <button type=\"button\" class=\"primary\" id=\"homeNewBtn\">+ Nuova scheda</button>\n\n          <div class=\"home-agenda\">\n            <div class=\"home-agenda-head\">\n              <div class=\"notes-title\">Agenda</div>\n            </div>\n            ", "\n          <p class=\"home-hint\">Choose a card from the list on the left, or start a new one.</p>\n          <button type=\"button\" class=\"primary\" id=\"homeNewBtn\">+ New card</button>\n\n          <div class=\"home-agenda\">\n            <div class=\"home-agenda-head\">\n              <div class=\"notes-title\">Calendar</div>\n            </div>\n            ")}${agendaDateNavHtml()}
             <div class="agenda-date-label">${fmtDateISOLong(agendaDataSelezionata)}</div>
             <div id="agendaGridWrap">
               ${renderAgendaGridHtml(agendaDataSelezionata)}
