@@ -3668,6 +3668,7 @@
   // tecnicoViewSnapshot quando si entra in Tricologo (che riparte sempre pulito, sul Magazzino),
   // e ripristinato quando si torna su Tecnico.
   let viewingTricologo = false;
+  let triPrintMode = null; // anteprima di stampa della scheda tricologica (si stampa quello che si vede, come il modulo vuoto del Tecnico)
   let activeTricoId = null; // scheda tricologica aperta (solo in modalità Tricologo)
   let tecnicoViewSnapshot = null;
   let searchAppTerm = "";
@@ -6680,23 +6681,29 @@
   .tri-seduta textarea, .tri-foto-comment { font-family: inherit; width: 100%; }
   .tri-pd h4 { margin: 0 0 6px; font-size: 14px; }
   .tri-consenso { display: flex; gap: 10px; align-items: flex-start; }
-  #triPrint { display: none; }
+  .tri-printdoc { max-width: 800px; margin: 0 auto; font-family: Georgia, serif; font-size: 14px; }
+  .tri-printdoc h1 { font-size: 20px; } .tri-printdoc h2 { font-size: 15px; border-bottom: 1px solid #999; margin: 14px 0 6px; }
+  .tri-printdoc .p-row { display: flex; gap: 10px; margin: 4px 0; align-items: baseline; flex-wrap: wrap; } .tri-printdoc .p-l { min-width: 150px; font-weight: bold; } .tri-printdoc .p-v { flex: 1; border-bottom: 1px dotted #666; min-height: 16px; }
+  .tri-printdoc .p-box { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; margin-right: 4px; vertical-align: -1px; } .tri-printdoc .p-box.on { background: #000; } .tri-printdoc .p-opt { display: inline-block; margin-right: 12px; }
+  .tri-printdoc .p-lines div { border-bottom: 1px solid #999; height: 22px; } .tri-printdoc .p-ph { display: flex; gap: 8px; margin: 4px 0; } .tri-printdoc .p-ph div { flex: 1; } .tri-printdoc .p-ph img { max-width: 100%; max-height: 170px; display: block; }
   @media print {
-    body.print-tri > *:not(#triPrint) { display: none !important; }
-    body.print-tri #triPrint { display: block !important; color: #000; background: #fff; font: 12px/1.4 Georgia, serif; padding: 0; }
-    body.print-tri #triPrint h1 { font-size: 18px; margin: 0 0 4px; }
-    body.print-tri #triPrint h2 { font-size: 13px; margin: 12px 0 4px; border-bottom: 1px solid #000; padding-bottom: 2px; }
-    body.print-tri #triPrint .p-row { display: flex; gap: 10px; margin: 3px 0; align-items: baseline; }
-    body.print-tri #triPrint .p-l { min-width: 150px; font-weight: bold; }
-    body.print-tri #triPrint .p-v { flex: 1; border-bottom: 1px dotted #666; min-height: 15px; }
-    body.print-tri #triPrint .p-box { display: inline-block; width: 11px; height: 11px; border: 1px solid #000; margin-right: 3px; vertical-align: -1px; }
-    body.print-tri #triPrint .p-box.on { background: #000; }
-    body.print-tri #triPrint .p-opt { display: inline-block; margin-right: 12px; }
-    body.print-tri #triPrint .p-lines div { border-bottom: 1px solid #999; height: 20px; }
-    body.print-tri #triPrint .p-ph { display: flex; gap: 8px; margin: 4px 0; }
-    body.print-tri #triPrint .p-ph div { flex: 1; }
-    body.print-tri #triPrint .p-ph img { max-width: 100%; max-height: 170px; display: block; }
-    body.print-tri #triPrint .p-sed { break-inside: avoid; margin-bottom: 8px; }
+      .tri-noprint { display: none !important; }
+    body:has(.tri-printdoc) #backupReminderBanner, body:has(.tri-printdoc) .top, body:has(.tri-printdoc) .sidebar-stack, body:has(.tri-printdoc) #topStatus, body:has(.tri-printdoc) #storageUsage, body:has(.tri-printdoc) #appDiagnostics, body:has(.tri-printdoc) .menu-toggle { display: none !important; }
+    body:has(.tri-printdoc) .layout { display: block; }
+    .tri-printdoc { color: #000; background: #fff; font: 12px/1.4 Georgia, serif; padding: 0; }
+    .tri-printdoc h1 { font-size: 18px; margin: 0 0 4px; }
+    .tri-printdoc h2 { font-size: 13px; margin: 12px 0 4px; border-bottom: 1px solid #000; padding-bottom: 2px; }
+    .tri-printdoc .p-row { display: flex; gap: 10px; margin: 3px 0; align-items: baseline; }
+    .tri-printdoc .p-l { min-width: 150px; font-weight: bold; }
+    .tri-printdoc .p-v { flex: 1; border-bottom: 1px dotted #666; min-height: 15px; }
+    .tri-printdoc .p-box { display: inline-block; width: 11px; height: 11px; border: 1px solid #000; margin-right: 3px; vertical-align: -1px; }
+    .tri-printdoc .p-box.on { background: #000; }
+    .tri-printdoc .p-opt { display: inline-block; margin-right: 12px; }
+    .tri-printdoc .p-lines div { border-bottom: 1px solid #999; height: 20px; }
+    .tri-printdoc .p-ph { display: flex; gap: 8px; margin: 4px 0; }
+    .tri-printdoc .p-ph div { flex: 1; }
+    .tri-printdoc .p-ph img { max-width: 100%; max-height: 170px; display: block; }
+    .tri-printdoc .p-sed { break-inside: avoid; margin-bottom: 8px; }
   }`;
   (function () { const s = document.createElement('style'); s.textContent = TRI_CSS; document.head.appendChild(s); })();
 
@@ -6708,7 +6715,7 @@
   function switchTrico(id) {
     tricoFlush();
     if (activeId) { const prev = getClient(activeId); if (prev) { commitVersion(prev); } }
-    activeTricoId = id;
+    activeTricoId = id; triPrintMode = null;
     viewingNotes = viewingIspirazione = viewingMagazzino = viewingServizi = viewingAnagrafica = viewingAgenda = viewingSearchApp = false;
     viewingBlankSheet = viewingOstwald = viewingCatalogoHp = viewingConsigliGenerici = viewingColorimetria = viewingTricologia = viewingSchedaGenerica = viewingHome = false;
     renderAll();
@@ -6941,13 +6948,9 @@
     h += '<div class="p-row"><span class="p-l">' + I("Sentire il medico", "Ask a doctor") + '</span><span class="p-opt"><span class="p-box' + (!vuota && T.medico ? ' on' : '') + '"></span>' + I("Consigliato", "Advised") + '</span><span class="p-v">' + val(T.medicoNote) + '</span></div>';
     h += row(I("Prossimo controllo", "Next check"), dd(T.prossimo));
     h += '<h2>' + I("Consenso", "Consent") + '</h2><div class="p-row"><span class="p-opt"><span class="p-box' + (!vuota && T.consensoSalute ? ' on' : '') + '"></span>' + I("Acconsento al trattamento dei dati sulla salute (cute, capelli, foto) per questa scheda.", "I consent to processing of health data (scalp, hair, photos) for this card.") + '</span></div>' + row(I("Data e firma", "Date and signature"), '');
-    let area = document.getElementById('triPrint');
-    if (!area) { area = document.createElement('div'); area.id = 'triPrint'; document.body.appendChild(area); }
-    area.innerHTML = h;
-    document.body.classList.add('print-tri');
-    const fine = () => { document.body.classList.remove('print-tri'); window.removeEventListener('afterprint', fine); };
-    window.addEventListener('afterprint', fine);
-    window.print();
+    triPrintMode = { html: h, id: c.id };
+    renderSheet();
+    window.scrollTo({ top: 0 });
   }
 
   function renderSheet() {
@@ -6999,6 +7002,12 @@
     // Tricologo apre subito sull'Agenda (la titolare, 15/10: "deve aprire subito su agenda"), non su
     // Magazzino: stessa Agenda condivisa vista nella schermata iniziale del Tecnico, senza
     // elenco clienti né saluto del giorno (qui non servono).
+    if (viewingTricologo && triPrintMode && !altraSezioneAperta()) {
+      panel.innerHTML = '<div class="tri-noprint" style="display:flex;gap:10px;margin-bottom:14px"><button type="button" class="ghost" id="triPrintBack">' + I("← Indietro", "← Back") + '</button><button type="button" class="primary" id="triPrintGo">' + I("Stampa", "Print") + '</button></div><div class="tri-printdoc">' + triPrintMode.html + '</div>';
+      document.getElementById('triPrintBack').addEventListener('click', () => { triPrintMode = null; renderSheet(); });
+      document.getElementById('triPrintGo').addEventListener('click', () => window.print());
+      return;
+    }
     if (viewingTricologo && activeTricoId && !altraSezioneAperta()) {
       const ct = getClient(activeTricoId);
       if (ct && ct.tricho) { renderTricoSheet(ct); return; }
@@ -7435,7 +7444,7 @@
           <input type="tel" id="f-telefono" class="name-field-telefono" placeholder="${t('sc.telefonoPh', I("Telefono (per WhatsApp)", "Phone (for WhatsApp)"))}" value="${escapeHtml(c.telefono)}">
           <div class="meta">${t('sc.meta', I("Creata il {c} · aggiornata il {u}", "Created on {c} · updated on {u}")).replace('{c}', fmtDate(c.createdAt)).replace('{u}', fmtDate(c.updatedAt))}</div>
         </div>
-        <button class="danger ghost small" id="deleteBtn">${t('sc.eliminaScheda', I("Elimina scheda", "Delete card"))}</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="ghost small" id="techBlankBtn">${I("Stampa modulo vuoto", "Print blank form")}</button><button class="danger ghost small" id="deleteBtn">${t('sc.eliminaScheda', I("Elimina scheda", "Delete card"))}</button></div>
       </div>
       ${hasHiddenFields ? `<button type="button" class="sheet-show-empty-toggle" id="sheetShowEmptyBtn">${t('sc.mostraNonCompilati', I("Mostra anche i campi non compilati", "Also show the fields left empty"))}</button>` : ''}
 
@@ -9815,7 +9824,7 @@
   }
   if (modeTecnicoBtn) {
     modeTecnicoBtn.addEventListener('click', () => {
-      tricoFlush(); activeTricoId = null;
+      tricoFlush(); activeTricoId = null; triPrintMode = null;
       viewingTricologo = false;
       if (tecnicoViewSnapshot) {
         viewingNotes = tecnicoViewSnapshot.viewingNotes;
@@ -9835,13 +9844,14 @@
         activeId = tecnicoViewSnapshot.activeId;
         tecnicoViewSnapshot = null;
       }
+      if (!altraSezioneAperta() && !(activeId && getClient(activeId))) viewingHome = true; // niente di aperto: si torna alla schermata iniziale, con l'Agenda
       aggiornaModeSwitch();
       renderAll();
     });
   }
   if (modeTricologoBtn) {
     modeTricologoBtn.addEventListener('click', () => {
-      activeTricoId = null; searchTerm = ''; { const se = document.getElementById('search'); if (se) se.value = ''; }
+      activeTricoId = null; triPrintMode = null; searchTerm = ''; { const se = document.getElementById('search'); if (se) se.value = ''; }
       viewingTricologo = true;
       tecnicoViewSnapshot = { viewingNotes, viewingIspirazione, viewingMagazzino, viewingServizi, viewingAnagrafica, viewingAgenda, viewingSearchApp, viewingBlankSheet, viewingOstwald, viewingCatalogoHp, viewingConsigliGenerici, viewingSchedaGenerica, viewingColorimetria, viewingTricologia, viewingHome, activeId };
       viewingNotes = false;
@@ -10500,6 +10510,7 @@
     renderSheet();
   }
   document.getElementById('sheetPanel').addEventListener('click', (e) => {
+    if (e.target.closest('#techBlankBtn')) { document.getElementById('blankSheetEntry').click(); return; }
     const printBlankBtn = e.target.closest('#printBlankBtn');
     if (printBlankBtn) {
       // Stampa direttamente quello che si vede a schermo (window.print), non più un PDF
