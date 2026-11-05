@@ -1943,7 +1943,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.173-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.174-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -6850,6 +6850,9 @@
         ${T.medico ? R(I("Motivo / nota", "Reason / note"), tricoTxt('tri-mednote', 'medicoNote', T.medicoNote, '')) : ''}
         ${R(I("Prossimo controllo", "Next check"), '<input type="date" data-tri="prossimo" value="' + escapeHtml(T.prossimo) + '">')}
       </fieldset>
+      <fieldset class="contatti-tecnico"><legend>${I("Contatti", "Contacts")}</legend>
+        <p class="hint hint-contatti">${contattoPie()}.</p>
+      </fieldset>
       <fieldset><legend>${I("Consenso", "Consent")}</legend>
         <label class="tri-consenso"><input type="checkbox" id="tri-consenso" ${T.consensoSalute ? 'checked' : ''}><span>${I("La cliente acconsente al trattamento dei dati sulla salute (cute, capelli, foto) per questa scheda.", "The client consents to processing of health data (scalp, hair, photos) for this card.")}${T.consensoSalute ? ' <strong>' + I("Registrato il ", "Recorded on ") + fmtDate(T.consensoSalute) + '</strong>' : ''}</span></label>
       </fieldset>`;
@@ -6959,24 +6962,24 @@
     h += '<div class="p-row"><span class="p-l">' + I("Sentire il medico", "Ask a doctor") + '</span><span class="p-opt"><span class="p-box' + (!vuota && T.medico ? ' on' : '') + '"></span>' + I("Consigliato", "Advised") + '</span><span class="p-v">' + val(T.medicoNote) + '</span></div>';
     h += row(I("Prossimo controllo", "Next check"), dd(T.prossimo));
     h += '<h2>' + I("Consenso", "Consent") + '</h2><div class="p-row"><span class="p-opt"><span class="p-box' + (!vuota && T.consensoSalute ? ' on' : '') + '"></span>' + I("Acconsento al trattamento dei dati sulla salute (cute, capelli, foto) per questa scheda.", "I consent to processing of health data (scalp, hair, photos) for this card.") + '</span></div>' + row(I("Data e firma", "Date and signature"), '');
-    h += '<p style="margin-top:14px;font-size:11px">' + escapeHtml(triAvviso()) + (contattoPie() ? '<br>' + contattoPie() : '') + '</p>';
+    h += '<h2>' + I("Contatti", "Contacts") + '</h2><p>' + contattoPie() + '.</p><p style="margin-top:10px;font-size:11px">' + escapeHtml(triAvviso()) + '</p>';
     triPrintMode = { html: h, id: c.id };
     renderSheet();
     window.scrollTo({ top: 0 });
   }
 
   function triAvviso() { return I("Questa scheda raccoglie osservazioni, non è una diagnosi. Per dubbi di salute: sentire il medico.", "This card records observations; it is not a diagnosis. For any health concern: ask a doctor."); }
-  function contattoPie() { const c = appSettingsCache.contattoAssistenza; return c ? I("Per dubbi: ", "Questions: ") + escapeHtml(c) : ''; }
+  // chi contattare: il campo scelto in Impostazioni, altrimenti nome e telefono del salone (come nella scheda tecnica)
+  function contattoTrico() { return appSettingsCache.contattoAssistenza || contattoTecnicoColore(); }
+  function contattoPie() { return I("Per dubbi, domande o perplessità sulla cute e sui capelli: ", "For doubts, questions or concerns about scalp and hair: ") + escapeHtml(contattoTrico()); }
   // Piè di pagina delle schede (e del modulo vuoto): avviso fisso nella scheda tricologica + contatto scelto in Impostazioni (vuoto = niente)
   function aggiornaPie() {
     const panel = document.getElementById('sheetPanel'); if (!panel) return;
     const old = panel.querySelector('.scheda-pie'); if (old) old.remove();
     const tri = viewingTricologo && (triPrintMode || (activeTricoId && !altraSezioneAperta()));
-    const tec = !viewingTricologo && (viewingBlankSheet || (activeId && !altraSezioneAperta() && getClient(activeId)));
     if (triPrintMode && tri) return; // l'anteprima di stampa ha già il suo piè di pagina
-    if (!tri && !tec) return;
-    const parti = [tri ? escapeHtml(triAvviso()) : '', contattoPie()].filter(Boolean);
-    if (!parti.length) return;
+    if (!tri) return;
+    const parti = [escapeHtml(triAvviso())];
     const d = document.createElement('p'); d.className = 'hint scheda-pie'; d.style.cssText = 'margin-top:18px;text-align:center'; d.innerHTML = parti.join('<br>');
     panel.appendChild(d);
   }
