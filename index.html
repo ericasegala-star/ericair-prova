@@ -1203,14 +1203,14 @@
   .launcher-tile:hover, .launcher-tile:focus-visible { background: var(--berry-soft); border-color: var(--berry); outline: none; }
   .launcher-tile .lt-title { position: relative; z-index: 1; font-size: 26px; font-weight: 600; letter-spacing: 0.01em; }
   .launcher-tile .lt-sub { position: relative; z-index: 1; font-size: 13px; color: var(--ink-soft); }
-  .launcher-tile svg { position: absolute; right: 6px; bottom: -8px; width: 130px; height: 130px; opacity: 0.16; pointer-events: none; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .launcher-tile svg { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 124px; height: 124px; opacity: 0.24; pointer-events: none; fill: currentColor; stroke: none; }
   .launcher .home-agenda { margin-top: 0; border-top: 0; padding-top: 0; }
   .launcher-shared { border-top: 1px solid var(--line); padding-top: 16px; }
   .launcher-shared-label { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 10px; }
   .launcher-shared-btns { display: flex; gap: 12px; flex-wrap: wrap; }
   .launcher-link { flex: 1 1 180px; padding: 14px 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; color: var(--berry); font: inherit; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; text-align: left; }
   .launcher-link:hover { background: var(--berry-soft); border-color: var(--berry); }
-  @media (max-width: 560px) { .launcher-tile { padding: 16px; min-height: 96px; } .launcher-tile .lt-title { font-size: 21px; } .launcher-tile svg { width: 84px; height: 84px; right: 2px; } .launcher-tile .lt-sub { max-width: 62%; } }
+  @media (max-width: 560px) { .launcher-tile { padding: 16px; min-height: 96px; } .launcher-tile .lt-title { font-size: 21px; } .launcher-tile svg { width: 84px; height: 84px; right: 8px; } .launcher-tile .lt-sub { max-width: 62%; } }
   .nome-wrap { position: relative; }
   .recontact-badge.canc-badge { background: #A8433C; color: #fff; border-color: #A8433C; }
   .recontact-badge {
@@ -1978,7 +1978,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.184-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.185-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -7159,8 +7159,8 @@
     panel.innerHTML = `
       <div class="launcher">
         <div class="launcher-tiles">
-          <button type="button" class="launcher-tile" id="launchTecnico"><svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(38 50 50)"><rect x="43" y="4" width="14" height="46" rx="7"/><rect x="39" y="48" width="22" height="9" rx="2"/><path d="M40 57h20l-3 33H43z"/><path d="M47 62v24M53 62v24"/></g></svg><span class="lt-title">${I("Tecnico", "Stylist")}</span><span class="lt-sub">${I("Schede colore, formule, ispirazione", "Colour cards, formulas, inspiration")}</span></button>
-          <button type="button" class="launcher-tile" id="launchTricologo"><svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-38 50 50)"><rect x="41" y="40" width="18" height="54" rx="9"/><rect x="34" y="8" width="32" height="34" rx="8"/><circle cx="50" cy="25" r="9"/><path d="M50 94v4"/></g></svg><span class="lt-title">${I("Tricologo", "Trichologist")}</span><span class="lt-sub">${I("Cute e capelli, tricocamera", "Scalp and hair, trichoscope")}</span></button>
+          <button type="button" class="launcher-tile" id="launchTecnico"><svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(32 50 50)"><path d="M50 -2L54 12H46Z"/><rect x="45" y="11" width="10" height="40" rx="5"/><rect x="39" y="49" width="22" height="11" rx="2.5"/><rect x="39.5" y="62" width="3.4" height="26" rx="1.7"/><rect x="44.2" y="62" width="3.4" height="30" rx="1.7"/><rect x="48.9" y="62" width="3.4" height="32" rx="1.7"/><rect x="53.6" y="62" width="3.4" height="30" rx="1.7"/><rect x="58.3" y="62" width="3.4" height="26" rx="1.7"/></g></svg><span class="lt-title">${I("Tecnico", "Stylist")}</span><span class="lt-sub">${I("Schede colore, formule, ispirazione", "Colour cards, formulas, inspiration")}</span></button>
+          <button type="button" class="launcher-tile" id="launchTricologo"><svg viewBox="0 0 100 100" aria-hidden="true"><path fill-rule="evenodd" d="M66 8a28 28 0 1 0 0.01 0ZM66 14a22 22 0 1 1-0.01 0Z"/><path d="M48 52q18-9 36 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M56 49q-3-12 1-18M66 47q0-14 4-20M76 49q3-10 0-16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><g transform="rotate(-45 30 74)"><rect x="6" y="67" width="46" height="14" rx="7"/><rect x="46" y="64" width="9" height="20" rx="3"/></g><path d="M12 92C6 94 4 98 8 99" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span class="lt-title">${I("Tricologo", "Trichologist")}</span><span class="lt-sub">${I("Cute e capelli, tricocamera", "Scalp and hair, trichoscope")}</span></button>
         </div>
         <div class="home-agenda launcher-agenda">
           <div class="home-agenda-head"><div class="notes-title">Agenda</div></div>
