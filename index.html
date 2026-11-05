@@ -770,6 +770,39 @@
   .agenda-field-operatore { flex: 0.6 1 90px; }
   .agenda-field-tipo { flex: 0.9 1 120px; }
   .agenda-field-titolo { flex: 1.8 1 200px; }
+
+  /* Agenda a colonne (restyling): una sola colonna delle ore a sinistra e una colonna per ogni
+     operatrice, tutte affiancate nello stesso riquadro che scorre. Ogni quarto d'ora e' alto
+     34px fisso, cosi' le colonne restano allineate tra loro e con le ore. */
+  .agenda-grid.agenda-multi { display: block; position: relative; max-height: min(72vh, 680px); border-radius: 10px; background: var(--paper-raised); }
+  .agenda-multi-head { display: flex; position: sticky; top: 0; z-index: 4; background: var(--paper-raised); border-bottom: 1px solid var(--line); }
+  .agenda-ruler-head { flex: none; width: 48px; }
+  .agenda-col-head { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 4px; border-left: 1px solid var(--line); }
+  .agenda-col-avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; }
+  .agenda-col-nome { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agenda-multi-body { display: flex; position: relative; }
+  .agenda-ruler { flex: none; width: 48px; }
+  .agenda-ruler-cell { height: 34px; font-size: 12px; color: var(--ink-soft); font-weight: 600; text-align: right; padding: 0 8px 0 0; line-height: 1; transform: translateY(-6px); }
+  .agenda-col { flex: 1 1 0; min-width: 0; border-left: 1px solid var(--line); }
+  .agenda-multi .agenda-slot { height: 34px; min-height: 0; padding: 0 4px; gap: 0; border-bottom: 1px solid var(--line); overflow: hidden; }
+  .agenda-multi .agenda-slot-time { display: none; }
+  .agenda-multi .agenda-slot-bordo-ora { border-bottom: 1px solid var(--ink-soft); }
+  .agenda-multi .agenda-slot-senza-bordo { border-bottom: 1px solid transparent; }
+  .agenda-multi .agenda-slot-add { margin: 0 auto; }
+  .agenda-multi .agenda-slot-filled { background: transparent; align-items: stretch; padding: 1px 3px; }
+  .agenda-multi .agenda-chip { border-radius: 6px; padding: 0 6px; border-width: 1px; gap: 4px; align-items: flex-start; }
+  .agenda-multi .agenda-chip-main { gap: 0; line-height: 1.1; justify-content: center; overflow: hidden; }
+  .agenda-multi .agenda-chip-nome { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agenda-multi .agenda-chip-servizio { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agenda-chip-ora { display: block; font-size: 11.5px; font-weight: 700; color: var(--ink-soft); }
+  .agenda-slot-filled[data-righe="1"] .agenda-chip-ora { display: none; }
+  .agenda-multi .agenda-chip-edit { font-size: 12px; padding: 0 2px; }
+  .agenda-multi .agenda-slot-chiuso { background: color-mix(in srgb, var(--ink-soft) 9%, transparent); }
+  .agenda-multi .agenda-slot-assente { background: rgba(122, 59, 86, 0.08); }
+  .agenda-multi .agenda-slot-assente-label { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agenda-multi .agenda-slot-occupato { background: transparent; }
+  .agenda-ora-linea { position: absolute; left: 40px; right: 0; height: 0; border-top: 2px solid var(--berry); z-index: 3; pointer-events: none; }
+  .agenda-ora-linea::before { content: ""; position: absolute; left: -4px; top: -5px; width: 8px; height: 8px; border-radius: 50%; background: var(--berry); }
   /* Giorni in cui lavorano sia le operatrici (es. sabato): due calendari affiancati. */
   .agenda-columns { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
   .agenda-column { flex: 1 1 260px; min-width: 220px; }
@@ -1982,7 +2015,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.191-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.192-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -6125,6 +6158,7 @@
     return `
       <div class="agenda-chip${isLavoro ? ' agenda-chip-lavoro' : ''}" data-id="${a.id}"${style}>
         <div class="agenda-chip-main">
+          <span class="agenda-chip-ora">${escapeHtml(a.ora || '')}</span>
           <span class="agenda-chip-nome">${escapeHtml(appuntamentoNomeDisplay(a))}</span>
           ${!isLavoro && appuntamentoServizioNome(a) ? `<span class="agenda-chip-servizio">${escapeHtml(appuntamentoServizioNome(a))}</span>` : ''}
         </div>
@@ -6210,7 +6244,7 @@
     const classiExtra = agendaClasseBordo(minutiFine);
     const righe = Math.max(1, Math.round((minutiFine - hhmmToMinuti(time)) / 15));
     return `
-      <div class="agenda-slot agenda-slot-filled${classiExtra}" data-time="${time}" data-fine="${minutiToHHMM(minutiFine)}" style="min-height:${righe * 34}px;">
+      <div class="agenda-slot agenda-slot-filled${classiExtra}" data-time="${time}" data-fine="${minutiToHHMM(minutiFine)}" data-righe="${righe}" style="min-height:${righe * 34}px;height:${righe * 34}px;">
         <div class="agenda-slot-time">${time}</div>
         <div class="agenda-slot-items">
           ${items.map(a => renderAgendaChipHtml(a)).join('')}
@@ -6267,15 +6301,23 @@
   function renderAgendaGridHtml(dateISO) {
     const operatoriReali = agendaOperatoriDelGiorno(dateISO);
     const operatori = operatoriReali.length ? operatoriReali : [primaOperatrice()];
-    if (operatori.length === 1) {
-      const op = operatori[0];
-      return `<div class="agenda-grid">${renderAgendaColonnaSlotsHtml(dateISO, op, appuntamentiDelGiorno(dateISO, op))}</div>`;
+    const slots = agendaSlotsVista();
+    const ruler = slots.map(time => `<div class="agenda-ruler-cell">${agendaMostraEtichettaOra(hhmmToMinuti(time)) ? time : ''}</div>`).join('');
+    const heads = operatori.map(op => `
+      <div class="agenda-col-head"><span class="agenda-col-avatar" style="background:${operatoreColore(op)};">${escapeHtml(String(op || '?').trim().charAt(0).toUpperCase())}</span><span class="agenda-col-nome">${escapeHtml(op)}</span></div>`).join('');
+    const cols = operatori.map(op => `<div class="agenda-col" data-operatore="${escapeHtml(op || '')}">${renderAgendaColonnaSlotsHtml(dateISO, op, appuntamentiDelGiorno(dateISO, op))}</div>`).join('');
+    // Linea dell'ora attuale (solo se si guarda oggi e l'ora e' dentro la griglia).
+    let linea = '';
+    if (dateISO === fmtDateISO(new Date()) && slots.length) {
+      const adesso = new Date();
+      const m = adesso.getHours() * 60 + adesso.getMinutes();
+      const m0 = hhmmToMinuti(slots[0]);
+      if (m >= m0 && m < m0 + slots.length * 15) linea = `<div class="agenda-ora-linea" style="top:${((m - m0) / 15) * 34}px;"></div>`;
     }
-    return `<div class="agenda-columns">${operatori.map(op => `
-      <div class="agenda-column">
-        <div class="agenda-column-head" style="color:${operatoreColore(op)};"><span class="agenda-column-dot" style="background:${operatoreColore(op)};"></span>${escapeHtml(op)}</div>
-        <div class="agenda-grid">${renderAgendaColonnaSlotsHtml(dateISO, op, appuntamentiDelGiorno(dateISO, op))}</div>
-      </div>`).join('')}</div>`;
+    return `<div class="agenda-grid agenda-multi">
+      <div class="agenda-multi-head"><div class="agenda-ruler-head"></div>${heads}</div>
+      <div class="agenda-multi-body"><div class="agenda-ruler">${ruler}</div>${cols}${linea}</div>
+    </div>`;
   }
 
   // Ridisegnare la scheda (es. scegliendo un servizio dal catalogo a metà agenda) non deve far
