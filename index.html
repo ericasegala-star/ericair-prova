@@ -1196,6 +1196,7 @@
   /* Bollino "da ricontattare" nell'elenco clienti: cliente senza una scheda aggiornata
      da più tempo di quanto scelto in Impostazioni. */
   .scheda-switch { margin-top: 6px; }
+  .nome-wrap { position: relative; }
   .recontact-badge.canc-badge { background: #A8433C; color: #fff; border-color: #A8433C; }
   .recontact-badge {
     display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 10px;
@@ -1961,7 +1962,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.181-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.182-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3760,6 +3761,7 @@
       const prev = getClient(activeId);
       if (prev) { commitVersion(prev); save(clients); }
     }
+    if (schedaNuovaId && schedaNuovaId !== newId) schedaNuovaId = null;
     activeId = newId;
     versionsExpanded = false;
     sheetShowEmpty = false;
@@ -6808,14 +6810,61 @@
   function switchTrico(id) {
     tricoFlush();
     if (activeId) { const prev = getClient(activeId); if (prev) { commitVersion(prev); } }
+    if (schedaNuovaId && schedaNuovaId !== id) schedaNuovaId = null;
     activeTricoId = id; triPrintMode = null;
     viewingNotes = viewingIspirazione = viewingMagazzino = viewingServizi = viewingAnagrafica = viewingAgenda = viewingSearchApp = false;
     viewingBlankSheet = viewingOstwald = viewingCatalogoHp = viewingConsigliGenerici = viewingColorimetria = viewingTricologia = viewingSchedaGenerica = viewingHome = false;
     renderAll();
     if (id) loadClientFoto(id);
   }
+  // --- Nome della nuova scheda: mai i contatti della rubrica del dispositivo, ma le clienti già in Anagrafica ---
+  let schedaNuovaId = null; // la scheda appena creata, ancora "vuota": solo lì compaiono i suggerimenti
+  function normNome(n) { return (n || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+  function clienteGiaInAnagrafica(nome, escludiId) {
+    const n = normNome(nome); if (!n) return null;
+    return clients.find(x => x.id !== escludiId && normNome(x.nome) === n) || null;
+  }
+  function suggerimentiAnagrafica(term, escludiId) {
+    const t = normNome(term); if (t.length < 2) return [];
+    return clients.filter(x => x.id !== escludiId && normNome(x.nome).includes(t)).slice(0, 6);
+  }
+  // La persona c'è già in Anagrafica: si usa lei (niente doppioni) e si butta la scheda vuota appena creata.
+  function adottaClienteEsistente(tipo, e, nuovoId) {
+    if (nuovoId) { save(clients.filter(x => x.id !== nuovoId)); }
+    schedaNuovaId = null;
+    notifyTop(I("È già in Anagrafica: ho aperto la sua scheda.", "She is already in the client directory: opened her card."));
+    if (tipo === 'tri') {
+      if (!e.tricho) { e.tricho = blankTricho(); save(clients); }
+      if (!viewingTricologo && modeTricologoBtn) modeTricologoBtn.click();
+      switchTrico(e.id);
+    } else {
+      if (e.soloAnagrafica) { e.soloAnagrafica = false; e.updatedAt = Date.now(); save(clients); }
+      if (viewingTricologo && modeTecnicoBtn) modeTecnicoBtn.click();
+      switchActive(e.id);
+    }
+  }
+  function collegaSuggerimentiNome(inputId, c, tipo) {
+    const inp = document.getElementById(inputId); if (!inp) return;
+    const box = inp.parentNode.querySelector('.nome-sugg'); if (!box) return;
+    // Come nel campo Cliente dell'agenda: "readonly" finché non si tocca, così Safari non propone i contatti della rubrica.
+    inp.setAttribute('autocomplete', 'off'); inp.setAttribute('name', 'nome-scheda-' + c.id); if (schedaNuovaId === c.id) inp.setAttribute('readonly', ''); // solo sulla scheda nuova: lì si scrive il nome da capo
+    function mostra() {
+      box.innerHTML = '';
+      if (schedaNuovaId !== c.id) return;
+      suggerimentiAnagrafica(inp.value, c.id).forEach(e => {
+        const d = document.createElement('div'); d.className = 'agenda-cliente-suggestion';
+        d.textContent = (e.nome || I("Senza nome", "Unnamed")) + (e.telefono ? ' · ' + e.telefono : '');
+        d.addEventListener('mousedown', ev => { ev.preventDefault(); adottaClienteEsistente(tipo, e, c.id); });
+        box.appendChild(d);
+      });
+    }
+    inp.addEventListener('focus', () => { inp.removeAttribute('readonly'); mostra(); });
+    inp.addEventListener('input', mostra);
+    inp.addEventListener('blur', () => setTimeout(() => { box.innerHTML = ''; }, 150));
+  }
   function createNewTrico(prefillName) {
     tricoFlush();
+    if (prefillName) { const e = clienteGiaInAnagrafica(prefillName); if (e) { adottaClienteEsistente('tri', e, null); return; } }
     const c = blankClient();
     c.soloAnagrafica = true; // è nuova solo come scheda tricologica: non compare tra le schede tecniche
     if (prefillName) c.nome = titleCaseName(prefillName);
@@ -6826,6 +6875,7 @@
     const sc = document.getElementById('searchClear'); if (sc) sc.hidden = true;
     save(clients);
     switchTrico(c.id);
+    schedaNuovaId = c.id;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     const n = document.getElementById('tri-nome'); if (n) n.focus({ preventScroll: true });
   }
@@ -6858,10 +6908,10 @@
     panel.innerHTML = `
       <div class="sheet-head">
         <div class="name-field">
-          <input type="text" id="tri-nome" placeholder="${I("Nome cliente", "Client name")}" value="${escapeHtml(c.nome)}">
+          <div class="nome-wrap"><input type="text" id="tri-nome" placeholder="${I("Nome cliente", "Client name")}" value="${escapeHtml(c.nome)}"><div class="agenda-cliente-suggestions nome-sugg"></div></div>
           <input type="tel" id="tri-tel" class="name-field-telefono" placeholder="${I("Telefono", "Phone")}" value="${escapeHtml(c.telefono || '')}">
           <div class="meta">${I("Scheda tricologica · creata il ", "Trichology card · created on ")}${fmtDate(T.createdAt)}${I(" · aggiornata il ", " · updated on ")}${fmtDate(T.updatedAt)}</div>
-          ${!c.soloAnagrafica ? `<button type="button" class="ghost small scheda-switch" id="schedaVaTec">${I("Vai alla scheda tecnica →", "Go to technical card →")}</button>` : ''}
+          <button type="button" class="ghost small scheda-switch" id="schedaVaTec">${!c.soloAnagrafica ? I("Vai alla scheda tecnica →", "Go to technical card →") : I("Crea la scheda tecnica →", "Create the technical card →")}</button>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="ghost small" id="triPrintBtn">${I("Stampa scheda", "Print card")}</button>
@@ -6946,8 +6996,10 @@
     panel.querySelectorAll('textarea.field-autosize').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; el.addEventListener('input', () => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); });
     const nome = document.getElementById('tri-nome');
     nome.addEventListener('input', () => { const p = nome.selectionStart; const v = titleCaseName(nome.value); if (v !== nome.value) { nome.value = v; nome.setSelectionRange(p, p); } c.nome = nome.value; T.updatedAt = Date.now(); tricoSave(); renderList(); });
+    collegaSuggerimentiNome('tri-nome', c, 'tri');
     { const b = document.getElementById('schedaVaTec'); if (b) b.addEventListener('click', () => {
         tricoFlush();
+        if (c.soloAnagrafica) { c.soloAnagrafica = false; c.updatedAt = Date.now(); save(clients); }
         if (viewingTricologo && modeTecnicoBtn) modeTecnicoBtn.click();
         switchActive(c.id);
       }); }
@@ -7586,10 +7638,10 @@
     panel.innerHTML = `
       <div class="sheet-head">
         <div class="name-field">
-          <input type="text" id="f-nome" placeholder="${t('sc.nomeCliente', I("Nome cliente", "Client name"))}" value="${escapeHtml(c.nome)}">
+          <div class="nome-wrap"><input type="text" id="f-nome" placeholder="${t('sc.nomeCliente', I("Nome cliente", "Client name"))}" value="${escapeHtml(c.nome)}"><div class="agenda-cliente-suggestions nome-sugg"></div></div>
           <input type="tel" id="f-telefono" class="name-field-telefono" placeholder="${t('sc.telefonoPh', I("Telefono (per WhatsApp)", "Phone (for WhatsApp)"))}" value="${escapeHtml(c.telefono)}">
           <div class="meta">${t('sc.meta', I("Creata il {c} · aggiornata il {u}", "Created on {c} · updated on {u}")).replace('{c}', fmtDate(c.createdAt)).replace('{u}', fmtDate(c.updatedAt))}</div>
-          ${c.tricho ? `<button type="button" class="ghost small scheda-switch" id="schedaVaTri">${I("Vai alla scheda tricologica →", "Go to trichology card →")}</button>` : ''}
+          <button type="button" class="ghost small scheda-switch" id="schedaVaTri">${c.tricho ? I("Vai alla scheda tricologica →", "Go to trichology card →") : I("Crea la scheda tricologica →", "Create the trichology card →")}</button>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="ghost small" id="techBlankBtn">${I("Stampa modulo vuoto", "Print blank form")}</button><button class="danger ghost small" id="deleteBtn">${t('sc.eliminaScheda', I("Elimina scheda", "Delete card"))}</button></div>
       </div>
@@ -9355,8 +9407,10 @@
       }
       touch(cl => cl.nome = input.value);
     });
+    collegaSuggerimentiNome('f-nome', c, 'tec');
     { const b = document.getElementById('schedaVaTri'); if (b) b.addEventListener('click', () => {
         salvaVersioneAttiva();
+        if (!c.tricho) { c.tricho = blankTricho(); save(clients); }
         if (!viewingTricologo && modeTricologoBtn) modeTricologoBtn.click();
         switchTrico(c.id);
       }); }
@@ -9623,11 +9677,13 @@
   // tasto che compare quando una ricerca in "Cerca cliente" non trova nessuno, nel qual caso
   // il nome cercato va già scritto nella nuova scheda (prefillName), per non doverlo riscrivere.
   function createNewClient(prefillName) {
+    if (prefillName) { const e = clienteGiaInAnagrafica(prefillName); if (e) { adottaClienteEsistente('tec', e, null); return; } }
     if (activeId) { const prev = getClient(activeId); if (prev) commitVersion(prev); }
     const c = blankClient();
     if (prefillName) c.nome = titleCaseName(prefillName);
     clients.push(c);
     activeId = c.id;
+    schedaNuovaId = c.id;
     versionsExpanded = false;
     sheetShowEmpty = true;
     viewingNotes = false;
