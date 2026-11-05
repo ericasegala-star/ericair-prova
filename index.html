@@ -1950,7 +1950,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.178-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.179-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -5304,7 +5304,7 @@
     el.textContent = msg;
     el.style.color = isError ? '#A8433C' : 'var(--ok)';
     clearTimeout(notify._t);
-    notify._t = setTimeout(() => { if (el) el.textContent = ''; }, 3200);
+    notify._t = setTimeout(() => { if (el) { el.textContent = testoSalvato(); el.style.color = 'var(--ok)'; } }, 3200);
   }
 
   function notifyTop(msg, isError) {
@@ -5373,24 +5373,50 @@
     reader.readAsText(file);
   }
 
-  function persist(showStatus) {
-    const statusEl = document.getElementById('saveStatus');
-    const resultPromise = save(clients); // scrive subito in memoria; il salvataggio su IndexedDB avviene in background
-    if (statusEl) {
-      statusEl.textContent = showStatus || I("Salvato.", "Saved.");
-      statusEl.style.color = 'var(--ok)';
-      clearTimeout(persist._t);
-      persist._t = setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 1800);
-    }
-    resultPromise.then(ok => {
-      if (!ok && statusEl) {
-        clearTimeout(persist._t);
-        statusEl.textContent = I("Non sono riuscita a salvare. Riprova tra poco.", "Couldn’t save. Try again in a moment.");
-        statusEl.style.color = '#A8433C';
-      }
-    });
-    return resultPromise; // promette true/false: si risolve quando il salvataggio su IndexedDB è davvero completato
+  // Stato del salvataggio, sempre visibile in fondo alla scheda: "Salvataggio…" mentre scrive,
+  // "Salvato ✓ ore HH:MM" quando è sul database, in rosso se non è riuscito.
+  let ultimoSalvataggio = 0;
+  function testoSalvato() {
+    if (!ultimoSalvataggio) return I("Si salva da sola.", "Saves automatically.");
+    const d = new Date(ultimoSalvataggio), p2 = n => (n < 10 ? '0' : '') + n;
+    return I("Salvato ✓ ore ", "Saved ✓ at ") + p2(d.getHours()) + ':' + p2(d.getMinutes());
   }
+  let statoSalvTok = 0;
+  function statoSalvataggio(stato, extra) {
+    const el = document.getElementById('saveStatus'); if (!el) return;
+    clearTimeout(notify._t);
+    if (stato === 'saving') { el.textContent = I("Salvataggio…", "Saving…"); el.style.color = 'var(--muted, #7a7a7a)'; }
+    else if (stato === 'slow') { el.textContent = I("Salvataggio in corso… controlla la connessione.", "Still saving… check the connection."); el.style.color = '#B7791F'; }
+    else if (stato === 'error') { el.textContent = I("NON salvato! Controlla la connessione e riprova.", "NOT saved! Check the connection and try again."); el.style.color = '#A8433C'; }
+    else { el.textContent = (extra ? extra + ' · ' : '') + testoSalvato(); el.style.color = 'var(--ok)'; }
+  }
+  function salvaEMostra(promessa, extra) {
+    const tok = ++statoSalvTok;
+    statoSalvataggio('saving');
+    const lento = setTimeout(() => { if (tok === statoSalvTok) statoSalvataggio('slow'); }, 6000);
+    return promessa.then(ok => {
+      clearTimeout(lento);
+      if (tok === statoSalvTok) { if (ok) { ultimoSalvataggio = Date.now(); statoSalvataggio('ok', extra); } else statoSalvataggio('error'); }
+      else if (ok) ultimoSalvataggio = Date.now();
+      return ok;
+    });
+  }
+  function persist(showStatus) {
+    return salvaEMostra(save(clients), showStatus); // promette true/false: si risolve quando il salvataggio è davvero completato
+  }
+  // Chiude la "versione" della scheda tecnica aperta (storico) e la salva: succede da sola
+  // quando si esce dalla scheda, si passa a un'altra o si chiude/nasconde l'app.
+  function salvaVersioneAttiva() {
+    const c = activeId && getClient(activeId);
+    if (!c || viewingTricologo) return;
+    const n0 = (c.versioni || []).length, v0 = (c.versioni || [])[0];
+    commitVersion(c);
+    if ((c.versioni || [])[0] !== v0) c.updatedAt = Date.now(); // c'è una versione nuova: va scritta sul database
+    ensureBaseline(c); // riparte lo storico per le prossime modifiche
+    save(clients);
+  }
+  window.addEventListener('pagehide', salvaVersioneAttiva);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { salvaVersioneAttiva(); tricoFlush(); } });
 
   function renderList() {
     updateBackupReminderUI(); // il promemoria dipende da quante clienti ci sono in totale
@@ -6757,10 +6783,11 @@
   }`;
   (function () { const s = document.createElement('style'); s.textContent = TRI_CSS; document.head.appendChild(s); })();
 
-  function tricoFlush() { if (tricoSave._t) { clearTimeout(tricoSave._t); tricoSave._t = null; save(clients); } }
+  function tricoFlush() { if (tricoSave._t) { clearTimeout(tricoSave._t); tricoSave._t = null; salvaEMostra(save(clients)); } }
   function tricoSave() {
     clearTimeout(tricoSave._t);
-    tricoSave._t = setTimeout(() => { tricoSave._t = null; save(clients); const st = document.getElementById('saveStatus'); if (st) { st.textContent = I("Salvato.", "Saved."); setTimeout(() => { if (st) st.textContent = ''; }, 1500); } }, 300);
+    statoSalvataggio('saving');
+    tricoSave._t = setTimeout(() => { tricoSave._t = null; salvaEMostra(save(clients)); }, 300);
   }
   function switchTrico(id) {
     tricoFlush();
@@ -6894,7 +6921,8 @@
       </fieldset>
       <fieldset><legend>${I("Consenso", "Consent")}</legend>
         <label class="tri-consenso"><input type="checkbox" id="tri-consenso" ${T.consensoSalute ? 'checked' : ''}><span>${I("La cliente acconsente al trattamento dei dati sulla salute (cute, capelli, foto) per questa scheda.", "The client consents to processing of health data (scalp, hair, photos) for this card.")}${T.consensoSalute ? ' <strong>' + I("Registrato il ", "Recorded on ") + fmtDate(T.consensoSalute) + '</strong>' : ''}</span></label>
-      </fieldset>`;
+      </fieldset>
+      <div class="sheet-footer"><span class="save-status" id="saveStatus">${testoSalvato()}</span></div>`;
     // campi di testo e date
     const touchT = (fn) => { fn(T); T.updatedAt = Date.now(); tricoSave(); };
     panel.querySelectorAll('[data-tri]').forEach(el => el.addEventListener('input', () => touchT(t => { t[el.dataset.tri] = el.value; })));
@@ -7033,6 +7061,7 @@
       viewingAgenda = true; // Tricologo riparte sempre dall'Agenda
       closeMobileMenu(); renderAll(); agendaScrollA830();
     } else {
+      salvaVersioneAttiva();
       vaiAllAgenda();
     }
   }
@@ -7507,7 +7536,7 @@
       return;
     }
     ensureBaseline(c);
-    if (floatingSave) floatingSave.hidden = false; // c'è una vera scheda cliente aperta: mostra il tasto laterale
+    if (floatingSave) floatingSave.hidden = true; // niente più tasto Salva: si salva tutto da solo
 
     // Scheda "compatta": appena si riapre una scheda già esistente, si vede solo quello che è
     // stato davvero compilato; il resto resta nascosto finché non si clicca il tasto per
@@ -7688,12 +7717,11 @@
       </fieldset>
 
       <div class="sheet-footer">
-        <span class="save-status" id="saveStatus"></span>
+        <span class="save-status" id="saveStatus">${testoSalvato()}</span>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="ghost small" id="duplicateBtn">${t('sc.duplica', I("Duplica scheda", "Duplicate card"))}</button>
           <button class="ghost small" id="printBtn">${t('sc.stampa', I("Stampa scheda", "Print card"))}</button>
           <button class="ghost small" id="downloadBtn">${t('sc.scaricaPdf', I("Scarica scheda (PDF)", "Download card (PDF)"))}</button>
-          <button class="primary small" id="saveBtn">${t('sc.salva', I("Salva", "Save"))}</button>
         </div>
       </div>
     `;
@@ -9477,14 +9505,6 @@
     on('sheetShowEmptyBtn', 'click', () => {
       sheetShowEmpty = true;
       renderSheet();
-    });
-
-    on('saveBtn', 'click', () => {
-      c.updatedAt = Date.now();
-      commitVersion(c);
-      ensureBaseline(c);
-      persist(t('sc.schedaSalvata', I("Scheda salvata.", "Card saved."))).then(ok => { if (ok) showCenterToast(t('sc.fatto', 'Fatto')); });
-      renderAll();
     });
 
     let deleteArmed = false;
