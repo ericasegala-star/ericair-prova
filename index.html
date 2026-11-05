@@ -1978,7 +1978,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.187-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.188-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -7249,7 +7249,7 @@
     const layoutEl = document.querySelector('.layout');
     const sidebarStackEl = document.querySelector('.sidebar-stack');
     if (layoutEl) layoutEl.classList.toggle('layout-magazzino-full', sezionePaginaIntera() || launcherMostrato());
-    { const nb = document.getElementById('newBtn'); if (nb) nb.style.display = launcherMostrato() ? 'none' : ''; aggiornaModeSwitch(); } // nella schermata iniziale non c'è "+ Nuova scheda" (Tecnico o Tricologo?)
+    { const nb = document.getElementById('newBtn'); if (nb) nb.style.display = launcherMostrato() ? 'none' : ''; const ms = document.getElementById('modeSwitch'); if (ms) ms.style.display = launcherMostrato() ? 'none' : ''; aggiornaModeSwitch(); } // nella schermata iniziale non c'è "+ Nuova scheda" (Tecnico o Tricologo?)
     if (sidebarStackEl) sidebarStackEl.style.display = ((sezionePaginaIntera() && !isTouchDevice) || launcherMostrato()) ? 'none' : '';
     const topAgendaBtnEl = document.getElementById('topAgendaBtn');
     if (topAgendaBtnEl) topAgendaBtnEl.hidden = !viewingMagazzino;
