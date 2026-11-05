@@ -1962,7 +1962,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.182-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.183-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3848,7 +3848,7 @@
     return `${I("\n      <div class=\"agenda-mese-riga\">\n        <label class=\"agenda-mese-pill\" title=\"Scegli una data\">\n          ", "\n      <div class=\"agenda-mese-riga\">\n        <label class=\"agenda-mese-pill\" title=\"Choose a date\">\n          ")}${escapeHtml(mese)} <span class="chev" aria-hidden="true">⌄</span>
           <input type="date" id="agendaDatePicker" value="${escapeHtml(agendaDataSelezionata)}${I("\" aria-label=\"Scegli una data\">\n        </label>\n        <div class=\"agenda-azioni\">\n          <button type=\"button\" class=\"ghost small\" id=\"agendaOggiBtn\">", "\" aria-label=\"Choose a date\">\n        </label>\n        <div class=\"agenda-azioni\">\n          <button type=\"button\" class=\"ghost small\" id=\"agendaOggiBtn\">")}${t('agenda.oggi', 'Oggi')}</button>
           <button type="button" class="ghost small" id="agendaTurniBtn">${t('agenda.turniLavoro', I("Turni di lavoro", "Work shifts"))}</button>
-          <button type="button" class="ghost small" id="agendaAssenzaBtn">${t('agenda.feriePermesso', I("Ferie/permesso", "Leave/time off"))}${I("</button>\n        </div>\n      </div>\n      <div class=\"agenda-settimana\" id=\"agendaSettimana\">\n        <button type=\"button\" class=\"agenda-sett-freccia\" id=\"agendaPrevDay\" aria-label=\"Giorno precedente\">‹</button>\n        <div class=\"agenda-settimana-giorni\">", "</button>\n        </div>\n      </div>\n      <div class=\"agenda-settimana\" id=\"agendaSettimana\">\n        <button type=\"button\" class=\"agenda-sett-freccia\" id=\"agendaPrevDay\" aria-label=\"Previous day\">‹</button>\n        <div class=\"agenda-settimana-giorni\">")}${giorni.join('')}${I("</div>\n        <button type=\"button\" class=\"agenda-sett-freccia\" id=\"agendaNextDay\" aria-label=\"Giorno successivo\">›</button>\n      </div>", "</div>\n        <button type=\"button\" class=\"agenda-sett-freccia\" id=\"agendaNextDay\" aria-label=\"Next day\">›</button>\n      </div>")}`;
+          <button type="button" class="ghost small" id="agendaAssenzaBtn">${t('agenda.feriePermesso', I("Ferie/permesso", "Leave/time off"))}${I("</button>\n        </div>\n      </div>\n      <div class=\"agenda-settimana\" id=\"agendaSettimana\">\n        <button type=\"button\" class=\"agenda-sett-freccia\" id=\"agendaPrevDay\" aria-label=\"Settimana precedente\">‹</button>\n        <div class=\"agenda-settimana-giorni\">", "</button>\n        </div>\n      </div>\n      <div class=\"agenda-settimana\" id=\"agendaSettimana\">\n        <button type=\"button\" class=\"agenda-sett-freccia\" id=\"agendaPrevDay\" aria-label=\"Previous week\">‹</button>\n        <div class=\"agenda-settimana-giorni\">")}${giorni.join('')}${I("</div>\n        <button type=\"button\" class=\"agenda-sett-freccia\" id=\"agendaNextDay\" aria-label=\"Settimana successiva\">›</button>\n      </div>", "</div>\n        <button type=\"button\" class=\"agenda-sett-freccia\" id=\"agendaNextDay\" aria-label=\"Next week\">›</button>\n      </div>")}`;
   }
 
   function fmtDateISOLong(iso) {
@@ -8498,9 +8498,9 @@
       agendaScrollA830();
     }
     const prevBtn = document.getElementById('agendaPrevDay');
-    if (prevBtn) prevBtn.addEventListener('click', () => spostaGiorno(-1));
+    if (prevBtn) prevBtn.addEventListener('click', () => spostaGiorno(-7)); // la freccia sposta la settimana, non il giorno
     const nextBtn = document.getElementById('agendaNextDay');
-    if (nextBtn) nextBtn.addEventListener('click', () => spostaGiorno(1));
+    if (nextBtn) nextBtn.addEventListener('click', () => spostaGiorno(7));
     document.querySelectorAll('.agenda-giorno').forEach(b => b.addEventListener('click', () => {
       agendaDataSelezionata = b.dataset.data;
       renderSheet();
