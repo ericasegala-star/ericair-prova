@@ -1937,7 +1937,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-04.168-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.169-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -6639,7 +6639,7 @@
     const isTouchDevice = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
     const sidebarAsideEl = document.querySelector('.sidebar-stack .sidebar');
     if (sidebarAsideEl) sidebarAsideEl.style.display = (viewingTricologo || (viewingMagazzino && isTouchDevice)) ? 'none' : '';
-    ['blankSheetEntry', 'notesEntry', 'ostwaldEntry', 'ispirazioneEntry', 'serviziEntry', 'anagraficaEntry'].forEach(id => {
+    ['blankSheetEntry', 'notesEntry', 'ostwaldEntry', 'ispirazioneEntry', 'serviziEntry', 'anagraficaEntry', 'colorimetriaEntry'].forEach(id => {
       const voce = document.getElementById(id);
       const wrapper = voce && voce.closest('.notes-banner');
       if (wrapper) wrapper.style.display = viewingTricologo ? 'none' : '';
