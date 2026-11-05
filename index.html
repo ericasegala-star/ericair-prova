@@ -344,6 +344,8 @@
     .field-rich-overlay { display: none; }
     .field-rich textarea.field-rich-input, .field-rich input.field-rich-input { display: block; position: static; color: var(--ink) !important; }
   }
+  .sezione-indietro { margin-bottom: 14px; }
+  @media print { .sezione-indietro { display: none !important; } }
   .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .row2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
   @media (max-width: 620px) { .row3, .row2 { grid-template-columns: 1fr; } }
@@ -1948,7 +1950,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.177-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.178-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -7020,7 +7022,32 @@
     const d = document.createElement('p'); d.className = 'hint scheda-pie'; d.style.cssText = 'margin-top:18px;text-align:center'; d.innerHTML = parti.join('<br>');
     panel.appendChild(d);
   }
-  function renderSheet() { renderSheetInner(); aggiornaPie(); }
+  // Sezioni "a pagina intera" (come il Magazzino): niente elenco/menu a fianco, in alto il tasto "Indietro".
+  function sezionePaginaIntera() {
+    return viewingNotes || viewingIspirazione || viewingMagazzino || viewingServizi || viewingAnagrafica || viewingSearchApp || viewingBlankSheet || viewingOstwald || viewingCatalogoHp || viewingConsigliGenerici || viewingSchedaGenerica || viewingColorimetria || viewingTricologia;
+  }
+  function tornaIndietro() {
+    if (viewingTricologo) {
+      tricoFlush(); activeTricoId = null; triPrintMode = null;
+      viewingNotes = viewingIspirazione = viewingMagazzino = viewingServizi = viewingAnagrafica = viewingSearchApp = viewingBlankSheet = viewingOstwald = viewingCatalogoHp = viewingConsigliGenerici = viewingSchedaGenerica = viewingTricologia = viewingHome = false; viewingColorimetria = false;
+      viewingAgenda = true; // Tricologo riparte sempre dall'Agenda
+      closeMobileMenu(); renderAll(); agendaScrollA830();
+    } else {
+      vaiAllAgenda();
+    }
+  }
+  function aggiornaIndietro() {
+    const panel = document.getElementById('sheetPanel'); if (!panel) return;
+    const old = panel.querySelector('.sezione-indietro'); if (old) old.remove();
+    const schedaTec = !viewingTricologo && activeId && !altraSezioneAperta() && getClient(activeId);
+    const schedaTri = viewingTricologo && activeTricoId && !altraSezioneAperta() && !triPrintMode;
+    if (!sezionePaginaIntera() && !schedaTec && !schedaTri) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ghost small sezione-indietro'; b.textContent = I("← Indietro", "← Back");
+    b.addEventListener('click', tornaIndietro);
+    panel.insertBefore(b, panel.firstChild);
+  }
+  function renderSheet() { renderSheetInner(); aggiornaIndietro(); aggiornaPie(); }
   function renderSheetInner() {
     const panel = document.getElementById('sheetPanel');
     const floatingSave = document.getElementById('floatingSaveBtn');
@@ -7051,7 +7078,7 @@
     // "fixed" fuori dal flusso — nasconderne il contenitore lo nasconderebbe anche lui.
     const isTouchDevice = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
     const sidebarAsideEl = document.querySelector('.sidebar-stack .sidebar');
-    if (sidebarAsideEl) sidebarAsideEl.style.display = (viewingMagazzino && isTouchDevice) ? 'none' : '';
+    if (sidebarAsideEl) sidebarAsideEl.style.display = (sezionePaginaIntera() && isTouchDevice) ? 'none' : '';
     ['blankSheetEntry', 'notesEntry', 'ostwaldEntry', 'ispirazioneEntry', 'serviziEntry', 'colorimetriaEntry'].forEach(id => {
       const voce = document.getElementById(id);
       const wrapper = voce && voce.closest('.notes-banner');
@@ -7062,8 +7089,8 @@
 
     const layoutEl = document.querySelector('.layout');
     const sidebarStackEl = document.querySelector('.sidebar-stack');
-    if (layoutEl) layoutEl.classList.toggle('layout-magazzino-full', viewingMagazzino);
-    if (sidebarStackEl) sidebarStackEl.style.display = (viewingMagazzino && !isTouchDevice) ? 'none' : '';
+    if (layoutEl) layoutEl.classList.toggle('layout-magazzino-full', sezionePaginaIntera());
+    if (sidebarStackEl) sidebarStackEl.style.display = (sezionePaginaIntera() && !isTouchDevice) ? 'none' : '';
     const topAgendaBtnEl = document.getElementById('topAgendaBtn');
     if (topAgendaBtnEl) topAgendaBtnEl.hidden = !viewingMagazzino;
 
