@@ -1937,7 +1937,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-04.167-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.168-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -6247,9 +6247,9 @@
     // ciclo di vita del capello: tre fasi
     const ciclo = `<svg class="col-fig" viewBox="0 0 520 120" width="520" role="img" aria-label="${I("Le tre fasi del ciclo del capello", "The three phases of the hair cycle")}">
       <g font-size="13" fill="currentColor" text-anchor="middle">
-        <rect x="4" y="14" width="250" height="56" rx="10" fill="#e6efe1" stroke="#4c7a5e" stroke-width="1.5"/><text x="129" y="38" font-weight="700">${I("Crescita", "Growth")}</text><text x="129" y="58" font-size="12">${I("la fase lunga (anni)", "the long phase (years)")}</text>
-        <rect x="266" y="14" width="110" height="56" rx="10" fill="#f6ebbb" stroke="#bf9c58" stroke-width="1.5"/><text x="321" y="38" font-weight="700">${I("Pausa breve", "Short pause")}</text><text x="321" y="58" font-size="12">${I("poche settimane", "a few weeks")}</text>
-        <rect x="388" y="14" width="128" height="56" rx="10" fill="#f1dcdc" stroke="#a5483f" stroke-width="1.5"/><text x="452" y="38" font-weight="700">${I("Riposo e caduta", "Rest and shedding")}</text><text x="452" y="58" font-size="12">${I("alcuni mesi", "a few months")}</text>
+        <rect x="4" y="14" width="250" height="56" rx="10" fill="#e6efe1" stroke="#4c7a5e" stroke-width="1.5"/><text x="129" y="36" font-weight="700">${I("ANAGEN", "ANAGEN")}</text><text x="129" y="55" font-size="12">${I("crescita: la fase lunga (anni)", "growth: the long phase (years)")}</text>
+        <rect x="266" y="14" width="110" height="56" rx="10" fill="#f6ebbb" stroke="#bf9c58" stroke-width="1.5"/><text x="321" y="36" font-weight="700">${I("CATAGEN", "CATAGEN")}</text><text x="321" y="55" font-size="12">${I("pausa: poche settimane", "pause: a few weeks")}</text>
+        <rect x="388" y="14" width="128" height="56" rx="10" fill="#f1dcdc" stroke="#a5483f" stroke-width="1.5"/><text x="452" y="36" font-weight="700">${I("TELOGEN", "TELOGEN")}</text><text x="452" y="55" font-size="12">${I("riposo e caduta: mesi", "rest and shedding: months")}</text>
         <text x="260" y="104" font-size="12" opacity=".75">${I("ogni capello ha il suo ritmo: non cadono tutti insieme", "each hair has its own rhythm: they do not all fall at once")}</text>
       </g></svg>`;
     // pelle e follicolo
@@ -6287,11 +6287,13 @@
         </section>
         <section class="col-card">
           <h3>${I("Il ciclo del capello", "The hair cycle")}</h3>
-          <p class="col-lead">${I("Ogni capello passa da una crescita, una pausa e un riposo, poi ricomincia.", "Every hair goes through growth, a pause and a rest, then starts again.")}</p>
+          <p class="col-lead">${I("Ogni capello passa da tre fasi — anagen, catagen e telogen — poi ricomincia.", "Every hair goes through three phases — anagen, catagen and telogen — then starts again.")}</p>
           ${ciclo}
           <ul>
-            ${li("La maggior parte dei capelli è sempre in <b>crescita</b>; una piccola parte è a riposo.", "Most hairs are in the <b>growth</b> phase at any time; a small share are resting.")}
-            ${li("Dopo uno stress forte, una febbre o un parto, molti capelli possono passare insieme al riposo e cadere <b>qualche mese dopo</b>: spesso è temporaneo.", "After strong stress, a fever or childbirth, many hairs can enter rest together and fall <b>a few months later</b>: it is often temporary.")}
+            ${li("<b>Anagen</b> (crescita): il capello si forma e si allunga. È la fase più lunga e riguarda la maggior parte dei capelli.", "<b>Anagen</b> (growth): the hair forms and lengthens. It is the longest phase and covers most hairs.")}
+            ${li("<b>Catagen</b> (pausa): una breve transizione in cui il follicolo si ritira e la crescita si ferma.", "<b>Catagen</b> (pause): a short transition in which the follicle shrinks back and growth stops.")}
+            ${li("<b>Telogen</b> (riposo): il capello è fermo e alla fine cade, lasciando posto a uno nuovo. Una piccola parte dei capelli è sempre in questa fase.", "<b>Telogen</b> (rest): the hair stands still and eventually falls, making room for a new one. A small share of hairs is always in this phase.")}
+            ${li("Dopo uno stress forte, una febbre o un parto, molti capelli possono passare insieme in <b>telogen</b> e cadere <b>qualche mese dopo</b>: spesso è temporaneo.", "After strong stress, a fever or childbirth, many hairs can enter <b>telogen</b> together and fall <b>a few months later</b>: it is often temporary.")}
           </ul>
           <div class="col-note tri-medico"><b>${I("Sentire il medico", "Ask a doctor")}</b>: ${I("se la caduta è molto più forte del solito o dura da più di qualche mese, la cliente può chiedere un parere al medico.", "if hair loss is much heavier than usual or lasts more than a few months, the client can ask a doctor for an opinion.")}</div>
         </section>
