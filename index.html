@@ -530,6 +530,8 @@
   .col-tbl th, .col-tbl td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
   .col-tbl th { font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
   .col-chip { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: -2px; margin-right: 6px; border: 1px solid rgba(0,0,0,.15); }
+  .tri-cat { margin: 26px 0 10px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .tri-medico { margin-top: 12px; }
   .col-note { background: var(--copper-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-top: 10px; }
   .linea-nome { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
   .line-name-input { flex: 1; min-width: 0; background: transparent; border: 0; border-bottom: 1px dashed transparent; border-radius: 0; padding: 2px 0; font: inherit; color: inherit; }
@@ -1935,7 +1937,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-04.166-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.167-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -6271,6 +6273,7 @@
         <div class="sub col-sub">${I("Nozioni di base su cute e capelli, per fare le domande giuste e sapere quando consigliare il medico.", "The basics about scalp and hair, to ask the right questions and know when to recommend a doctor.")}</div>
       </div></div>
       <div class="col-note" style="margin:0 0 18px"><b>${I("Importante.", "Important.")}</b> ${I("Queste pagine sono informazioni generali per il lavoro in salone. Non sono una diagnosi e non sostituiscono il parere di un medico: in caso di dubbio si consiglia sempre una visita.", "These pages are general information for salon work. They are not a diagnosis and do not replace a doctor’s opinion: when in doubt, always recommend a medical visit.")}</div>
+      <h2 class="tri-cat">${I("Conoscere cute e capello", "Know the scalp and hair")}</h2>
       <div class="col-grid">
         <section class="col-card">
           <h3>${I("Cute e capello", "Scalp and hair")}</h3>
@@ -6290,7 +6293,11 @@
             ${li("La maggior parte dei capelli è sempre in <b>crescita</b>; una piccola parte è a riposo.", "Most hairs are in the <b>growth</b> phase at any time; a small share are resting.")}
             ${li("Dopo uno stress forte, una febbre o un parto, molti capelli possono passare insieme al riposo e cadere <b>qualche mese dopo</b>: spesso è temporaneo.", "After strong stress, a fever or childbirth, many hairs can enter rest together and fall <b>a few months later</b>: it is often temporary.")}
           </ul>
+          <div class="col-note tri-medico"><b>${I("Sentire il medico", "Ask a doctor")}</b>: ${I("se la caduta è molto più forte del solito o dura da più di qualche mese, la cliente può chiedere un parere al medico.", "if hair loss is much heavier than usual or lasts more than a few months, the client can ask a doctor for an opinion.")}</div>
         </section>
+      </div>
+      <h2 class="tri-cat">${I("Osservare e ascoltare", "Observe and listen")}</h2>
+      <div class="col-grid">
         <section class="col-card">
           <h3>${I("Cosa osservare e cosa chiedere", "What to look at and what to ask")}</h3>
           <p class="col-lead">${I("Una buona consulenza comincia ascoltando, poi guardando.", "A good consultation starts by listening, then looking.")}</p>
@@ -6304,6 +6311,21 @@
           <div class="col-note">${I("Scrivi nella scheda solo ciò che la cliente ti dice o che vedi, senza etichette mediche.", "Write on the card only what the client tells you or what you see, without medical labels.")}</div>
         </section>
         <section class="col-card">
+          <h3>${I("Analisi con la microcamera", "Scalp analysis with a micro-camera")}</h3>
+          <p class="col-lead">${I("Fa vedere alla cliente ciò che dici: aumenta la fiducia e la consapevolezza.", "It shows the client what you are describing: it builds trust and awareness.")}</p>
+          <ul>
+            ${li("<b>Prima</b>: postazione tranquilla e riservata, lente pulita e igienizzata, capelli ben pettinati.", "<b>Before</b>: a quiet, private spot, a clean and sanitised lens, hair well combed.")}
+            ${li("<b>Durante</b>: osserva più zone (nuca, lati, sommità, attaccatura) e confrontale tra loro. Ingrandimento basso per la visione d’insieme, alto per il singolo capello.", "<b>During</b>: look at several areas (nape, sides, crown, hairline) and compare them. Low magnification for the overview, high for a single hair.")}
+            ${li("Guarda prima a secco; se serve, ripeti con un po’ d’acqua per vedere meglio la superficie.", "Look dry first; if needed, repeat with a little water to see the surface better.")}
+            ${li("<b>Dopo</b>: mostra le immagini con parole semplici, descrivi ciò che si vede (sebo, squame, capelli sottili) senza dare nomi di malattie.", "<b>After</b>: show the images in simple words, describe what you see (sebum, flakes, fine hair) without naming illnesses.")}
+            ${li("Salva le foto solo se la cliente è d’accordo, e dillo anche nel consenso.", "Save photos only if the client agrees, and say so in the consent.")}
+          </ul>
+          <div class="col-note tri-medico"><b>${I("Sentire il medico", "Ask a doctor")}</b>: ${I("se vedi qualcosa di insolito (lesioni, macchie, zone che sanguinano o non guariscono) non interpretarlo: consiglia con calma di sentire il medico.", "if you see anything unusual (lesions, spots, areas that bleed or do not heal), do not interpret it: calmly recommend asking a doctor.")}</div>
+        </section>
+      </div>
+      <h2 class="tri-cat">${I("Problemi più comuni", "Common problems")}</h2>
+      <div class="col-grid">
+        <section class="col-card">
           <h3>${I("Perdita di capelli: i casi più comuni", "Hair loss: the most common cases")}</h3>
           <p class="col-lead">${I("Distinguere come cade aiuta a capire cosa consigliare.", "Seeing how it falls helps you decide what to recommend.")}</p>
           <table class="col-tbl"><thead><tr><th>${I("Come si presenta", "What it looks like")}</th><th>${I("Cosa può indicare", "What it may suggest")}</th></tr></thead><tbody>
@@ -6312,6 +6334,7 @@
             <tr><td>${I("Chiazza rotonda senza capelli, pelle liscia", "A round bare patch with smooth skin")}</td><td>${I("Va fatta vedere da un medico, senza aspettare.", "Should be seen by a doctor, without waiting.")}</td></tr>
             <tr><td>${I("Capelli che si spezzano a metà lunghezza", "Hairs breaking along their length")}</td><td>${I("Di solito danno al fusto (trattamenti, calore, trazione): è un tema di cura, non di radice.", "Usually damage to the shaft (treatments, heat, pulling): a care issue, not a root issue.")}</td></tr>
           </tbody></table>
+          <div class="col-note tri-medico"><b>${I("Sentire il medico", "Ask a doctor")}</b>: ${I("per capire la causa servono visita ed eventuali esami: in salone si consiglia di sentire il parere del medico, soprattutto se la caduta è improvvisa, a chiazze o continua.", "finding the cause takes a visit and possibly tests: in the salon, recommend asking a doctor, especially if the loss is sudden, patchy or ongoing.")}</div>
         </section>
         <section class="col-card">
           <h3>${I("Cuoio capelluto: unto, forfora, prurito", "Scalp: grease, dandruff, itching")}</h3>
@@ -6323,7 +6346,11 @@
             ${li("<b>Prurito</b> forte o che dura: si chiede da quanto c’è, quali prodotti si sono usati e si evita di insistere con trattamenti.", "<b>Strong or lasting itching</b>: ask how long it has been there, which products were used, and avoid pushing treatments.")}
           </ul>
           <div class="col-note">${I("Se la cute è arrossata, ferita o screpolata, non si fanno colore, decolorazione o permanente: si aspetta il parere del medico.", "If the scalp is red, broken or cracked, do not do colour, bleaching or perms: wait for the doctor’s opinion.")}</div>
+          <div class="col-note tri-medico"><b>${I("Sentire il medico", "Ask a doctor")}</b>: ${I("se il disturbo non migliora con lavaggi regolari, peggiora o torna sempre, è bene sentire il parere del medico (o del dermatologo).", "if the problem does not improve with regular washing, gets worse or keeps coming back, it is best to ask a doctor (or a dermatologist).")}</div>
         </section>
+      </div>
+      <h2 class="tri-cat">${I("Quando serve il medico e clienti delicate", "When a doctor is needed, and delicate clients")}</h2>
+      <div class="col-grid">
         <section class="col-card">
           <h3>${I("Quando mandare dal medico", "When to send to a doctor")}</h3>
           <p class="col-lead">${I("Il parrucchiere è spesso il primo a notare un cambiamento: riconoscerlo è già un grande aiuto.", "The hairdresser is often the first to notice a change: spotting it is already a big help.")}</p>
@@ -6348,18 +6375,11 @@
             ${li("Dopo un trapianto: si seguono le istruzioni dell’équipe che ha operato; nella zona trattata non si fa nulla senza il suo via libera.", "After a transplant: follow the instructions of the team that operated; do nothing on the treated area without their go-ahead.")}
           </ul>
           <div class="col-note">${I("Frasi da evitare: «Vedrai che passa», «Almeno sei viva», «Non è poi così grave». Meglio: «Sono qui, dimmi come vuoi che ti aiuti».", "Phrases to avoid: “It will pass”, “At least you are alive”, “It is not that bad”. Better: “I am here, tell me how you want me to help.”")}</div>
+          <div class="col-note tri-medico"><b>${I("Sentire il medico", "Ask a doctor")}</b>: ${I("per ogni trattamento, prodotto o tecnica si chiede il parere del medico o dell’équipe che segue la cliente, e si rispettano i tempi che indicano.", "for any treatment, product or technique, ask the doctor or team following the client, and respect the timing they give.")}</div>
         </section>
-        <section class="col-card">
-          <h3>${I("Analisi con la microcamera", "Scalp analysis with a micro-camera")}</h3>
-          <p class="col-lead">${I("Fa vedere alla cliente ciò che dici: aumenta la fiducia e la consapevolezza.", "It shows the client what you are describing: it builds trust and awareness.")}</p>
-          <ul>
-            ${li("<b>Prima</b>: postazione tranquilla e riservata, lente pulita e igienizzata, capelli ben pettinati.", "<b>Before</b>: a quiet, private spot, a clean and sanitised lens, hair well combed.")}
-            ${li("<b>Durante</b>: osserva più zone (nuca, lati, sommità, attaccatura) e confrontale tra loro. Ingrandimento basso per la visione d’insieme, alto per il singolo capello.", "<b>During</b>: look at several areas (nape, sides, crown, hairline) and compare them. Low magnification for the overview, high for a single hair.")}
-            ${li("Guarda prima a secco; se serve, ripeti con un po’ d’acqua per vedere meglio la superficie.", "Look dry first; if needed, repeat with a little water to see the surface better.")}
-            ${li("<b>Dopo</b>: mostra le immagini con parole semplici, descrivi ciò che si vede (sebo, squame, capelli sottili) senza dare nomi di malattie.", "<b>After</b>: show the images in simple words, describe what you see (sebum, flakes, fine hair) without naming illnesses.")}
-            ${li("Salva le foto solo se la cliente è d’accordo, e dillo anche nel consenso.", "Save photos only if the client agrees, and say so in the consent.")}
-          </ul>
-        </section>
+      </div>
+      <h2 class="tri-cat">${I("Prodotti e benessere", "Products and wellbeing")}</h2>
+      <div class="col-grid">
         <section class="col-card">
           <h3>${I("Leggere l’etichetta (INCI)", "Reading the label (INCI)")}</h3>
           <p class="col-lead">${I("L’elenco degli ingredienti è obbligatorio in tutta Europa e dice cosa c’è davvero nel flacone.", "The ingredient list is mandatory across Europe and tells you what is really in the bottle.")}</p>
@@ -6370,6 +6390,7 @@
             ${li("Profumo e conservanti sono tra le cause più comuni di allergia: con una cute sensibile conviene controllarli.", "Fragrance and preservatives are among the most common causes of allergy: with a sensitive scalp it pays to check them.")}
             ${li("«Naturale» non vuol dire «senza allergie» e «senza» una sostanza non vuol dire «migliore»: conta l’elenco intero.", "“Natural” does not mean “allergy-free” and “free from” one substance does not mean “better”: the whole list matters.")}
           </ul>
+          <div class="col-note tri-medico"><b>${I("Sentire il medico", "Ask a doctor")}</b>: ${I("se la cliente ha avuto reazioni allergiche, o ne sospetta una, il parere del medico (o dell’allergologo) viene prima di qualsiasi consiglio sul prodotto.", "if the client has had allergic reactions, or suspects one, a doctor’s (or allergist’s) opinion comes before any advice on the product.")}</div>
         </section>
         <section class="col-card">
           <h3>${I("Oli essenziali: uso prudente", "Essential oils: careful use")}</h3>
@@ -6382,6 +6403,7 @@
             ${li("Si conservano in flaconi di vetro scuro, ben chiusi, al riparo da luce e calore. Gli agrumi e le conifere si alterano prima.", "Keep them in dark glass bottles, well closed, away from light and heat. Citrus and conifer oils spoil sooner.")}
             ${li("Una piccola prova sulla pelle, prima dell’uso, evita brutte sorprese.", "A small skin test before use avoids nasty surprises.")}
           </ul>
+          <div class="col-note tri-medico"><b>${I("Sentire il medico", "Ask a doctor")}</b>: ${I("in caso di gravidanza, allattamento, malattie, allergie o terapie in corso, si sente prima il parere del medico.", "in case of pregnancy, breastfeeding, illness, allergies or ongoing therapy, ask a doctor first.")}</div>
         </section>
         <section class="col-card">
           <h3>${I("Alimentazione e capelli", "Food and hair")}</h3>
@@ -6392,10 +6414,10 @@
             ${li("Dormire bene e gestire lo stress contano più di quanto si pensi.", "Good sleep and managing stress matter more than people think.")}
             ${li("Integratori: non si consigliano dosi né marche. Se la cliente ne parla, la si invita a sentire il medico o il farmacista.", "Supplements: do not recommend doses or brands. If the client brings them up, invite her to ask her doctor or pharmacist.")}
           </ul>
+          <div class="col-note tri-medico"><b>${I("Sentire il medico", "Ask a doctor")}</b>: ${I("per diete particolari, carenze sospette o integratori, il parere del medico o del nutrizionista viene prima di qualsiasi consiglio.", "for special diets, suspected deficiencies or supplements, a doctor’s or nutritionist’s opinion comes before any advice.")}</div>
         </section>
       </div>`;
   }
-
   // ---- Colorimetria: pagina di consultazione (testi e disegni originali) ----
   function colorimetriaHtml() {
     const LIV = ['#1d1511','#2e1f16','#43301d','#5c4022','#7a5a2f','#9c7a41','#bf9c58','#d9ba76','#ebd596','#f6ebbb'];
