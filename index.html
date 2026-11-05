@@ -1146,6 +1146,11 @@
     text-transform: uppercase; letter-spacing: 0.03em;
   }
   .settings-logo-row { display: flex; align-items: center; gap: 16px; }
+  .settings-op-foto { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .settings-op-riga { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .settings-op-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; color: #fff; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+  .settings-op-nome { flex: 1 1 100px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .agenda-col-avatar { object-fit: cover; }
   .settings-logo-preview {
     width: 64px; height: 64px; object-fit: contain; border-radius: var(--radius);
     background: var(--paper); border: 1px solid var(--line); flex: none; padding: 4px;
@@ -1787,6 +1792,8 @@
       <label for="settingsOperatrici" data-it="Operatrici (separate da virgola)">Stylists (separated by commas)</label>
       <input type="text" id="settingsOperatrici" placeholder="For example: Anna, Marta" maxlength="120" data-it-placeholder="Per esempio: Anna, Marta">
       <p class="hint" data-it="Compaiono nell'agenda, nei turni, nelle assenze e nella prenotazione online. Imposta i nomi all'inizio: cambiarli dopo non aggiorna gli appuntamenti già salvati.">They appear in the calendar, shifts, time off and online booking. Set the names at the start: changing them later does not update appointments already saved.</p>
+      <div class="settings-op-foto" id="settingsOperatriciFoto"></div>
+      <input type="file" id="settingsOpFotoInput" accept="image/png,image/jpeg,image/webp" hidden>
     </div>
 
     <div class="settings-section">
@@ -2015,7 +2022,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.193-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.194-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3415,6 +3422,44 @@
     renderList(); // i bollini "Da ricontattare" dipendono dalla soglia in mesi appena caricata/cambiata
   }
 
+  // Foto delle operatrici (facoltativa): una per nome, piccola e ritagliata quadrata, salvata nelle
+  // impostazioni condivise; compare nell'intestazione della colonna dell'agenda.
+  function operatriceFoto(op) { const f = appSettingsCache && appSettingsCache.operatriciFoto; return (f && f[op]) || null; }
+  function renderSettingsOperatriciFoto() {
+    const box = document.getElementById('settingsOperatriciFoto');
+    if (!box) return;
+    box.innerHTML = elencoOperatrici().map(op => {
+      const foto = operatriceFoto(op);
+      const av = foto
+        ? '<img class="settings-op-avatar" alt="" src="' + foto + '">'
+        : '<span class="settings-op-avatar" style="background:' + operatoreColore(op) + ';">' + escapeHtml(String(op || '?').trim().charAt(0).toUpperCase()) + '</span>';
+      return '<div class="settings-op-riga">' + av + '<span class="settings-op-nome">' + escapeHtml(op) + '</span>' +
+        '<button type="button" class="ghost small settings-op-carica" data-op="' + escapeHtml(op) + '">' + (foto ? I("Cambia foto", "Change photo") : I("Carica foto", "Add photo")) + '</button>' +
+        (foto ? '<button type="button" class="ghost small settings-op-togli" data-op="' + escapeHtml(op) + '">' + I("Togli", "Remove") + '</button>' : '') + '</div>';
+    }).join('');
+  }
+  // Ritaglia al centro in un quadrato e riduce (160px, JPEG): resta leggera nei dati condivisi.
+  function ridimensionaFotoOperatrice(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const lato = Math.min(img.width, img.height);
+          const canvas = document.createElement('canvas');
+          canvas.width = 160; canvas.height = 160;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, (img.width - lato) / 2, (img.height - lato) / 2, lato, lato, 0, 0, 160, 160);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.onerror = () => reject(new Error('immagine non valida'));
+        img.src = reader.result;
+      };
+      reader.onerror = () => reject(new Error('lettura file fallita'));
+      reader.readAsDataURL(file);
+    });
+  }
+
   function saveSettings(partial) {
     appSettingsCache = Object.assign({}, appSettingsCache, partial);
     applySettings();
@@ -3485,6 +3530,7 @@
     if (recInput && document.activeElement !== recInput) recInput.value = appSettingsCache.linkRecensioni || DEFAULT_LINK_RECENSIONI || '';
     const paeseSel = document.getElementById('settingsPaese');
     if (paeseSel) paeseSel.value = paeseCorrente();
+    renderSettingsOperatriciFoto();
     const operatriciInput = document.getElementById('settingsOperatrici');
     if (operatriciInput && document.activeElement !== operatriciInput) operatriciInput.value = (appSettingsCache.operatrici || []).join(', ');
     const assenzaSel = document.getElementById('assenzaOperatore');
@@ -3689,6 +3735,7 @@
           mesiRicontatto: aspettoData.mesiRicontatto || null,
           mesiCancellazione: aspettoData.mesiCancellazione || null,
           operatrici: (aspettoData.operatrici && aspettoData.operatrici.length) ? aspettoData.operatrici : null,
+          operatriciFoto: aspettoData.operatriciFoto || null,
           linee: (aspettoData.linee && aspettoData.linee.length) ? aspettoData.linee : null,
           etichettaFinale: aspettoData.etichettaFinale || null,
           paese: aspettoData.paese || null,
@@ -6304,7 +6351,7 @@
     const slots = agendaSlotsVista();
     const ruler = slots.map(time => `<div class="agenda-ruler-cell">${agendaMostraEtichettaOra(hhmmToMinuti(time)) ? time : ''}</div>`).join('');
     const heads = operatori.map(op => `
-      <div class="agenda-col-head"><span class="agenda-col-avatar" style="background:${operatoreColore(op)};">${escapeHtml(String(op || '?').trim().charAt(0).toUpperCase())}</span><span class="agenda-col-nome">${escapeHtml(op)}</span></div>`).join('');
+      <div class="agenda-col-head">${operatriceFoto(op) ? `<img class="agenda-col-avatar" alt="" src="${operatriceFoto(op)}">` : `<span class="agenda-col-avatar" style="background:${operatoreColore(op)};">${escapeHtml(String(op || '?').trim().charAt(0).toUpperCase())}</span>`}<span class="agenda-col-nome">${escapeHtml(op)}</span></div>`).join('');
     const cols = operatori.map(op => `<div class="agenda-col" data-operatore="${escapeHtml(op || '')}">${renderAgendaColonnaSlotsHtml(dateISO, op, appuntamentiDelGiorno(dateISO, op))}</div>`).join('');
     // Linea dell'ora attuale (solo se si guarda oggi e l'ora e' dentro la griglia).
     let linea = '';
@@ -10738,6 +10785,37 @@
   document.getElementById('settingsPaese').addEventListener('change', (e) => {
     saveSettings({ paese: PAESI[e.target.value] && e.target.value !== 'IT' ? e.target.value : null }).then(() => { try { pubblicaDisponibilitaOnline(); renderSheetMantenendoScroll(); } catch (er) {} });
   });
+  (function () {
+    const box = document.getElementById('settingsOperatriciFoto');
+    const inp = document.getElementById('settingsOpFotoInput');
+    if (!box || !inp) return;
+    let opScelta = null;
+    box.addEventListener('click', (e) => {
+      const c = e.target.closest('.settings-op-carica');
+      const t = e.target.closest('.settings-op-togli');
+      if (c) { opScelta = c.dataset.op; inp.click(); }
+      else if (t) {
+        const f = Object.assign({}, appSettingsCache.operatriciFoto || {});
+        delete f[t.dataset.op];
+        saveSettings({ operatriciFoto: Object.keys(f).length ? f : null }).then(() => { try { renderSheetMantenendoScroll(); } catch (er) {} });
+      }
+    });
+    inp.addEventListener('change', async (e) => {
+      const file = (e.target.files || [])[0];
+      e.target.value = '';
+      if (!file || !opScelta) return;
+      if (!file.type || !file.type.startsWith('image/')) { notifyTop(I("Scegli un file immagine (PNG o JPG).", "Choose an image file (PNG or JPG)."), true); return; }
+      try {
+        const dataUri = await ridimensionaFotoOperatrice(file);
+        const f = Object.assign({}, appSettingsCache.operatriciFoto || {});
+        f[opScelta] = dataUri;
+        const ok = await saveSettings({ operatriciFoto: f });
+        if (ok) { notifyTop(I("Foto aggiornata.", "Photo updated.")); try { renderSheetMantenendoScroll(); } catch (er) {} }
+      } catch (err) {
+        notifyTop(I("Non sono riuscita a caricare questa immagine.", "Couldn’t load this image."), true);
+      }
+    });
+  })();
   document.getElementById('settingsOperatrici').addEventListener('change', (e) => {
     const l = e.target.value.split(',').map(x => x.trim()).filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).slice(0, 6);
     saveSettings({ operatrici: l.length ? l : null });
@@ -10770,7 +10848,7 @@
     });
   })();
   document.getElementById('settingsResetBtn').addEventListener('click', () => {
-    saveSettings({ nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, mesiCancellazione: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, linkRecensioni: null, contattoAssistenza: null })
+    saveSettings({ operatriciFoto: null, nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, mesiCancellazione: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, linkRecensioni: null, contattoAssistenza: null })
       .then(ok => { if (ok) notifyTop('Aspetto ripristinato.'); });
   });
   // Lingua: scelta per dispositivo, salvata solo in locale (non su Firestore). La pagina si ricarica
