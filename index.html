@@ -1590,6 +1590,12 @@
           </div>
         </aside>
         <aside class="panel notes-banner">
+          <div class="notes-banner-item" id="tricologiaEntry">
+            <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5"/><path d="M8 11c1-2 3-2 4 0"/></svg></span>
+            <span class="name" data-it="Tricologia">Trichology</span>
+          </div>
+        </aside>
+        <aside class="panel notes-banner">
           <div class="notes-banner-item" id="ostwaldEntry">
             <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v8.5l6 4.5"/></svg></span>
             <span class="name" data-i18n="nav.discoNewton" data-it="Disco di Newton">Color wheel</span>
@@ -1929,7 +1935,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-04.165-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.166-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3676,6 +3682,7 @@
   let viewingConsigliGenerici = false; // true quando il pannello principale mostra "Consigli generici"
   let viewingSchedaGenerica = false; // true quando il pannello principale mostra "Scheda generica"
   let viewingColorimetria = false; // true quando il pannello principale mostra "Colorimetria"
+  let viewingTricologia = false; // true quando il pannello principale mostra "Tricologia"
 
   function contentSnapshot(c) {
     return JSON.parse(JSON.stringify({
@@ -3725,7 +3732,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     renderAll();
@@ -5352,7 +5359,7 @@
     ul.innerHTML = '';
     filtered.forEach(c => {
       const li = document.createElement('li');
-      li.className = (!viewingNotes && !viewingIspirazione && !viewingMagazzino && !viewingServizi && !viewingAnagrafica && !viewingAgenda && !viewingSearchApp && !viewingBlankSheet && !viewingOstwald && !viewingCatalogoHp && !viewingConsigliGenerici && !viewingSchedaGenerica && !viewingColorimetria && !viewingHome && c.id === activeId) ? 'active' : '';
+      li.className = (!viewingNotes && !viewingIspirazione && !viewingMagazzino && !viewingServizi && !viewingAnagrafica && !viewingAgenda && !viewingSearchApp && !viewingBlankSheet && !viewingOstwald && !viewingCatalogoHp && !viewingConsigliGenerici && !viewingSchedaGenerica && !viewingColorimetria && !viewingTricologia && !viewingHome && c.id === activeId) ? 'active' : '';
       const mesiRic = appSettingsCache.mesiRicontatto;
       const daRicontattare = mesiRic && (Date.now() - c.updatedAt) >= mesiRic * 30 * 24 * 3600 * 1000;
       li.innerHTML = `<span class="name">${escapeHtml(c.nome || I("Senza nome", "Unnamed"))}${daRicontattare ? I("<span class=\"recontact-badge\">Da ricontattare</span>", "<span class=\"recontact-badge\">To follow up</span>") : ''}</span><span class="date">${fmtDate(c.updatedAt)}</span>`;
@@ -5384,6 +5391,8 @@
     if (consigliGenericiEntry) consigliGenericiEntry.className = 'notes-banner-item' + (viewingConsigliGenerici ? ' active' : '');
     const colorimetriaEntry = document.getElementById('colorimetriaEntry');
     if (colorimetriaEntry) colorimetriaEntry.className = 'notes-banner-item' + (viewingColorimetria ? ' active' : '');
+    const tricologiaEntry = document.getElementById('tricologiaEntry');
+    if (tricologiaEntry) tricologiaEntry.className = 'notes-banner-item' + (viewingTricologia ? ' active' : '');
     const schedaGenericaEntry = document.getElementById('schedaGenericaEntry');
     if (schedaGenericaEntry) schedaGenericaEntry.className = 'notes-banner-item' + (viewingSchedaGenerica ? ' active' : '');
   }
@@ -5461,6 +5470,7 @@
     viewingConsigliGenerici = flagDaAttivare === 'consigliGenerici';
     viewingSchedaGenerica = flagDaAttivare === 'schedaGenerica';
     viewingColorimetria = flagDaAttivare === 'colorimetria';
+    viewingTricologia = flagDaAttivare === 'tricologia';
     viewingHome = false;
     closeMobileMenu();
     renderAll();
@@ -6230,6 +6240,162 @@
     renderSheet();
   }
 
+  // ---- Tricologia: pagina di consultazione (testi e disegni originali) ----
+  function tricologiaHtml() {
+    // ciclo di vita del capello: tre fasi
+    const ciclo = `<svg class="col-fig" viewBox="0 0 520 120" width="520" role="img" aria-label="${I("Le tre fasi del ciclo del capello", "The three phases of the hair cycle")}">
+      <g font-size="13" fill="currentColor" text-anchor="middle">
+        <rect x="4" y="14" width="250" height="56" rx="10" fill="#e6efe1" stroke="#4c7a5e" stroke-width="1.5"/><text x="129" y="38" font-weight="700">${I("Crescita", "Growth")}</text><text x="129" y="58" font-size="12">${I("la fase lunga (anni)", "the long phase (years)")}</text>
+        <rect x="266" y="14" width="110" height="56" rx="10" fill="#f6ebbb" stroke="#bf9c58" stroke-width="1.5"/><text x="321" y="38" font-weight="700">${I("Pausa breve", "Short pause")}</text><text x="321" y="58" font-size="12">${I("poche settimane", "a few weeks")}</text>
+        <rect x="388" y="14" width="128" height="56" rx="10" fill="#f1dcdc" stroke="#a5483f" stroke-width="1.5"/><text x="452" y="38" font-weight="700">${I("Riposo e caduta", "Rest and shedding")}</text><text x="452" y="58" font-size="12">${I("alcuni mesi", "a few months")}</text>
+        <text x="260" y="104" font-size="12" opacity=".75">${I("ogni capello ha il suo ritmo: non cadono tutti insieme", "each hair has its own rhythm: they do not all fall at once")}</text>
+      </g></svg>`;
+    // pelle e follicolo
+    const follicolo = `<svg class="col-fig" viewBox="0 0 430 190" width="430" role="img" aria-label="${I("Il capello nella pelle", "The hair in the skin")}">
+      <rect x="0" y="60" width="430" height="130" fill="#f3e3d6"/><rect x="0" y="60" width="430" height="14" fill="#e3c7b0"/>
+      <path d="M120 60 C118 90 112 120 122 150 C132 170 160 170 168 150 C176 124 160 90 150 60 Z" fill="#fff6ee" stroke="#9c7a41" stroke-width="2"/>
+      <path d="M135 0 L140 100" stroke="#5c4022" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="144" cy="140" rx="15" ry="13" fill="#c98f6a"/>
+      <ellipse cx="188" cy="104" rx="16" ry="11" fill="#f6d98a" stroke="#bf9c58"/>
+      <path d="M172 104 C165 100 160 96 154 92" stroke="#bf9c58" stroke-width="2" fill="none"/>
+      <g font-size="12.5" fill="currentColor">
+        <text x="206" y="30">${I("fusto (la parte che si vede)", "shaft (the visible part)")}</text><line x1="204" y1="27" x2="146" y2="26" stroke="currentColor" opacity=".5"/>
+        <text x="208" y="108">${I("ghiandola del sebo", "sebaceous gland")}</text>
+        <text x="172" y="168">${I("bulbo: qui nasce il capello", "bulb: where the hair is made")}</text>
+        <text x="6" y="54" opacity=".8">${I("superficie della pelle", "skin surface")}</text>
+      </g></svg>`;
+    const li = (a, b) => `<li>${I(a, b)}</li>`;
+    return `
+      <div class="sheet-head"><div class="name-field">
+        <div class="notes-title">${I("Tricologia", "Trichology")}</div>
+        <div class="sub col-sub">${I("Nozioni di base su cute e capelli, per fare le domande giuste e sapere quando consigliare il medico.", "The basics about scalp and hair, to ask the right questions and know when to recommend a doctor.")}</div>
+      </div></div>
+      <div class="col-note" style="margin:0 0 18px"><b>${I("Importante.", "Important.")}</b> ${I("Queste pagine sono informazioni generali per il lavoro in salone. Non sono una diagnosi e non sostituiscono il parere di un medico: in caso di dubbio si consiglia sempre una visita.", "These pages are general information for salon work. They are not a diagnosis and do not replace a doctor’s opinion: when in doubt, always recommend a medical visit.")}</div>
+      <div class="col-grid">
+        <section class="col-card">
+          <h3>${I("Cute e capello", "Scalp and hair")}</h3>
+          <p class="col-lead">${I("Il capello nasce dentro la pelle, in una piccola sacca chiamata follicolo.", "Hair is made inside the skin, in a small pocket called the follicle.")}</p>
+          ${follicolo}
+          <ul>
+            ${li("La parte che vediamo è il <b>fusto</b>, fatto di cheratina: non è vivo, per questo tagliarlo non fa male.", "The part we see is the <b>shaft</b>, made of keratin: it is not alive, which is why cutting it does not hurt.")}
+            ${li("La <b>ghiandola del sebo</b> lubrifica cute e capello: troppo sebo dà un aspetto unto, troppo poco dà secchezza.", "The <b>sebaceous gland</b> lubricates scalp and hair: too much sebum looks greasy, too little feels dry.")}
+            ${li("Perdere ogni giorno alcune decine di capelli è normale: sono quelli arrivati a fine ciclo.", "Losing a few dozen hairs a day is normal: they are the ones at the end of their cycle.")}
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Il ciclo del capello", "The hair cycle")}</h3>
+          <p class="col-lead">${I("Ogni capello passa da una crescita, una pausa e un riposo, poi ricomincia.", "Every hair goes through growth, a pause and a rest, then starts again.")}</p>
+          ${ciclo}
+          <ul>
+            ${li("La maggior parte dei capelli è sempre in <b>crescita</b>; una piccola parte è a riposo.", "Most hairs are in the <b>growth</b> phase at any time; a small share are resting.")}
+            ${li("Dopo uno stress forte, una febbre o un parto, molti capelli possono passare insieme al riposo e cadere <b>qualche mese dopo</b>: spesso è temporaneo.", "After strong stress, a fever or childbirth, many hairs can enter rest together and fall <b>a few months later</b>: it is often temporary.")}
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Cosa osservare e cosa chiedere", "What to look at and what to ask")}</h3>
+          <p class="col-lead">${I("Una buona consulenza comincia ascoltando, poi guardando.", "A good consultation starts by listening, then looking.")}</p>
+          <table class="col-tbl"><thead><tr><th>${I("Guardo", "I look at")}</th><th>${I("Chiedo", "I ask")}</th></tr></thead><tbody>
+            <tr><td>${I("Cute unta, secca o normale", "Scalp: greasy, dry or normal")}</td><td>${I("Ogni quanto lava i capelli e con cosa?", "How often do you wash, and with what?")}</td></tr>
+            <tr><td>${I("Squame: piccole e bianche, o gialle e untuose", "Flakes: small and white, or yellow and greasy")}</td><td>${I("Da quanto tempo c’è il problema?", "How long has this been going on?")}</td></tr>
+            <tr><td>${I("Rossore, graffi, crosticine", "Redness, scratches, scabs")}</td><td>${I("Prurito o bruciore? A tutte le ore?", "Itching or burning? At all times?")}</td></tr>
+            <tr><td>${I("Densità: uguale ovunque o diradata in una zona", "Density: even everywhere or thinner in one area")}</td><td>${I("Cadono più capelli di prima? Da quando?", "Is more hair falling than before? Since when?")}</td></tr>
+            <tr><td>${I("Capelli più sottili o corti vicino alla radice", "Hairs thinner or shorter near the root")}</td><td>${I("Cambiamenti recenti: stress, dieta, parto, farmaci, prodotti nuovi?", "Recent changes: stress, diet, childbirth, medication, new products?")}</td></tr>
+          </tbody></table>
+          <div class="col-note">${I("Scrivi nella scheda solo ciò che la cliente ti dice o che vedi, senza etichette mediche.", "Write on the card only what the client tells you or what you see, without medical labels.")}</div>
+        </section>
+        <section class="col-card">
+          <h3>${I("Perdita di capelli: i casi più comuni", "Hair loss: the most common cases")}</h3>
+          <p class="col-lead">${I("Distinguere come cade aiuta a capire cosa consigliare.", "Seeing how it falls helps you decide what to recommend.")}</p>
+          <table class="col-tbl"><thead><tr><th>${I("Come si presenta", "What it looks like")}</th><th>${I("Cosa può indicare", "What it may suggest")}</th></tr></thead><tbody>
+            <tr><td>${I("Caduta in tutta la testa, abbondante, dopo un evento", "Loss all over the head, heavy, after an event")}</td><td>${I("Spesso temporanea (stress, parto, dieta, febbre, cambio di farmaci). Si consiglia di sentire il medico.", "Often temporary (stress, childbirth, diet, fever, change of medication). Suggest talking to a doctor.")}</td></tr>
+            <tr><td>${I("Diradamento lento, capelli sempre più sottili, in zone precise", "Slow thinning, hairs getting finer, in typical areas")}</td><td>${I("Può essere familiare. Un medico può dire se e come intervenire.", "May run in the family. A doctor can say whether and how to act.")}</td></tr>
+            <tr><td>${I("Chiazza rotonda senza capelli, pelle liscia", "A round bare patch with smooth skin")}</td><td>${I("Va fatta vedere da un medico, senza aspettare.", "Should be seen by a doctor, without waiting.")}</td></tr>
+            <tr><td>${I("Capelli che si spezzano a metà lunghezza", "Hairs breaking along their length")}</td><td>${I("Di solito danno al fusto (trattamenti, calore, trazione): è un tema di cura, non di radice.", "Usually damage to the shaft (treatments, heat, pulling): a care issue, not a root issue.")}</td></tr>
+          </tbody></table>
+        </section>
+        <section class="col-card">
+          <h3>${I("Cuoio capelluto: unto, forfora, prurito", "Scalp: grease, dandruff, itching")}</h3>
+          <p class="col-lead">${I("Molti disturbi si somigliano: in salone si osserva e si cura la pulizia, non si diagnostica.", "Many problems look alike: in the salon we observe and take care of cleansing; we do not diagnose.")}</p>
+          <ul>
+            ${li("<b>Cute unta</b>: lavaggi regolari con prodotti delicati; evitare di strofinare forte.", "<b>Greasy scalp</b>: regular washing with gentle products; avoid rubbing hard.")}
+            ${li("<b>Squame piccole e bianche</b> con poco o nessun rossore: spesso è forfora semplice; aiutano shampoo specifici e lavaggi regolari.", "<b>Small white flakes</b> with little or no redness: often simple dandruff; dedicated shampoos and regular washing help.")}
+            ${li("<b>Squame gialle e untuose</b> con rossore, o <b>placche spesse</b> e secche: possono avere una causa medica. Meglio consigliare una visita.", "<b>Yellow greasy flakes</b> with redness, or <b>thick dry patches</b>: they may have a medical cause. Better to recommend a visit.")}
+            ${li("<b>Prurito</b> forte o che dura: si chiede da quanto c’è, quali prodotti si sono usati e si evita di insistere con trattamenti.", "<b>Strong or lasting itching</b>: ask how long it has been there, which products were used, and avoid pushing treatments.")}
+          </ul>
+          <div class="col-note">${I("Se la cute è arrossata, ferita o screpolata, non si fanno colore, decolorazione o permanente: si aspetta il parere del medico.", "If the scalp is red, broken or cracked, do not do colour, bleaching or perms: wait for the doctor’s opinion.")}</div>
+        </section>
+        <section class="col-card">
+          <h3>${I("Quando mandare dal medico", "When to send to a doctor")}</h3>
+          <p class="col-lead">${I("Il parrucchiere è spesso il primo a notare un cambiamento: riconoscerlo è già un grande aiuto.", "The hairdresser is often the first to notice a change: spotting it is already a big help.")}</p>
+          <ul>
+            ${li("Caduta <b>improvvisa</b> o molto abbondante.", "<b>Sudden</b> or very heavy hair loss.")}
+            ${li("Zone senza capelli, rotonde o a chiazze.", "Bare areas, round or patchy.")}
+            ${li("Cute <b>dolente</b>, con crosticine, secrezioni o arrossamento esteso.", "<b>Painful</b> scalp, with scabs, discharge or widespread redness.")}
+            ${li("Perdita anche di ciglia o sopracciglia.", "Loss of eyelashes or eyebrows as well.")}
+            ${li("Nei, macchie o lesioni che cambiano forma o colore, o che non guariscono.", "Moles, spots or lesions that change shape or colour, or do not heal.")}
+            ${li("Capelli che la cliente si strappa di continuo, senza riuscire a smettere.", "Hair the client keeps pulling out without being able to stop.")}
+          </ul>
+          <div class="col-note">${I("Come dirlo: «Questa zona mi sembra da far vedere a un medico, così sei più tranquilla». Calma, parole semplici, nessuna parola difficile.", "How to say it: “This area looks like something to have a doctor check, so you can feel reassured.” Calm, simple words, no difficult terms.")}</div>
+        </section>
+        <section class="col-card">
+          <h3>${I("Clienti in cura o dopo un intervento", "Clients in treatment or after surgery")}</h3>
+          <p class="col-lead">${I("Chemioterapia, radioterapia o un trapianto di capelli: la cliente ha bisogno di cura e di rispetto.", "Chemotherapy, radiotherapy or a hair transplant: the client needs care and respect.")}</p>
+          <ul>
+            ${li("Ascolta prima di proporre: chiedi cosa desidera, senza fare domande sulla malattia se non ne parla lei.", "Listen before suggesting: ask what she wants, without questions about the illness unless she brings it up.")}
+            ${li("Offri uno spazio tranquillo e riservato. Parrucche, foulard e tagli corti si possono presentare con delicatezza.", "Offer a quiet, private space. Wigs, scarves and short cuts can be presented gently.")}
+            ${li("Spazzole molto morbide, acqua tiepida, prodotti delicati, niente trazioni.", "Very soft brushes, lukewarm water, gentle products, no pulling.")}
+            ${li("Colore, decolorazione e altri trattamenti chimici: solo dopo che il medico li ha autorizzati.", "Colour, bleaching and other chemical treatments: only after the doctor has approved them.")}
+            ${li("Dopo un trapianto: si seguono le istruzioni dell’équipe che ha operato; nella zona trattata non si fa nulla senza il suo via libera.", "After a transplant: follow the instructions of the team that operated; do nothing on the treated area without their go-ahead.")}
+          </ul>
+          <div class="col-note">${I("Frasi da evitare: «Vedrai che passa», «Almeno sei viva», «Non è poi così grave». Meglio: «Sono qui, dimmi come vuoi che ti aiuti».", "Phrases to avoid: “It will pass”, “At least you are alive”, “It is not that bad”. Better: “I am here, tell me how you want me to help.”")}</div>
+        </section>
+        <section class="col-card">
+          <h3>${I("Analisi con la microcamera", "Scalp analysis with a micro-camera")}</h3>
+          <p class="col-lead">${I("Fa vedere alla cliente ciò che dici: aumenta la fiducia e la consapevolezza.", "It shows the client what you are describing: it builds trust and awareness.")}</p>
+          <ul>
+            ${li("<b>Prima</b>: postazione tranquilla e riservata, lente pulita e igienizzata, capelli ben pettinati.", "<b>Before</b>: a quiet, private spot, a clean and sanitised lens, hair well combed.")}
+            ${li("<b>Durante</b>: osserva più zone (nuca, lati, sommità, attaccatura) e confrontale tra loro. Ingrandimento basso per la visione d’insieme, alto per il singolo capello.", "<b>During</b>: look at several areas (nape, sides, crown, hairline) and compare them. Low magnification for the overview, high for a single hair.")}
+            ${li("Guarda prima a secco; se serve, ripeti con un po’ d’acqua per vedere meglio la superficie.", "Look dry first; if needed, repeat with a little water to see the surface better.")}
+            ${li("<b>Dopo</b>: mostra le immagini con parole semplici, descrivi ciò che si vede (sebo, squame, capelli sottili) senza dare nomi di malattie.", "<b>After</b>: show the images in simple words, describe what you see (sebum, flakes, fine hair) without naming illnesses.")}
+            ${li("Salva le foto solo se la cliente è d’accordo, e dillo anche nel consenso.", "Save photos only if the client agrees, and say so in the consent.")}
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Leggere l’etichetta (INCI)", "Reading the label (INCI)")}</h3>
+          <p class="col-lead">${I("L’elenco degli ingredienti è obbligatorio in tutta Europa e dice cosa c’è davvero nel flacone.", "The ingredient list is mandatory across Europe and tells you what is really in the bottle.")}</p>
+          <ul>
+            ${li("Gli ingredienti sono scritti in <b>ordine decrescente</b>: i primi sono i più presenti. Sotto l’1% l’ordine è libero.", "Ingredients are listed in <b>descending order</b>: the first are the most present. Below 1% the order is free.")}
+            ${li("Le piante sono indicate col nome <b>latino</b>, le sostanze chimiche col nome <b>inglese</b>, i coloranti con la sigla <b>CI</b> e un numero.", "Plants use their <b>Latin</b> name, chemicals their <b>English</b> name, colourants the <b>CI</b> code and a number.")}
+            ${li("L’acqua (<i>aqua</i>) è quasi sempre tra i primi. Conservanti e profumo stanno di solito in fondo.", "Water (<i>aqua</i>) is almost always among the first. Preservatives and fragrance are usually near the end.")}
+            ${li("Profumo e conservanti sono tra le cause più comuni di allergia: con una cute sensibile conviene controllarli.", "Fragrance and preservatives are among the most common causes of allergy: with a sensitive scalp it pays to check them.")}
+            ${li("«Naturale» non vuol dire «senza allergie» e «senza» una sostanza non vuol dire «migliore»: conta l’elenco intero.", "“Natural” does not mean “allergy-free” and “free from” one substance does not mean “better”: the whole list matters.")}
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Oli essenziali: uso prudente", "Essential oils: careful use")}</h3>
+          <p class="col-lead">${I("Sono concentrati vegetali molto potenti: si usano con rispetto.", "They are very powerful plant concentrates: use them with respect.")}</p>
+          <ul>
+            ${li("Mai <b>puri</b> sulla pelle: si diluiscono sempre in un olio vegetale. Le dosi le indica il produttore o un esperto, non si improvvisano.", "Never <b>pure</b> on the skin: always dilute in a carrier oil. Doses come from the producer or an expert, never guessed.")}
+            ${li("Non si bevono e non si usano vicino a occhi, naso e orecchie.", "Do not swallow them or use them near the eyes, nose or ears.")}
+            ${li("Attenzione a <b>gravidanza, allattamento, bambini, asma, epilessia, allergie</b> e farmaci in corso: si chiede prima al medico.", "Take care with <b>pregnancy, breastfeeding, children, asthma, epilepsy, allergies</b> and ongoing medication: ask a doctor first.")}
+            ${li("Alcuni, come gli agrumi, rendono la pelle più sensibile al sole.", "Some, such as citrus oils, make the skin more sensitive to the sun.")}
+            ${li("Si conservano in flaconi di vetro scuro, ben chiusi, al riparo da luce e calore. Gli agrumi e le conifere si alterano prima.", "Keep them in dark glass bottles, well closed, away from light and heat. Citrus and conifer oils spoil sooner.")}
+            ${li("Una piccola prova sulla pelle, prima dell’uso, evita brutte sorprese.", "A small skin test before use avoids nasty surprises.")}
+          </ul>
+        </section>
+        <section class="col-card">
+          <h3>${I("Alimentazione e capelli", "Food and hair")}</h3>
+          <p class="col-lead">${I("Il capello è fatto di proteine: quello che si mangia, nel tempo, si vede.", "Hair is made of protein: what we eat shows over time.")}</p>
+          <ul>
+            ${li("Una dieta varia, con proteine, verdura, frutta, legumi e grassi buoni, aiuta capelli e cute.", "A varied diet with protein, vegetables, fruit, pulses and good fats supports hair and scalp.")}
+            ${li("Diete molto drastiche o carenze (per esempio di ferro) possono far cadere i capelli.", "Very strict diets or deficiencies (for example iron) can cause hair loss.")}
+            ${li("Dormire bene e gestire lo stress contano più di quanto si pensi.", "Good sleep and managing stress matter more than people think.")}
+            ${li("Integratori: non si consigliano dosi né marche. Se la cliente ne parla, la si invita a sentire il medico o il farmacista.", "Supplements: do not recommend doses or brands. If the client brings them up, invite her to ask her doctor or pharmacist.")}
+          </ul>
+        </section>
+      </div>`;
+  }
+
   // ---- Colorimetria: pagina di consultazione (testi e disegni originali) ----
   function colorimetriaHtml() {
     const LIV = ['#1d1511','#2e1f16','#43301d','#5c4022','#7a5a2f','#9c7a41','#bf9c58','#d9ba76','#ebd596','#f6ebbb'];
@@ -6668,6 +6834,12 @@
     if (viewingColorimetria) {
       if (floatingSave) floatingSave.hidden = true;
       panel.innerHTML = colorimetriaHtml();
+      return;
+    }
+
+    if (viewingTricologia) {
+      if (floatingSave) floatingSave.hidden = true;
+      panel.innerHTML = tricologiaHtml();
       return;
     }
 
@@ -8941,7 +9113,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     searchTerm = "";
@@ -9011,7 +9183,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -9029,7 +9201,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -9048,7 +9220,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     magazzinoSearchTerm = "";
@@ -9072,7 +9244,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -9083,7 +9255,7 @@
   // Consigli generici: contenuto fisso, come "Disco di Newton" — nessun caricamento da db.
   document.querySelectorAll('[data-sezione-generica]').forEach(el => { el.style.display = SEZIONI_GENERICHE_VISIBILI ? '' : 'none'; });
   document.getElementById('consigliGenericiEntry').addEventListener('click', () => {
-    viewingConsigliGenerici = true; viewingColorimetria = false;
+    viewingConsigliGenerici = true; viewingColorimetria = false; viewingTricologia = false;
     viewingServizi = false; viewingAnagrafica = false;
     viewingMagazzino = false;
     viewingNotes = false;
@@ -9101,10 +9273,13 @@
   document.getElementById('colorimetriaEntry').addEventListener('click', () => {
     chiudiAltreSezioniEApri('colorimetria');
   });
+  document.getElementById('tricologiaEntry').addEventListener('click', () => {
+    chiudiAltreSezioniEApri('tricologia');
+  });
 
   // Scheda generica: stesso comportamento di "Crea servizio" (si salva da sola)
   document.getElementById('schedaGenericaEntry').addEventListener('click', () => {
-    viewingSchedaGenerica = true; viewingColorimetria = false;
+    viewingSchedaGenerica = true; viewingColorimetria = false; viewingTricologia = false;
     viewingServizi = false; viewingAnagrafica = false;
     viewingMagazzino = false;
     viewingNotes = false;
@@ -9113,7 +9288,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingHome = false;
     closeMobileMenu();
     renderAll();
@@ -9135,7 +9310,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -9156,7 +9331,7 @@
     viewingSearchApp = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -9174,7 +9349,7 @@
     viewingSearchApp = false;
     viewingBlankSheet = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = false;
     closeMobileMenu();
@@ -9185,7 +9360,7 @@
   // stesso comportamento delle altre voci fisse del menu.
   document.getElementById('catalogoHpEntry').addEventListener('click', () => {
     viewingCatalogoHp = true;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingNotes = false;
     viewingIspirazione = false;
@@ -9213,7 +9388,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = true;
     closeMobileMenu();
@@ -9239,7 +9414,7 @@
     viewingBlankSheet = false;
     viewingOstwald = false;
     viewingCatalogoHp = false;
-    viewingConsigliGenerici = false; viewingColorimetria = false;
+    viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
     viewingSchedaGenerica = false;
     viewingHome = true;
     closeMobileMenu();
@@ -9280,6 +9455,7 @@
         viewingConsigliGenerici = tecnicoViewSnapshot.viewingConsigliGenerici;
         viewingSchedaGenerica = tecnicoViewSnapshot.viewingSchedaGenerica;
         viewingColorimetria = !!tecnicoViewSnapshot.viewingColorimetria;
+        viewingTricologia = !!tecnicoViewSnapshot.viewingTricologia;
         viewingHome = tecnicoViewSnapshot.viewingHome;
         activeId = tecnicoViewSnapshot.activeId;
         tecnicoViewSnapshot = null;
@@ -9291,7 +9467,7 @@
   if (modeTricologoBtn) {
     modeTricologoBtn.addEventListener('click', () => {
       viewingTricologo = true;
-      tecnicoViewSnapshot = { viewingNotes, viewingIspirazione, viewingMagazzino, viewingServizi, viewingAnagrafica, viewingAgenda, viewingSearchApp, viewingBlankSheet, viewingOstwald, viewingCatalogoHp, viewingConsigliGenerici, viewingSchedaGenerica, viewingColorimetria, viewingHome, activeId };
+      tecnicoViewSnapshot = { viewingNotes, viewingIspirazione, viewingMagazzino, viewingServizi, viewingAnagrafica, viewingAgenda, viewingSearchApp, viewingBlankSheet, viewingOstwald, viewingCatalogoHp, viewingConsigliGenerici, viewingSchedaGenerica, viewingColorimetria, viewingTricologia, viewingHome, activeId };
       viewingNotes = false;
       viewingIspirazione = false;
       viewingMagazzino = false;
@@ -9300,7 +9476,7 @@
       viewingBlankSheet = false;
       viewingOstwald = false;
       viewingCatalogoHp = false;
-      viewingConsigliGenerici = false; viewingColorimetria = false;
+      viewingConsigliGenerici = false; viewingColorimetria = false; viewingTricologia = false;
       viewingSchedaGenerica = false;
       viewingHome = false;
       viewingAgenda = true; // Tricologia riparte sempre sull'Agenda
