@@ -1937,7 +1937,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-04.171-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.172-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -2373,8 +2373,8 @@
     list.forEach(c => {
       if (!c || !c.id) return;
       currentIds.add(c.id);
-      if ((lastWrittenUpdatedAt[c.id] || 0) < (c.updatedAt || 0)) {
-        lastWrittenUpdatedAt[c.id] = c.updatedAt || Date.now();
+      if ((lastWrittenUpdatedAt[c.id] || 0) < docStamp(c)) {
+        lastWrittenUpdatedAt[c.id] = docStamp(c) || Date.now();
         writes.push(db.doc('clients/' + c.id).set(clientToDbBody(c)));
       }
     });
@@ -2411,7 +2411,7 @@
       const c = clients.find(cl => cl.id === id);
       if (!c) return; // la scheda è stata cambiata o eliminata nel frattempo
       c.foto = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
-      if (activeId === id) renderSheet();
+      if (activeId === id || activeTricoId === id) renderSheet();
     }).catch(() => { /* le foto non si sono caricate: la scheda resta visibile senza, per ora */ });
   }
   function saveClientFotoDoc(clientId, photoId, body) {
@@ -2435,6 +2435,7 @@
     fotoArray.forEach((f, i) => {
       const photoId = uid();
       const body = { dataUrl: f.dataUrl, name: f.name || '', commento: f.commento || '', createdAt: Date.now() + i };
+      if (f.tricho) { body.tricho = true; body.seduta = f.seduta || ''; body.fase = f.fase || ''; }
       f.id = photoId;
       saveClientFotoDoc(clientId, photoId, body);
     });
@@ -3573,7 +3574,7 @@
       altreLetture.catch(() => {});
       return db.collection('clients').get().then(snap => snap.empty ? migrateLegacyLocalStorageIfNeeded().then(() => db.collection('clients').get()) : snap).then(snap => {
         clients = snap.docs.map(d => clientFromDbDoc(d.id, d.data()));
-        clients.forEach(c => { lastWrittenUpdatedAt[c.id] = c.updatedAt || Date.now(); });
+        clients.forEach(c => { lastWrittenUpdatedAt[c.id] = docStamp(c) || Date.now(); });
         __marks.schede = performance.now() - __T0;
         return altreLetture.then(r => { __marks.letture = performance.now() - __T0; return r; });
       }).then(([aTime, aGreen, aGloss, aspetto, backup, agenda, turni, assenze, servizi]) => migrateLegacyAppuntiIfNeeded([aTime, aGreen, aGloss]).then(migrated => migrated.concat([aspetto, backup, agenda, turni, assenze, servizi]))).then(([aTime, aGreen, aGloss, aspetto, backup, agenda, turni, assenze, servizi]) => {
@@ -3667,6 +3668,7 @@
   // tecnicoViewSnapshot quando si entra in Tricologo (che riparte sempre pulito, sul Magazzino),
   // e ripristinato quando si torna su Tecnico.
   let viewingTricologo = false;
+  let activeTricoId = null; // scheda tricologica aperta (solo in modalità Tricologo)
   let tecnicoViewSnapshot = null;
   let searchAppTerm = "";
   let viewingBlankSheet = false; // true quando il pannello principale mostra "Scheda da stampare" (modulo vuoto)
@@ -5344,8 +5346,8 @@
     const ul = document.getElementById('clientList');
     const term = searchTerm.trim().toLowerCase();
     const filtered = clients
-      .filter(c => !c.soloAnagrafica && c.nome.toLowerCase().includes(term)) // chi è solo in Anagrafica non ha (ancora) una scheda tecnica
-      .sort((a, b) => b.updatedAt - a.updatedAt);
+      .filter(c => (viewingTricologo ? !!c.tricho : !c.soloAnagrafica) && c.nome.toLowerCase().includes(term)) // Tecnico: solo schede tecniche; Tricologo: solo schede tricologiche
+      .sort((a, b) => viewingTricologo ? (b.tricho.updatedAt - a.tricho.updatedAt) : (b.updatedAt - a.updatedAt));
 
     if (!filtered.length) {
       // Il tasto "+ Nuova scheda" compare solo cercando qualcosa che non c'è (non a campo
@@ -5355,17 +5357,17 @@
         (term ? I("<button type=\"button\" class=\"empty-list-newbtn\" id=\"emptyListNewBtn\">+ Nuova scheda per \"", "<button type=\"button\" class=\"empty-list-newbtn\" id=\"emptyListNewBtn\">+ New card for \"") +
           escapeHtml(searchTerm.trim()) + '"</button>' : '') + '</li>';
       const btn = document.getElementById('emptyListNewBtn');
-      if (btn) btn.addEventListener('click', () => createNewClient(searchTerm.trim()));
+      if (btn) btn.addEventListener('click', () => viewingTricologo ? createNewTrico(searchTerm.trim()) : createNewClient(searchTerm.trim()));
       return;
     }
     ul.innerHTML = '';
     filtered.forEach(c => {
       const li = document.createElement('li');
-      li.className = (!viewingNotes && !viewingIspirazione && !viewingMagazzino && !viewingServizi && !viewingAnagrafica && !viewingAgenda && !viewingSearchApp && !viewingBlankSheet && !viewingOstwald && !viewingCatalogoHp && !viewingConsigliGenerici && !viewingSchedaGenerica && !viewingColorimetria && !viewingTricologia && !viewingHome && c.id === activeId) ? 'active' : '';
+      li.className = (!viewingNotes && !viewingIspirazione && !viewingMagazzino && !viewingServizi && !viewingAnagrafica && !viewingAgenda && !viewingSearchApp && !viewingBlankSheet && !viewingOstwald && !viewingCatalogoHp && !viewingConsigliGenerici && !viewingSchedaGenerica && !viewingColorimetria && !viewingTricologia && !viewingHome && c.id === (viewingTricologo ? activeTricoId : activeId)) ? 'active' : '';
       const mesiRic = appSettingsCache.mesiRicontatto;
       const daRicontattare = mesiRic && (Date.now() - c.updatedAt) >= mesiRic * 30 * 24 * 3600 * 1000;
       li.innerHTML = `<span class="name">${escapeHtml(c.nome || I("Senza nome", "Unnamed"))}${daRicontattare ? I("<span class=\"recontact-badge\">Da ricontattare</span>", "<span class=\"recontact-badge\">To follow up</span>") : ''}</span><span class="date">${fmtDate(c.updatedAt)}</span>`;
-      li.addEventListener('click', () => switchActive(c.id));
+      li.addEventListener('click', () => viewingTricologo ? switchTrico(c.id) : switchActive(c.id));
       ul.appendChild(li);
     });
   }
@@ -5482,6 +5484,7 @@
     categoria: I("Schede clienti", "Client cards"),
     cerca(term) {
       const risultati = [];
+      if (viewingTricologo) return risultati; // le sezioni viaggiano separate: in Tricologo si cercano solo le schede tricologiche
       clients.forEach(raw => {
         if (raw.soloAnagrafica) return;
         const c = hydrate(JSON.parse(JSON.stringify(raw)));
@@ -5490,6 +5493,23 @@
         if (nameMatches || fieldMatches.length) {
           risultati.push({ titolo: c.nome || I("Senza nome", "Unnamed"), matches: fieldMatches, apri: () => switchActive(c.id) });
         }
+      });
+      risultati.sort((a, b) => a.titolo.localeCompare(b.titolo));
+      return risultati;
+    },
+  });
+
+  registerSearchAppSource({
+    categoria: I("Schede tricologiche", "Trichology cards"),
+    cerca(term) {
+      const risultati = [];
+      if (!viewingTricologo) return risultati;
+      clients.forEach(c => {
+        if (!c.tricho) return;
+        const T = hydrateTricho(c.tricho);
+        const campi = [[I("Motivo", "Reason"), T.motivo], [I("Note", "Notes"), T.note], [I("Trattamento", "Treatment"), T.trattamento], [I("Prodotti", "Products"), T.prodottiConsigliati]]
+          .concat(T.sedute.map(x => [I("Controllo", "Check"), x.note])).filter(([, v]) => v && String(v).toLowerCase().includes(term));
+        if ((c.nome || '').toLowerCase().includes(term) || campi.length) risultati.push({ titolo: c.nome || I("Senza nome", "Unnamed"), matches: campi, apri: () => switchTrico(c.id) });
       });
       risultati.sort((a, b) => a.titolo.localeCompare(b.titolo));
       return risultati;
@@ -6608,6 +6628,328 @@
       </div>`;
   }
 
+  // =====================================================================================
+  // TRICOLOGO — schede clienti per la tricocamera ("Anomalie cute / capelli").
+  // Vivono nella stessa persona dell'Anagrafica (clients/<id>) dentro l'oggetto "tricho", ma
+  // non hanno niente a che vedere con la scheda tecnica: elenchi separati, campi separati,
+  // foto separate (campo "tricho:true" sulle foto). Nessuna diagnosi: la scheda raccoglie
+  // osservazioni e promemoria "sentire il medico".
+  // =====================================================================================
+  function docStamp(c) { return Math.max(c.updatedAt || 0, (c.tricho && c.tricho.updatedAt) || 0); }
+  function oggiISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function blankTricho() {
+    const ora = Date.now();
+    return { createdAt: ora, updatedAt: ora, dataVisita: oggiISO(), motivo: '',
+      salute: '', farmaci: '', allergie: '', gravidanza: '', fumo: '', stress: '', sonno: '', alimentazione: '',
+      lavaggi: '', prodotti: '', trattamenti: [], strumenti: [],
+      da: '', andamento: '', sintomi: [],
+      tipoCute: '', tipoCapello: '', osservazioni: [], zone: [], note: '',
+      trattamento: '', prodottiConsigliati: '', medico: false, medicoNote: '', prossimo: '',
+      consensoSalute: null, sedute: [] };
+  }
+  function hydrateTricho(t) {
+    const b = blankTricho();
+    Object.keys(b).forEach(k => { if (t[k] === undefined) t[k] = b[k]; });
+    ['trattamenti', 'strumenti', 'sintomi', 'osservazioni', 'zone', 'sedute'].forEach(k => { if (!Array.isArray(t[k])) t[k] = []; });
+    return t;
+  }
+  function tricoElenco() { return clients.filter(c => c.tricho); }
+  const TRI_OPZ = {
+    gravidanza: [['no', I("No", "No")], ['gravidanza', I("Gravidanza", "Pregnancy")], ['allattamento', I("Allattamento", "Breastfeeding")]],
+    fumo: [['no', I("No", "No")], ['si', I("Sì", "Yes")], ['ex', I("Ex", "Former")]],
+    livello: [['basso', I("Basso", "Low")], ['medio', I("Medio", "Medium")], ['alto', I("Alto", "High")]],
+    sonno: [['buono', I("Buono", "Good")], ['irregolare', I("Irregolare", "Irregular")], ['scarso', I("Scarso", "Poor")]],
+    andamento: [['stabile', I("Stabile", "Stable")], ['peggiora', I("In peggioramento", "Getting worse")], ['migliora', I("In miglioramento", "Improving")], ['periodi', I("A periodi", "Comes and goes")]],
+    cute: [['normale', I("Normale", "Normal")], ['grassa', I("Grassa", "Oily")], ['secca', I("Secca", "Dry")], ['mista', I("Mista", "Combination")], ['sensibile', I("Sensibile", "Sensitive")]],
+    capello: [['sottile', I("Sottile", "Fine")], ['medio', I("Medio", "Medium")], ['spesso', I("Spesso", "Thick")], ['liscio', I("Liscio", "Straight")], ['mosso', I("Mosso", "Wavy")], ['riccio', I("Riccio", "Curly")]],
+    trattamenti: [['colore', I("Colore", "Colour")], ['decolorazione', I("Decolorazione", "Bleach")], ['permanente', I("Permanente", "Perm")], ['stiratura', I("Stiratura / lisciante", "Straightening")], ['extension', I("Extension", "Extensions")]],
+    strumenti: [['phon', I("Phon", "Hair dryer")], ['piastra', I("Piastra", "Flat iron")], ['ferro', I("Ferro / arricciacapelli", "Curling iron")], ['aria', I("Asciugatura all'aria", "Air-dry")]],
+    sintomi: [['prurito', I("Prurito", "Itching")], ['bruciore', I("Bruciore", "Burning")], ['dolore', I("Dolore / tensione", "Pain / tightness")], ['desquamazione', I("Desquamazione", "Flaking")], ['arrossamento', I("Arrossamento", "Redness")], ['caduta', I("Caduta", "Shedding")], ['diradamento', I("Diradamento", "Thinning")], ['untuosita', I("Cute che si unge presto", "Scalp gets oily fast")], ['fragilita', I("Capelli fragili / che si spezzano", "Fragile / breaking hair")]],
+    osservazioni: [['squame-secche', I("Squame secche", "Dry flakes")], ['squame-untuose', I("Squame untuose", "Greasy flakes")], ['sebo', I("Sebo in eccesso", "Excess sebum")], ['arrossata', I("Cute arrossata", "Red scalp")], ['follicoli-ostruiti', I("Aperture follicolari ostruite", "Blocked follicle openings")], ['capelli-miniaturizzati', I("Capelli di diametro ridotto", "Reduced-diameter hairs")], ['peli-corti', I("Peli corti nuovi", "Short new hairs")], ['capelli-spezzati', I("Capelli spezzati", "Broken hairs")], ['vasi', I("Vasi evidenti", "Visible vessels")], ['aree-vuote', I("Aree con meno capelli", "Areas with fewer hairs")]],
+    zone: [['fronte', I("Fronte", "Front")], ['tempie', I("Tempie", "Temples")], ['vertice', I("Vertice", "Crown")], ['nuca', I("Nuca", "Nape")], ['laterali', I("Laterali", "Sides")], ['tutta', I("Tutta la testa", "Whole head")]]
+  };
+  const TRI_CSS = `
+  .tri-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tri-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 14px; background: var(--card, #fff); user-select: none; }
+  .tri-chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .tri-chip.on { background: var(--berry); color: #fff; border-color: var(--berry); }
+  .tri-seduta { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  .tri-seduta-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .tri-pd { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; }
+  @media (max-width: 620px) { .tri-pd { grid-template-columns: 1fr; } }
+  .tri-seduta textarea, .tri-foto-comment { font-family: inherit; width: 100%; }
+  .tri-pd h4 { margin: 0 0 6px; font-size: 14px; }
+  .tri-consenso { display: flex; gap: 10px; align-items: flex-start; }
+  #triPrint { display: none; }
+  @media print {
+    body.print-tri > *:not(#triPrint) { display: none !important; }
+    body.print-tri #triPrint { display: block !important; color: #000; background: #fff; font: 12px/1.4 Georgia, serif; padding: 0; }
+    body.print-tri #triPrint h1 { font-size: 18px; margin: 0 0 4px; }
+    body.print-tri #triPrint h2 { font-size: 13px; margin: 12px 0 4px; border-bottom: 1px solid #000; padding-bottom: 2px; }
+    body.print-tri #triPrint .p-row { display: flex; gap: 10px; margin: 3px 0; align-items: baseline; }
+    body.print-tri #triPrint .p-l { min-width: 150px; font-weight: bold; }
+    body.print-tri #triPrint .p-v { flex: 1; border-bottom: 1px dotted #666; min-height: 15px; }
+    body.print-tri #triPrint .p-box { display: inline-block; width: 11px; height: 11px; border: 1px solid #000; margin-right: 3px; vertical-align: -1px; }
+    body.print-tri #triPrint .p-box.on { background: #000; }
+    body.print-tri #triPrint .p-opt { display: inline-block; margin-right: 12px; }
+    body.print-tri #triPrint .p-lines div { border-bottom: 1px solid #999; height: 20px; }
+    body.print-tri #triPrint .p-ph { display: flex; gap: 8px; margin: 4px 0; }
+    body.print-tri #triPrint .p-ph div { flex: 1; }
+    body.print-tri #triPrint .p-ph img { max-width: 100%; max-height: 170px; display: block; }
+    body.print-tri #triPrint .p-sed { break-inside: avoid; margin-bottom: 8px; }
+  }`;
+  (function () { const s = document.createElement('style'); s.textContent = TRI_CSS; document.head.appendChild(s); })();
+
+  function tricoFlush() { if (tricoSave._t) { clearTimeout(tricoSave._t); tricoSave._t = null; save(clients); } }
+  function tricoSave() {
+    clearTimeout(tricoSave._t);
+    tricoSave._t = setTimeout(() => { tricoSave._t = null; save(clients); const st = document.getElementById('saveStatus'); if (st) { st.textContent = I("Salvato.", "Saved."); setTimeout(() => { if (st) st.textContent = ''; }, 1500); } }, 300);
+  }
+  function switchTrico(id) {
+    tricoFlush();
+    if (activeId) { const prev = getClient(activeId); if (prev) { commitVersion(prev); } }
+    activeTricoId = id;
+    viewingNotes = viewingIspirazione = viewingMagazzino = viewingServizi = viewingAnagrafica = viewingAgenda = viewingSearchApp = false;
+    viewingBlankSheet = viewingOstwald = viewingCatalogoHp = viewingConsigliGenerici = viewingColorimetria = viewingTricologia = viewingSchedaGenerica = viewingHome = false;
+    renderAll();
+    if (id) loadClientFoto(id);
+  }
+  function createNewTrico(prefillName) {
+    tricoFlush();
+    const c = blankClient();
+    c.soloAnagrafica = true; // è nuova solo come scheda tricologica: non compare tra le schede tecniche
+    if (prefillName) c.nome = titleCaseName(prefillName);
+    c.tricho = blankTricho();
+    clients.push(c);
+    searchTerm = '';
+    const s = document.getElementById('search'); if (s) s.value = '';
+    const sc = document.getElementById('searchClear'); if (sc) sc.hidden = true;
+    save(clients);
+    switchTrico(c.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const n = document.getElementById('tri-nome'); if (n) n.focus({ preventScroll: true });
+  }
+  function altraSezioneAperta() {
+    return viewingNotes || viewingIspirazione || viewingMagazzino || viewingServizi || viewingAnagrafica || viewingAgenda || viewingSearchApp || viewingBlankSheet || viewingOstwald || viewingCatalogoHp || viewingConsigliGenerici || viewingSchedaGenerica || viewingColorimetria || viewingTricologia || viewingHome;
+  }
+  function tricoChips(campo, opz, valori, multi) {
+    return '<div class="tri-chips" data-tri-chips="' + campo + '" data-multi="' + (multi ? 1 : 0) + '">' + opz.map(([v, l]) => {
+      const on = multi ? valori.indexOf(v) >= 0 : valori === v;
+      return '<label class="tri-chip' + (on ? ' on' : '') + '"><input type="' + (multi ? 'checkbox' : 'radio') + '" name="tri-' + campo + '" value="' + v + '"' + (on ? ' checked' : '') + '>' + escapeHtml(l) + '</label>';
+    }).join('') + '</div>';
+  }
+  function tricoTxt(id, campo, val, ph, rows) {
+    return '<textarea id="' + id + '" data-tri="' + campo + '" class="field-autosize" rows="' + (rows || 1) + '" placeholder="' + escapeHtml(ph || '') + '">' + escapeHtml(val || '') + '</textarea>';
+  }
+  function tricoFotoGrid(c, sid, fase) {
+    const foto = (c.foto || []).filter(f => f.tricho && f.seduta === sid && f.fase === fase);
+    return '<div class="foto-grid">' + foto.map(f => `
+      <div class="foto-card"><div class="foto-thumb"><img src="${f.dataUrl}" data-id="${f.id}" class="tri-foto-open" alt="${escapeHtml(f.name || '')}"><button type="button" class="foto-remove tri-foto-remove" data-id="${f.id}" title="${I("Rimuovi foto", "Remove photo")}">×</button></div>
+      <input type="text" class="tri-foto-comment" data-id="${f.id}" placeholder="${I("Commento…", "Comment…")}" value="${escapeHtml(f.commento || '')}"></div>`).join('') + `
+      <label class="foto-add"><input type="file" class="tri-foto-input" data-seduta="${sid}" data-fase="${fase}" accept="image/*" multiple><span>${I("+ Aggiungi", "+ Add")}</span></label></div>`;
+  }
+  function renderTricoSheet(c) {
+    const panel = document.getElementById('sheetPanel');
+    const floatingSave = document.getElementById('floatingSaveBtn'); if (floatingSave) floatingSave.hidden = true;
+    const apptModal = document.getElementById('agendaApptModal'); if (apptModal) apptModal.hidden = true;
+    const T = hydrateTricho(c.tricho);
+    const R = (lbl, inner) => '<div class="field"><label class="label-legend-style">' + lbl + '</label>' + inner + '</div>';
+    const sedute = T.sedute.slice().sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+    panel.innerHTML = `
+      <div class="sheet-head">
+        <div class="name-field">
+          <input type="text" id="tri-nome" placeholder="${I("Nome cliente", "Client name")}" value="${escapeHtml(c.nome)}">
+          <input type="tel" id="tri-tel" class="name-field-telefono" placeholder="${I("Telefono", "Phone")}" value="${escapeHtml(c.telefono || '')}">
+          <div class="meta">${I("Scheda tricologica · creata il ", "Trichology card · created on ")}${fmtDate(T.createdAt)}${I(" · aggiornata il ", " · updated on ")}${fmtDate(T.updatedAt)}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="ghost small" id="triPrintBtn">${I("Stampa scheda", "Print card")}</button>
+          <button type="button" class="ghost small" id="triPrintBlankBtn">${I("Stampa modulo vuoto", "Print blank form")}</button>
+          <button type="button" class="danger ghost small" id="triDeleteBtn">${I("Elimina scheda", "Delete card")}</button>
+        </div>
+      </div>
+      <fieldset><legend>${I("Visita", "Visit")}</legend>
+        <div class="row2">${R(I("Data prima visita", "First visit date"), '<input type="date" data-tri="dataVisita" value="' + escapeHtml(T.dataVisita) + '">')}
+        ${R(I("Motivo della visita", "Reason for the visit"), tricoTxt('tri-motivo', 'motivo', T.motivo, I("Cosa ti porta qui, in poche parole…", "What brings you here, in a few words…")))}</div>
+      </fieldset>
+      <fieldset><legend>${I("Anamnesi generale", "General background")}</legend>
+        <p class="hint">${I("Informazioni riferite dalla cliente. Per qualunque dubbio di salute: sentire il parere del medico.", "Information reported by the client. For any health concern: ask a doctor.")}</p>
+        ${R(I("Problemi di salute noti", "Known health issues"), tricoTxt('tri-salute', 'salute', T.salute, I("Come riferiti dalla cliente…", "As reported by the client…")))}
+        ${R(I("Farmaci o integratori in corso", "Medication or supplements in use"), tricoTxt('tri-farmaci', 'farmaci', T.farmaci, ''))}
+        ${R(I("Allergie / intolleranze", "Allergies / intolerances"), tricoTxt('tri-allergie', 'allergie', T.allergie, ''))}
+        <div class="row3">
+          ${R(I("Gravidanza / allattamento", "Pregnancy / breastfeeding"), tricoChips('gravidanza', TRI_OPZ.gravidanza, T.gravidanza, false))}
+          ${R(I("Fumo", "Smoking"), tricoChips('fumo', TRI_OPZ.fumo, T.fumo, false))}
+          ${R(I("Alimentazione", "Diet"), tricoTxt('tri-alim', 'alimentazione', T.alimentazione, I("Es. varia, vegetariana…", "E.g. varied, vegetarian…")))}
+        </div>
+        <div class="row2">
+          ${R(I("Livello di stress", "Stress level"), tricoChips('stress', TRI_OPZ.livello, T.stress, false))}
+          ${R(I("Sonno", "Sleep"), tricoChips('sonno', TRI_OPZ.sonno, T.sonno, false))}
+        </div>
+      </fieldset>
+      <fieldset><legend>${I("Abitudini per i capelli", "Hair habits")}</legend>
+        <div class="row2">
+          ${R(I("Quante volte li lava", "Washes per week"), '<input type="text" data-tri="lavaggi" value="' + escapeHtml(T.lavaggi) + '" placeholder="' + I("Es. 3 a settimana", "E.g. 3 a week") + '">')}
+          ${R(I("Prodotti usati", "Products used"), tricoTxt('tri-prodotti', 'prodotti', T.prodotti, ''))}
+        </div>
+        ${R(I("Trattamenti chimici", "Chemical treatments"), tricoChips('trattamenti', TRI_OPZ.trattamenti, T.trattamenti, true))}
+        ${R(I("Asciugatura / styling", "Drying / styling"), tricoChips('strumenti', TRI_OPZ.strumenti, T.strumenti, true))}
+      </fieldset>
+      <fieldset><legend>${I("Il disturbo", "The concern")}</legend>
+        <div class="row2">
+          ${R(I("Da quanto tempo", "For how long"), '<input type="text" data-tri="da" value="' + escapeHtml(T.da) + '" placeholder="' + I("Es. circa 6 mesi", "E.g. about 6 months") + '">')}
+          ${R(I("Andamento", "Course"), tricoChips('andamento', TRI_OPZ.andamento, T.andamento, false))}
+        </div>
+        ${R(I("Cosa nota la cliente", "What the client notices"), tricoChips('sintomi', TRI_OPZ.sintomi, T.sintomi, true))}
+      </fieldset>
+      <fieldset><legend>${I("Osservazione con la tricocamera", "Trichoscope observation")}</legend>
+        <div class="row2">
+          ${R(I("Tipo di cute", "Scalp type"), tricoChips('tipoCute', TRI_OPZ.cute, T.tipoCute, false))}
+          ${R(I("Tipo di capello", "Hair type"), tricoChips('tipoCapello', TRI_OPZ.capello, T.tipoCapello, false))}
+        </div>
+        ${R(I("Cosa si osserva", "What is observed"), tricoChips('osservazioni', TRI_OPZ.osservazioni, T.osservazioni, true))}
+        ${R(I("Zone interessate", "Areas involved"), tricoChips('zone', TRI_OPZ.zone, T.zone, true))}
+        ${R(I("Note dell'osservazione", "Observation notes"), tricoTxt('tri-note', 'note', T.note, '', 2))}
+      </fieldset>
+      <fieldset><legend>${I("Foto prima / dopo", "Before / after photos")}</legend>
+        <p class="hint">${I("Una riga per ogni controllo: foto di prima e di dopo il trattamento. Si salvano da sole.", "One block per check: photos before and after treatment. They save automatically.")}</p>
+        ${sedute.map((s, i) => `
+          <div class="tri-seduta" data-seduta="${s.id}">
+            <div class="tri-seduta-head">
+              <strong>${I("Controllo ", "Check ")}${i + 1}</strong>
+              <input type="date" class="tri-sed-data" data-seduta="${s.id}" value="${escapeHtml(s.data || '')}">
+              <button type="button" class="ghost small tri-sed-del" data-seduta="${s.id}">${I("Elimina controllo", "Delete check")}</button>
+            </div>
+            <textarea class="tri-sed-note field-autosize" data-seduta="${s.id}" rows="1" placeholder="${I("Note del controllo…", "Notes for this check…")}">${escapeHtml(s.note || '')}</textarea>
+            <div class="tri-pd"><div><h4>${I("Prima", "Before")}</h4>${tricoFotoGrid(c, s.id, 'prima')}</div><div><h4>${I("Dopo", "After")}</h4>${tricoFotoGrid(c, s.id, 'dopo')}</div></div>
+          </div>`).join('')}
+        <button type="button" class="ghost" id="triAddSeduta">${I("+ Aggiungi controllo", "+ Add check")}</button>
+      </fieldset>
+      <fieldset><legend>${I("Consiglio e prossimi passi", "Advice and next steps")}</legend>
+        ${R(I("Trattamento proposto", "Proposed treatment"), tricoTxt('tri-trat', 'trattamento', T.trattamento, '', 2))}
+        ${R(I("Prodotti consigliati", "Recommended products"), tricoTxt('tri-prodcons', 'prodottiConsigliati', T.prodottiConsigliati, ''))}
+        <label class="tri-consenso"><input type="checkbox" id="tri-medico" ${T.medico ? 'checked' : ''}><span><strong>${I("Consigliato sentire il parere del medico", "Advised to ask a doctor")}</strong></span></label>
+        ${T.medico ? R(I("Motivo / nota", "Reason / note"), tricoTxt('tri-mednote', 'medicoNote', T.medicoNote, '')) : ''}
+        ${R(I("Prossimo controllo", "Next check"), '<input type="date" data-tri="prossimo" value="' + escapeHtml(T.prossimo) + '">')}
+      </fieldset>
+      <fieldset><legend>${I("Consenso", "Consent")}</legend>
+        <label class="tri-consenso"><input type="checkbox" id="tri-consenso" ${T.consensoSalute ? 'checked' : ''}><span>${I("La cliente acconsente al trattamento dei dati sulla salute (cute, capelli, foto) per questa scheda.", "The client consents to processing of health data (scalp, hair, photos) for this card.")}${T.consensoSalute ? ' <strong>' + I("Registrato il ", "Recorded on ") + fmtDate(T.consensoSalute) + '</strong>' : ''}</span></label>
+      </fieldset>`;
+    // campi di testo e date
+    const touchT = (fn) => { fn(T); T.updatedAt = Date.now(); tricoSave(); };
+    panel.querySelectorAll('[data-tri]').forEach(el => el.addEventListener('input', () => touchT(t => { t[el.dataset.tri] = el.value; })));
+    panel.querySelectorAll('textarea.field-autosize').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; el.addEventListener('input', () => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); });
+    const nome = document.getElementById('tri-nome');
+    nome.addEventListener('input', () => { const p = nome.selectionStart; const v = titleCaseName(nome.value); if (v !== nome.value) { nome.value = v; nome.setSelectionRange(p, p); } c.nome = nome.value; T.updatedAt = Date.now(); tricoSave(); renderList(); });
+    document.getElementById('tri-tel').addEventListener('input', e => { c.telefono = e.target.value; T.updatedAt = Date.now(); tricoSave(); });
+    // scelte (singole o multiple): un tocco sulla pillola la accende / spegne
+    panel.querySelectorAll('[data-tri-chips]').forEach(g => {
+      const campo = g.dataset.triChips, multi = g.dataset.multi === '1';
+      g.querySelectorAll('.tri-chip').forEach(l => l.addEventListener('click', ev => {
+        ev.preventDefault();
+        const inp = l.querySelector('input'), v = inp.value;
+        touchT(t => {
+          if (multi) { const s = new Set(t[campo]); s.has(v) ? s.delete(v) : s.add(v); t[campo] = Array.from(s); }
+          else t[campo] = (t[campo] === v) ? '' : v;
+        });
+        g.querySelectorAll('.tri-chip').forEach(x => { const i = x.querySelector('input'); const on = multi ? T[campo].indexOf(i.value) >= 0 : T[campo] === i.value; i.checked = on; x.classList.toggle('on', on); });
+      }));
+    });
+    document.getElementById('tri-medico').addEventListener('change', e => { touchT(t => { t.medico = e.target.checked; }); renderSheet(); });
+    document.getElementById('tri-consenso').addEventListener('change', e => { touchT(t => { t.consensoSalute = e.target.checked ? Date.now() : null; }); renderSheet(); });
+    // controlli e foto
+    document.getElementById('triAddSeduta').addEventListener('click', () => { touchT(t => { t.sedute.push({ id: uid(), data: oggiISO(), note: '' }); }); tricoFlush(); renderSheet(); });
+    panel.querySelectorAll('.tri-sed-data').forEach(el => el.addEventListener('change', () => { touchT(t => { const s = t.sedute.find(x => x.id === el.dataset.seduta); if (s) s.data = el.value; }); renderSheet(); }));
+    panel.querySelectorAll('.tri-sed-note').forEach(el => el.addEventListener('input', () => touchT(t => { const s = t.sedute.find(x => x.id === el.dataset.seduta); if (s) s.note = el.value; })));
+    panel.querySelectorAll('.tri-sed-del').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = I("Sicura? Tocca di nuovo", "Sure? Tap again"); setTimeout(() => { if (b.isConnected) { b.dataset.armed = ''; b.textContent = I("Elimina controllo", "Delete check"); } }, 4000); return; }
+      const sid = b.dataset.seduta;
+      (c.foto || []).filter(f => f.tricho && f.seduta === sid).forEach(f => deleteClientFotoDoc(c.id, f.id));
+      c.foto = (c.foto || []).filter(f => !(f.tricho && f.seduta === sid));
+      touchT(t => { t.sedute = t.sedute.filter(x => x.id !== sid); }); tricoFlush(); renderSheet();
+    }));
+    panel.querySelectorAll('.tri-foto-input').forEach(inp => inp.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []);
+      for (const file of files) {
+        try {
+          const dataUrl = await resizeImage(file, 1000, 0.6);
+          const photoId = uid();
+          const body = { dataUrl, name: file.name, commento: '', createdAt: Date.now(), tricho: true, seduta: inp.dataset.seduta, fase: inp.dataset.fase };
+          c.foto.push(Object.assign({ id: photoId }, body));
+          saveClientFotoDoc(c.id, photoId, body);
+          T.updatedAt = Date.now(); tricoSave();
+        } catch (err) { notify(I("Non sono riuscita a caricare \"" + file.name + "\".", "Couldn’t load \"" + file.name + "\"."), true); }
+      }
+      renderSheet();
+    }));
+    panel.querySelectorAll('.tri-foto-comment').forEach(el => el.addEventListener('input', () => {
+      const f = (c.foto || []).find(x => x.id === el.dataset.id); if (f) f.commento = el.value;
+      updateClientFotoCommento(c.id, el.dataset.id, el.value);
+    }));
+    panel.querySelectorAll('.tri-foto-remove').forEach(b => b.addEventListener('click', () => {
+      c.foto = (c.foto || []).filter(f => f.id !== b.dataset.id); deleteClientFotoDoc(c.id, b.dataset.id); renderSheet();
+    }));
+    panel.querySelectorAll('.tri-foto-open').forEach(img => img.addEventListener('click', () => openImageModal(img.src, img.alt)));
+    // stampa
+    document.getElementById('triPrintBtn').addEventListener('click', () => stampaTrico(c, false));
+    document.getElementById('triPrintBlankBtn').addEventListener('click', () => stampaTrico(c, true));
+    // elimina: toglie solo la scheda tricologica (la persona resta in Anagrafica e le sue schede tecniche restano)
+    const del = document.getElementById('triDeleteBtn');
+    del.addEventListener('click', () => {
+      if (del.dataset.armed !== '1') { del.dataset.armed = '1'; del.textContent = I("Sicura? Tocca di nuovo", "Sure? Tap again"); setTimeout(() => { if (del.isConnected) { del.dataset.armed = ''; del.textContent = I("Elimina scheda", "Delete card"); } }, 4000); return; }
+      tricoFlush();
+      (c.foto || []).filter(f => f.tricho).forEach(f => deleteClientFotoDoc(c.id, f.id));
+      c.foto = (c.foto || []).filter(f => !f.tricho);
+      delete c.tricho;
+      c.updatedAt = Date.now();
+      // una persona nata solo come scheda tricologica, senza scheda tecnica né dati: non resta un guscio vuoto
+      activeTricoId = null; viewingAgenda = true;
+      save(clients).then(() => renderAll());
+      notifyTop(I("Scheda tricologica eliminata. La cliente resta in Anagrafica.", "Trichology card deleted. The client stays in the Client directory."));
+    });
+  }
+  // Stampa semplice: un foglio pulito (bianco e nero), compilato oppure vuoto da riempire a penna.
+  function stampaTrico(c, vuota) {
+    const T = hydrateTricho(c.tricho || blankTricho());
+    const val = v => vuota ? '' : escapeHtml(v || '');
+    const row = (l, v) => '<div class="p-row"><span class="p-l">' + l + '</span><span class="p-v">' + val(v) + '</span></div>';
+    const opts = (lista, sel) => lista.map(([v, l]) => '<span class="p-opt"><span class="p-box' + (!vuota && (Array.isArray(sel) ? sel.indexOf(v) >= 0 : sel === v) ? ' on' : '') + '"></span>' + escapeHtml(l) + '</span>').join('');
+    const orow = (l, lista, sel) => '<div class="p-row"><span class="p-l">' + l + '</span><span>' + opts(lista, sel) + '</span></div>';
+    const lines = (l, v, n) => '<div class="p-row"><span class="p-l">' + l + '</span></div>' + (vuota || !v ? '<div class="p-lines">' + '<div></div>'.repeat(n || 2) + '</div>' : '<div style="white-space:pre-wrap;border-bottom:1px solid #999;padding-bottom:2px">' + escapeHtml(v) + '</div>');
+    const dd = s => s ? s.split('-').reverse().join('/') : '';
+    const sedute = vuota ? [{ id: 'x1', data: '', note: '' }, { id: 'x2', data: '', note: '' }] : T.sedute.slice().sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+    let h = '<h1>' + I("Scheda anamnesi · Anomalie cute / capelli", "History card · Scalp / hair concerns") + '</h1>';
+    h += row(I("Nome", "Name"), c.nome) + row(I("Telefono", "Phone"), c.telefono) + row(I("Data prima visita", "First visit"), dd(T.dataVisita)) + row(I("Motivo della visita", "Reason for visit"), T.motivo);
+    h += '<h2>' + I("Anamnesi generale", "General background") + '</h2>';
+    h += row(I("Problemi di salute noti", "Known health issues"), T.salute) + row(I("Farmaci / integratori", "Medication / supplements"), T.farmaci) + row(I("Allergie / intolleranze", "Allergies / intolerances"), T.allergie);
+    h += orow(I("Gravidanza / allattamento", "Pregnancy / breastfeeding"), TRI_OPZ.gravidanza, T.gravidanza) + orow(I("Fumo", "Smoking"), TRI_OPZ.fumo, T.fumo) + row(I("Alimentazione", "Diet"), T.alimentazione);
+    h += orow(I("Stress", "Stress"), TRI_OPZ.livello, T.stress) + orow(I("Sonno", "Sleep"), TRI_OPZ.sonno, T.sonno);
+    h += '<h2>' + I("Abitudini per i capelli", "Hair habits") + '</h2>';
+    h += row(I("Lavaggi", "Washes"), T.lavaggi) + row(I("Prodotti usati", "Products used"), T.prodotti) + orow(I("Trattamenti chimici", "Chemical treatments"), TRI_OPZ.trattamenti, T.trattamenti) + orow(I("Asciugatura / styling", "Drying / styling"), TRI_OPZ.strumenti, T.strumenti);
+    h += '<h2>' + I("Il disturbo", "The concern") + '</h2>';
+    h += row(I("Da quanto tempo", "For how long"), T.da) + orow(I("Andamento", "Course"), TRI_OPZ.andamento, T.andamento) + orow(I("Cosa nota", "Notices"), TRI_OPZ.sintomi, T.sintomi);
+    h += '<h2>' + I("Osservazione con la tricocamera", "Trichoscope observation") + '</h2>';
+    h += orow(I("Tipo di cute", "Scalp type"), TRI_OPZ.cute, T.tipoCute) + orow(I("Tipo di capello", "Hair type"), TRI_OPZ.capello, T.tipoCapello) + orow(I("Cosa si osserva", "Observed"), TRI_OPZ.osservazioni, T.osservazioni) + orow(I("Zone", "Areas"), TRI_OPZ.zone, T.zone) + lines(I("Note", "Notes"), T.note, 2);
+    h += '<h2>' + I("Controlli e foto prima / dopo", "Checks and before / after photos") + '</h2>';
+    sedute.forEach((s, i) => {
+      h += '<div class="p-sed">' + row(I("Controllo ", "Check ") + (i + 1) + I(" · data", " · date"), dd(s.data)) + lines(I("Note", "Notes"), s.note, 2);
+      const ph = fase => vuota ? '' : (c.foto || []).filter(f => f.tricho && f.seduta === s.id && f.fase === fase).map(f => '<img src="' + f.dataUrl + '" alt="">').join('');
+      h += '<div class="p-ph"><div><strong>' + I("Prima", "Before") + '</strong><br>' + ph('prima') + (vuota ? '<div style="height:120px;border:1px solid #999"></div>' : '') + '</div><div><strong>' + I("Dopo", "After") + '</strong><br>' + ph('dopo') + (vuota ? '<div style="height:120px;border:1px solid #999"></div>' : '') + '</div></div></div>';
+    });
+    h += '<h2>' + I("Consiglio e prossimi passi", "Advice and next steps") + '</h2>';
+    h += lines(I("Trattamento proposto", "Proposed treatment"), T.trattamento, 2) + row(I("Prodotti consigliati", "Recommended products"), T.prodottiConsigliati);
+    h += '<div class="p-row"><span class="p-l">' + I("Sentire il medico", "Ask a doctor") + '</span><span class="p-opt"><span class="p-box' + (!vuota && T.medico ? ' on' : '') + '"></span>' + I("Consigliato", "Advised") + '</span><span class="p-v">' + val(T.medicoNote) + '</span></div>';
+    h += row(I("Prossimo controllo", "Next check"), dd(T.prossimo));
+    h += '<h2>' + I("Consenso", "Consent") + '</h2><div class="p-row"><span class="p-opt"><span class="p-box' + (!vuota && T.consensoSalute ? ' on' : '') + '"></span>' + I("Acconsento al trattamento dei dati sulla salute (cute, capelli, foto) per questa scheda.", "I consent to processing of health data (scalp, hair, photos) for this card.") + '</span></div>' + row(I("Data e firma", "Date and signature"), '');
+    let area = document.getElementById('triPrint');
+    if (!area) { area = document.createElement('div'); area.id = 'triPrint'; document.body.appendChild(area); }
+    area.innerHTML = h;
+    document.body.classList.add('print-tri');
+    const fine = () => { document.body.classList.remove('print-tri'); window.removeEventListener('afterprint', fine); };
+    window.addEventListener('afterprint', fine);
+    window.print();
+  }
+
   function renderSheet() {
     const panel = document.getElementById('sheetPanel');
     const floatingSave = document.getElementById('floatingSaveBtn');
@@ -6638,8 +6980,8 @@
     // "fixed" fuori dal flusso — nasconderne il contenitore lo nasconderebbe anche lui.
     const isTouchDevice = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
     const sidebarAsideEl = document.querySelector('.sidebar-stack .sidebar');
-    if (sidebarAsideEl) sidebarAsideEl.style.display = (viewingTricologo || (viewingMagazzino && isTouchDevice)) ? 'none' : '';
-    ['blankSheetEntry', 'notesEntry', 'ostwaldEntry', 'ispirazioneEntry', 'serviziEntry', 'anagraficaEntry', 'colorimetriaEntry'].forEach(id => {
+    if (sidebarAsideEl) sidebarAsideEl.style.display = (viewingMagazzino && isTouchDevice) ? 'none' : '';
+    ['blankSheetEntry', 'notesEntry', 'ostwaldEntry', 'ispirazioneEntry', 'serviziEntry', 'colorimetriaEntry'].forEach(id => {
       const voce = document.getElementById(id);
       const wrapper = voce && voce.closest('.notes-banner');
       if (wrapper) wrapper.style.display = viewingTricologo ? 'none' : '';
@@ -6657,6 +6999,12 @@
     // Tricologo apre subito sull'Agenda (la titolare, 15/10: "deve aprire subito su agenda"), non su
     // Magazzino: stessa Agenda condivisa vista nella schermata iniziale del Tecnico, senza
     // elenco clienti né saluto del giorno (qui non servono).
+    if (viewingTricologo && activeTricoId && !altraSezioneAperta()) {
+      const ct = getClient(activeTricoId);
+      if (ct && ct.tricho) { renderTricoSheet(ct); return; }
+      activeTricoId = null;
+    }
+
     if (viewingAgenda) {
       panel.innerHTML = `${I("\n        <div class=\"home-agenda\">\n          <div class=\"home-agenda-head\">\n            <div class=\"notes-title\">Agenda</div>\n          </div>\n          ", "\n        <div class=\"home-agenda\">\n          <div class=\"home-agenda-head\">\n            <div class=\"notes-title\">Calendar</div>\n          </div>\n          ")}${agendaDateNavHtml()}
           <div class="agenda-date-label">${fmtDateISOLong(agendaDataSelezionata)}</div>
@@ -7213,7 +7561,7 @@
         <div class="field">
           <label class="label-legend-style">${t('sc.fotoPrimaDopo', I("Foto prima / dopo", "Before / after photos"))}</label>
           <div class="foto-grid" id="fotoGrid">
-            ${c.foto.map(f => `
+            ${c.foto.filter(f => !f.tricho).map(f => `
               <div class="foto-card">
                 <div class="foto-thumb">
                   <img src="${f.dataUrl}" data-id="${f.id}" class="foto-open" alt="${escapeHtml(f.name)}">
@@ -9160,7 +9508,7 @@
     }
   }
 
-  document.getElementById('newBtn').addEventListener('click', () => createNewClient());
+  document.getElementById('newBtn').addEventListener('click', () => viewingTricologo ? createNewTrico() : createNewClient());
 
   const searchInput = document.getElementById('search');
   const searchClearBtn = document.getElementById('searchClear');
@@ -9467,6 +9815,7 @@
   }
   if (modeTecnicoBtn) {
     modeTecnicoBtn.addEventListener('click', () => {
+      tricoFlush(); activeTricoId = null;
       viewingTricologo = false;
       if (tecnicoViewSnapshot) {
         viewingNotes = tecnicoViewSnapshot.viewingNotes;
@@ -9492,6 +9841,7 @@
   }
   if (modeTricologoBtn) {
     modeTricologoBtn.addEventListener('click', () => {
+      activeTricoId = null; searchTerm = ''; { const se = document.getElementById('search'); if (se) se.value = ''; }
       viewingTricologo = true;
       tecnicoViewSnapshot = { viewingNotes, viewingIspirazione, viewingMagazzino, viewingServizi, viewingAnagrafica, viewingAgenda, viewingSearchApp, viewingBlankSheet, viewingOstwald, viewingCatalogoHp, viewingConsigliGenerici, viewingSchedaGenerica, viewingColorimetria, viewingTricologia, viewingHome, activeId };
       viewingNotes = false;
@@ -9783,7 +10133,7 @@
     const vuotoObj = o => !o || Object.values(o).every(vuoto);
     const testi = ['note', 'allergie', 'bianchiDavanti', 'bianchiDietro', 'livFondo', 'livLunghezze', 'livPunte', 'obiettivo', 'modifiche', 'postColoreSalone', 'consigliMantenimento'];
     if (!testi.every(k => vuoto(c[k]))) return false;
-    return vuotoObj(c.tempiTime) && vuotoObj(c.tempiGreen) && vuotoObj(c.formulaTime) && vuotoObj(c.formulaGreen) && !(c.foto || []).length;
+    return vuotoObj(c.tempiTime) && vuotoObj(c.tempiGreen) && vuotoObj(c.formulaTime) && vuotoObj(c.formulaGreen) && !(c.foto || []).filter(f => !f.tricho).length;
   }
   function anagNomiRipetuti() {
     return clients.map(c => ({ c, nuovo: anagNomeSenzaRipetizione(c.nome) })).filter(x => x.nuovo && x.nuovo !== x.c.nome);
@@ -9813,7 +10163,8 @@
       </div>
       <label class="anag-consenso"><input type="checkbox" id="anagConsenso" ${c.consensoAt ? 'checked' : ''}${I("><span>Consenso al trattamento dei dati (privacy): <strong>", "><span>Consent to data processing (privacy): <strong>")}${consensoTxt}${I("</strong></span></label>\n      <p class=\"hint\">Prima registrazione: ", "</strong></span></label>\n      <p class=\"hint\">First registered: ")}${anagData(c.createdAt)}${I(" · Ultima visita: ", " · Last visit: ")}${anagUltimaVisita(c) ? anagDataISO(anagUltimaVisita(c)) : '—'}</p>
       <div class="anag-azioni">
-        <button type="button" class="primary" id="anagApri">${c.soloAnagrafica ? I("Crea la scheda tecnica", "Create the technical card") : I("Apri la scheda", "Open the card")}</button>
+        <button type="button" class="primary" id="anagApri">${c.soloAnagrafica ? I("Crea la scheda tecnica", "Create the technical card") : I("Apri la scheda tecnica", "Open the technical card")}</button>
+        <button type="button" class="primary" id="anagApriTri">${c.tricho ? I("Apri la scheda tricologica", "Open the trichology card") : I("Crea la scheda tricologica", "Create the trichology card")}</button>
         ${wa ? '<a class="ghost small import-label" id="anagWa" href="' + escapeHtml(anagLinkWhatsapp(c, true)) + I("\" target=\"_blank\" rel=\"noopener\" style=\"display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;\">Scrivi su WhatsApp</a>", "\" target=\"_blank\" rel=\"noopener\" style=\"display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;\">Message on WhatsApp</a>") : ''}
         ${!c.soloAnagrafica && anagSchedaVuota(c) ? I("<button type=\"button\" class=\"ghost\" id=\"anagTogli\">Togli dalle schede tecniche</button>", "<button type=\"button\" class=\"ghost\" id=\"anagTogli\">Remove from the technical cards</button>") : ''}
         ${anagLinkRecensione(c) ? '<a class="ghost small import-label" id="anagRecensione" href="' + escapeHtml(anagLinkRecensione(c)) + I("\" target=\"_blank\" rel=\"noopener\" style=\"display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;\">★ Chiedi recensione</a>", "\" target=\"_blank\" rel=\"noopener\" style=\"display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;\">★ Ask for a review</a>") : ''}${I("\n        <button type=\"button\" class=\"ghost\" id=\"anagScaricaDati\">Scarica i suoi dati</button>\n        <button type=\"button\" class=\"ghost anag-pericolo\" id=\"anagElimina\">Elimina cliente</button>\n      </div>\n      <p class=\"hint\">\"Scarica i suoi dati\" crea un file con scheda, appuntamenti e foto: serve se la cliente chiede una copia dei propri dati. \"Elimina cliente\" cancella scheda e foto e rende anonimi i suoi appuntamenti.</p>", "\n        <button type=\"button\" class=\"ghost\" id=\"anagScaricaDati\">Download their data</button>\n        <button type=\"button\" class=\"ghost anag-pericolo\" id=\"anagElimina\">Delete client</button>\n      </div>\n      <p class=\"hint\">\"Download their data\" creates a file with card, appointments and photos: needed if the client asks for a copy of her own data. \"Delete client\" removes the card and photos and anonymises her appointments.</p>")}`;
@@ -9841,7 +10192,18 @@
         if (e.target.checked) { cc.consensoAt = Date.now(); cc.consensoVia = 'salone'; } else { cc.consensoAt = null; cc.consensoVia = ''; }
         anagSalvaCampi(cc); renderAnagrafica();
       });
-      on_('anagApri', 'click', () => { if (cc.soloAnagrafica) { cc.soloAnagrafica = false; cc.updatedAt = Date.now(); save(clients); } chiudiAnagrafica(); switchActive(cc.id); });
+      on_('anagApri', 'click', () => {
+        if (cc.soloAnagrafica) { cc.soloAnagrafica = false; cc.updatedAt = Date.now(); save(clients); }
+        chiudiAnagrafica();
+        if (viewingTricologo && modeTecnicoBtn) modeTecnicoBtn.click(); // la scheda tecnica sta nella modalità Tecnico
+        switchActive(cc.id);
+      });
+      on_('anagApriTri', 'click', () => {
+        if (!cc.tricho) { cc.tricho = blankTricho(); save(clients); }
+        chiudiAnagrafica();
+        if (!viewingTricologo && modeTricologoBtn) modeTricologoBtn.click(); // la scheda tricologica sta nella modalità Tricologo
+        switchTrico(cc.id);
+      });
       on_('anagTogli', 'click', () => {
         cc.soloAnagrafica = true; lastWrittenUpdatedAt[cc.id] = 0;
         if (activeId === cc.id) { const prima = clients.find(x => !x.soloAnagrafica); activeId = prima ? prima.id : null; }
