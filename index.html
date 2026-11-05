@@ -1937,7 +1937,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-04.170-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-04.171-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -6644,6 +6644,8 @@
       const wrapper = voce && voce.closest('.notes-banner');
       if (wrapper) wrapper.style.display = viewingTricologo ? 'none' : '';
     });
+    // La voce Tricologia serve solo nella modalità Tricologo: in Tecnico non compare.
+    { const voceTri = document.getElementById('tricologiaEntry'); const wrapTri = voceTri && voceTri.closest('.notes-banner'); if (wrapTri) wrapTri.style.display = viewingTricologo ? '' : 'none'; }
 
     const layoutEl = document.querySelector('.layout');
     const sidebarStackEl = document.querySelector('.sidebar-stack');
@@ -9479,7 +9481,7 @@
         viewingConsigliGenerici = tecnicoViewSnapshot.viewingConsigliGenerici;
         viewingSchedaGenerica = tecnicoViewSnapshot.viewingSchedaGenerica;
         viewingColorimetria = !!tecnicoViewSnapshot.viewingColorimetria;
-        viewingTricologia = !!tecnicoViewSnapshot.viewingTricologia;
+        viewingTricologia = false; // la pagina Tricologia esiste solo nella modalità Tricologo
         viewingHome = tecnicoViewSnapshot.viewingHome;
         activeId = tecnicoViewSnapshot.activeId;
         tecnicoViewSnapshot = null;
