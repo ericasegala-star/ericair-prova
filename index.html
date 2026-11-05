@@ -6937,11 +6937,11 @@
     h += row(I("Da quanto tempo", "For how long"), T.da) + orow(I("Andamento", "Course"), TRI_OPZ.andamento, T.andamento) + orow(I("Cosa nota", "Notices"), TRI_OPZ.sintomi, T.sintomi);
     h += '<h2>' + I("Osservazione con la tricocamera", "Trichoscope observation") + '</h2>';
     h += orow(I("Tipo di cute", "Scalp type"), TRI_OPZ.cute, T.tipoCute) + orow(I("Tipo di capello", "Hair type"), TRI_OPZ.capello, T.tipoCapello) + orow(I("Cosa si osserva", "Observed"), TRI_OPZ.osservazioni, T.osservazioni) + orow(I("Zone", "Areas"), TRI_OPZ.zone, T.zone) + lines(I("Note", "Notes"), T.note, 2);
-    h += '<h2>' + I("Controlli e foto prima / dopo", "Checks and before / after photos") + '</h2>';
+    h += '<h2>' + (vuota ? I("Controlli", "Checks") : I("Controlli e foto prima / dopo", "Checks and before / after photos")) + '</h2>';
     sedute.forEach((s, i) => {
       h += '<div class="p-sed">' + row(I("Controllo ", "Check ") + (i + 1) + I(" · data", " · date"), dd(s.data)) + lines(I("Note", "Notes"), s.note, 2);
       const ph = fase => vuota ? '' : (c.foto || []).filter(f => f.tricho && f.seduta === s.id && f.fase === fase).map(f => '<img src="' + f.dataUrl + '" alt="">').join('');
-      h += '<div class="p-ph"><div><strong>' + I("Prima", "Before") + '</strong><br>' + ph('prima') + (vuota ? '<div style="height:120px;border:1px solid #999"></div>' : '') + '</div><div><strong>' + I("Dopo", "After") + '</strong><br>' + ph('dopo') + (vuota ? '<div style="height:120px;border:1px solid #999"></div>' : '') + '</div></div></div>';
+      if (!vuota) { h += '<div class="p-ph"><div><strong>' + I("Prima", "Before") + '</strong><br>' + ph('prima') + (vuota ? '<div style="height:120px;border:1px solid #999"></div>' : '') + '</div><div><strong>' + I("Dopo", "After") + '</strong><br>' + ph('dopo') + (vuota ? '<div style="height:120px;border:1px solid #999"></div>' : '') + '</div></div></div>'; }
     });
     h += '<h2>' + I("Consiglio e prossimi passi", "Advice and next steps") + '</h2>';
     h += lines(I("Trattamento proposto", "Proposed treatment"), T.trattamento, 2) + row(I("Prodotti consigliati", "Recommended products"), T.prodottiConsigliati);
