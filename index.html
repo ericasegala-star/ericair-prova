@@ -1371,6 +1371,11 @@
   .primi-passo-testo { flex: 1; }
   .primi-passi-link { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; font-size: 13px; }
   .primi-passi-link code { word-break: break-all; background: var(--bg, #faf6f3); padding: 3px 6px; border-radius: 6px; }
+  .mag-riordini-qta { max-height: 45vh; overflow-y: auto; margin: 6px 0 10px; }
+  .mag-qta-marca { font-weight: 700; color: var(--berry); margin: 10px 0 4px; }
+  .mag-qta-riga { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--line); }
+  .mag-qta-riga input { width: 80px; text-align: center; }
+  .mag-qta-gruppo[hidden] { display: none; }
   .mag-riordini-azioni { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
   .mag-fornitore { border: 1px solid var(--line, #e2d5c6); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
   .mag-fornitore .field { margin: 0; }
@@ -1943,7 +1948,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.176-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.177-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -4475,7 +4480,7 @@
   // loro "Quantità minima" (vedi magazzinoDaRiordinare), da portare o mandare al fornitore. Niente
   // dorso verticale per marca come nell'inventario completo: qui basta un elenco semplice, con la
   // marca come colonna, raggruppato comunque per marca/fornitore per comodità.
-  function buildMagazzinoRiordiniPdf(logo, lista) {
+  function buildMagazzinoRiordiniPdf(logo, lista, qta) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const margin = 42;
@@ -4562,7 +4567,9 @@
       doc.setDrawColor(120, 110, 100); doc.setLineWidth(0.7);
       doc.rect(col.min - boxW, y - 12, boxW, boxH);
       // ...e la casella è anche un campo compilabile: si può scrivere la quantità direttamente sul PDF
-      try {
+      const qv = qta && qta[p.id] ? String(qta[p.id]) : '';
+      if (qv) { doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(30, 24, 20); doc.text(qv, col.min - boxW / 2, y + 1, { align: 'center' }); doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); }
+      if (!qv) try {
         const TF = (window.jspdf.jsPDF.AcroForm && window.jspdf.jsPDF.AcroForm.TextField) || (doc.AcroForm && doc.AcroForm.TextField);
         if (TF) {
           const f = new TF();
@@ -4577,9 +4584,9 @@
     });
     return doc.output('blob');
   }
-  async function downloadMagazzinoRiordiniPdf(lista, nomeFornitore) {
+  async function downloadMagazzinoRiordiniPdf(lista, nomeFornitore, qta) {
     const logo = await getMagazzinoPdfLogo();
-    const blob = buildMagazzinoRiordiniPdf(logo, lista);
+    const blob = buildMagazzinoRiordiniPdf(logo, lista, qta);
     const suffisso = nomeFornitore ? '-' + String(nomeFornitore).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '';
     await saveBlobAsFile(blob, 'lista-riordini' + suffisso + '-' + fmtDate(Date.now()).replace(/\//g, '-') + '.pdf');
   }
@@ -4591,12 +4598,12 @@
     if (!key) return null;
     return (magazzinoCache.fornitori || []).find(f => normalizzaMarca(f.nome) === key) || null;
   }
-  function messaggioOrdineFornitore(f, prodotti) {
+  function messaggioOrdineFornitore(f, prodotti, qta) {
     const salone = appSettingsCache.nome || DEFAULT_NOME;
     const ref = (f.referente || '').trim();
     // Quantità indicativa: quanto manca per tornare alla soglia minima (almeno 1). La si può
     // correggere prima di inviare, il testo si apre già scritto nell'app di posta/WhatsApp.
-    const righe = prodotti.map(p => '- ' + (p.nome || I("Senza nome", "Unnamed")) + ' × ' + Math.max(1, (p.quantitaMinima || 0) - (p.quantita || 0))).join('\n');
+    const righe = prodotti.map(p => '- ' + (p.nome || I("Senza nome", "Unnamed")) + ' × ' + (qta && qta[p.id] ? qta[p.id] : Math.max(1, (p.quantitaMinima || 0) - (p.quantita || 0)))).join('\n');
     const T = {
       it: { subj: 'Riordino – ' + salone, body: 'Buongiorno' + (ref ? ' ' + ref : '') + '! ☀️\nSono ' + salone + ': qualche prodotto sta finendo e vorrei riordinare.\n\n' + righe + '\n\nMi confermi disponibilità e tempi di consegna? Grazie mille e buona giornata! 😊' },
       en: { subj: 'Reorder – ' + salone, body: 'Good morning' + (ref ? ' ' + ref : '') + '! ☀️\nThis is ' + salone + ': a few products are running low and I would like to reorder.\n\n' + righe + '\n\nCould you confirm availability and delivery time? Thank you so much, have a lovely day! 😊' }
@@ -4658,11 +4665,11 @@
   // fornitore si scarica subito, senza chiedere niente.
   function scaricaListaRiordini() {
     const gruppi = groupMagazzinoByMarca(magazzinoDaRiordinare());
-    const fine = (lista, nome) => downloadMagazzinoRiordiniPdf(lista, nome)
+    const fine = (lista, nome, qta) => downloadMagazzinoRiordiniPdf(lista, nome, qta)
       .then(() => notifyTop(I("Lista riordini scaricata.", "Reorder list downloaded.")))
       .catch((err) => { if (!(err && err.code === 'declined')) notifyTop(I("Non sono riuscita a generare il PDF.", "Couldn’t generate the PDF."), true); });
     const haContatti = (g) => { const f = fornitoreDiMarca(g.marca); return !!(f && (f.email || f.whatsapp)); };
-    if (gruppi.length <= 1 && !(gruppi.length === 1 && haContatti(gruppi[0]))) { fine(null, ''); return; }
+    if (!gruppi.length) { fine(null, ''); return; }
     const modal = document.getElementById('magRiordiniModal');
     const body = document.getElementById('magRiordiniBody');
     if (!modal || !body) { fine(null, ''); return; }
@@ -4671,6 +4678,8 @@
         <label class="mag-riordini-voce"><input type="checkbox" id="magRiordiniTutti" checked> <strong>${t('mag.tutti', I("Tutti", "All"))}</strong></label>
         ${gruppi.map((g, i) => `<label class="mag-riordini-voce"><input type="checkbox" class="mag-riordini-check" data-i="${i}" checked> ${escapeHtml(g.marca)} <span class="hint">(${g.prodotti.length})</span></label>`).join('')}
       </div>
+      <p class="hint">${I("Scrivi le quantità da ordinare (facoltativo): finiscono nelle caselle del PDF e nel messaggio.", "Type the quantities to order (optional): they go into the PDF boxes and the message.")}</p>
+      <div class="mag-riordini-qta">${gruppi.map((g, i) => `<div class="mag-qta-gruppo" data-i="${i}"><div class="mag-qta-marca">${escapeHtml(g.marca || '—')}</div>${sortMagazzinoProdotti(g.prodotti).map(p => `<label class="mag-qta-riga"><span>${escapeHtml(p.nome || '')}</span><input type="number" min="0" step="1" inputmode="numeric" class="mag-qta-input" data-id="${escapeHtml(p.id)}" placeholder="0"></label>`).join('')}</div>`).join('')}</div>
       <p class="hint" id="magRiordiniNota"></p>
       <div class="mag-riordini-azioni">
         <button type="button" class="ghost" id="magRiordiniEmail">${t('mag.inviaEmail', I("Invia email", "Send email"))}</button>
@@ -4681,10 +4690,12 @@
     const vai = body.querySelector('#magRiordiniVai');
     const tutti = body.querySelector('#magRiordiniTutti');
     const btnEmail = body.querySelector('#magRiordiniEmail'), btnWa = body.querySelector('#magRiordiniWa'), nota = body.querySelector('#magRiordiniNota');
+    const qtaOra = () => { const o = {}; body.querySelectorAll('.mag-qta-input').forEach(i => { const v = parseInt(i.value, 10); if (v > 0) o[i.dataset.id] = v; }); return o; };
     const scelteOra = () => checks().filter(c => c.checked).map(c => gruppi[Number(c.dataset.i)]);
     const aggiorna = () => {
       const sel = scelteOra();
       vai.disabled = sel.length === 0;
+      checks().forEach(c => { const gq = body.querySelector('.mag-qta-gruppo[data-i="' + c.dataset.i + '"]'); if (gq) gq.hidden = !c.checked; });
       tutti.checked = sel.length === gruppi.length;
       // Email/WhatsApp solo con UN fornitore scelto che abbia il contatto in anagrafica.
       const f = sel.length === 1 ? fornitoreDiMarca(sel[0].marca) : null;
@@ -4696,12 +4707,12 @@
     };
     btnEmail.addEventListener('click', () => {
       const g = scelteOra()[0]; const f = g && fornitoreDiMarca(g.marca); if (!f || !f.email) return;
-      const m = messaggioOrdineFornitore(f, sortMagazzinoProdotti(g.prodotti));
+      const m = messaggioOrdineFornitore(f, sortMagazzinoProdotti(g.prodotti), qtaOra());
       window.location.href = 'mailto:' + encodeURIComponent(f.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(m.subj) + '&body=' + encodeURIComponent(m.body);
     });
     btnWa.addEventListener('click', () => {
       const g = scelteOra()[0]; const f = g && fornitoreDiMarca(g.marca); const n = f && telefonoPerWhatsapp(f.whatsapp); if (!n) return;
-      const m = messaggioOrdineFornitore(f, sortMagazzinoProdotti(g.prodotti));
+      const m = messaggioOrdineFornitore(f, sortMagazzinoProdotti(g.prodotti), qtaOra());
       window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(m.body), '_blank');
     });
     tutti.addEventListener('change', () => { checks().forEach(c => { c.checked = tutti.checked; }); aggiorna(); });
@@ -4712,7 +4723,7 @@
       if (!scelti.length) return;
       const lista = sortMagazzinoProdotti(scelti.reduce((acc, g) => acc.concat(g.prodotti), []));
       modal.hidden = true;
-      fine(lista, scelti.length === 1 ? scelti[0].marca : '');
+      fine(lista, scelti.length === 1 ? scelti[0].marca : '', qtaOra());
     });
     if (!modal.dataset.legato) {
       modal.dataset.legato = '1';
