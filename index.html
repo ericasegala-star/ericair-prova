@@ -1195,6 +1195,7 @@
 
   /* Bollino "da ricontattare" nell'elenco clienti: cliente senza una scheda aggiornata
      da più tempo di quanto scelto in Impostazioni. */
+  .recontact-badge.canc-badge { background: #A8433C; color: #fff; border-color: #A8433C; }
   .recontact-badge {
     display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 10px;
     background: var(--berry); color: #fff; font-size: 10.5px; font-weight: 600;
@@ -1782,9 +1783,18 @@
       <label for="settingsRicontatto" data-i18n="settings.recontact.label" data-it="Segnala le clienti da ricontattare">Flag clients to follow up with</label>
       <div class="settings-number-row">
         <input type="number" id="settingsRicontatto" min="0" max="36" step="1">
-        <span data-i18n="settings.recontact.suffix" data-it="mesi senza una scheda aggiornata (0 = disattivato)">months without an updated record (0 = off)</span>
+        <span data-i18n="settings.recontact.suffix" data-it="mesi senza appuntamento né scheda aggiornata (0 = disattivato)">months without an updated record (0 = off)</span>
       </div>
-      <p class="hint" data-i18n="settings.recontact.hint" data-it="Chi non ha una scheda compilata o salvata da più di così tanto tempo riceve un bollino &quot;Da ricontattare&quot; nell'elenco a sinistra.">Anyone without a record filled in or saved for longer than this gets a "Follow up" tag in the list on the left.</p>
+      <p class="hint" data-i18n="settings.recontact.hint" data-it="Chi non ha appuntamenti né schede aggiornate da più di così tanto tempo riceve il bollino &quot;Da ricontattare&quot;.">Anyone without a record filled in or saved for longer than this gets a "Follow up" tag in the list on the left.</p>
+    </div>
+
+    <div class="settings-section">
+      <label for="settingsCancellazione" data-i18n="settings.canc.label" data-it="Segnala le clienti da cancellare dall'anagrafica">Flag clients to remove from the directory</label>
+      <div class="settings-number-row">
+        <input type="number" id="settingsCancellazione" min="0" max="120" step="1">
+        <span data-i18n="settings.canc.suffix" data-it="mesi senza che si presenti (0 = disattivato)">months without a visit (0 = off)</span>
+      </div>
+      <p class="hint" data-i18n="settings.canc.hint" data-it="In Anagrafica compare il bollino &quot;Da cancellare&quot; e il filtro per vederle tutte. Non si cancella niente da solo: decidi tu, cliente per cliente.">In the client directory a "To delete" tag and a filter appear. Nothing is deleted automatically: you decide, client by client.</p>
     </div>
 
     <details id="settingsDiagnostica" style="margin:14px 0"><summary data-i18n="settings.diag" data-it="Diagnostica">Diagnostics</summary><div class="storage-usage" id="appDiagnosticsFull" style="margin-top:8px"></div></details>
@@ -1950,7 +1960,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.179-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.180-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -1981,6 +1991,9 @@
       'settings.recontact.label': 'Flag clients to follow up with',
       'settings.recontact.suffix': 'months without an updated record (0 = off)',
       'settings.recontact.hint': 'Anyone without a record filled in or saved for longer than this gets a "Follow up" tag in the list on the left.',
+      'settings.canc.label': 'Flag clients to remove from the directory',
+      'settings.canc.suffix': 'months without a visit (0 = off)',
+      'settings.canc.hint': 'In the client directory a "To delete" tag and a filter appear. Nothing is deleted automatically: you decide, client by client.',
       'settings.reset': 'Restore default appearance', 'ui.close': 'Close',
       'mag.titolo': 'Inventory', 'mag.selectAll': 'Select all', 'mag.prodotto': 'Product',
       'mag.tipo': 'Type', 'mag.marcaFornitore': 'Brand/supplier', 'mag.prezzo': 'Price €',
@@ -2295,7 +2308,7 @@
   let agendaModificaId = null; // id dell'appuntamento in modifica (null = si sta creando un nuovo appuntamento)
   let agendaEditingId = null; // id dell'appuntamento aperto nel calendario a slot (null = tutti chiusi, solo targhette)
   // Aspetto dell'app (logo, nome, colore): condiviso tra tutte, si cambia da "Impostazioni".
-  let appSettingsCache = { linkRecensioni: null, nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, contattoAssistenza: null };
+  let appSettingsCache = { linkRecensioni: null, nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, mesiCancellazione: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, contattoAssistenza: null };
   // Paese e formati (valuta, data, settimana, prefisso telefonico): si sceglie in Impostazioni.
   const PAESI = {
     IT: { locale: 'en-GB', valuta: '€', prefisso: '39', primoGiorno: 1 },
@@ -3425,6 +3438,8 @@
     if (contattoInput && document.activeElement !== contattoInput) contattoInput.value = appSettingsCache.contattoAssistenza || '';
     const ricontattoInput = document.getElementById('settingsRicontatto');
     if (ricontattoInput && document.activeElement !== ricontattoInput) ricontattoInput.value = appSettingsCache.mesiRicontatto || 0;
+    const cancInput = document.getElementById('settingsCancellazione');
+    if (cancInput && document.activeElement !== cancInput) cancInput.value = appSettingsCache.mesiCancellazione || 0;
   }
 
   function openSettingsModal() {
@@ -3617,6 +3632,7 @@
           indirizzo: aspettoData.indirizzo || null,
           telefono: aspettoData.telefono || null,
           mesiRicontatto: aspettoData.mesiRicontatto || null,
+          mesiCancellazione: aspettoData.mesiCancellazione || null,
           operatrici: (aspettoData.operatrici && aspettoData.operatrici.length) ? aspettoData.operatrici : null,
           linee: (aspettoData.linee && aspettoData.linee.length) ? aspettoData.linee : null,
           etichettaFinale: aspettoData.etichettaFinale || null,
@@ -5441,8 +5457,7 @@
     filtered.forEach(c => {
       const li = document.createElement('li');
       li.className = (!viewingNotes && !viewingIspirazione && !viewingMagazzino && !viewingServizi && !viewingAnagrafica && !viewingAgenda && !viewingSearchApp && !viewingBlankSheet && !viewingOstwald && !viewingCatalogoHp && !viewingConsigliGenerici && !viewingSchedaGenerica && !viewingColorimetria && !viewingTricologia && !viewingHome && c.id === (viewingTricologo ? activeTricoId : activeId)) ? 'active' : '';
-      const mesiRic = appSettingsCache.mesiRicontatto;
-      const daRicontattare = mesiRic && (Date.now() - c.updatedAt) >= mesiRic * 30 * 24 * 3600 * 1000;
+      const daRicontattare = anagDaRicontattare(c);
       li.innerHTML = `<span class="name">${escapeHtml(c.nome || I("Senza nome", "Unnamed"))}${daRicontattare ? I("<span class=\"recontact-badge\">Da ricontattare</span>", "<span class=\"recontact-badge\">To follow up</span>") : ''}</span><span class="date">${fmtDate(c.updatedAt)}</span>`;
       li.addEventListener('click', () => viewingTricologo ? switchTrico(c.id) : switchActive(c.id));
       ul.appendChild(li);
@@ -10057,13 +10072,23 @@
     (agendaCache.appuntamenti || []).forEach(a => { if (a.clienteId === c.id && a.tipo !== 'lavoro' && a.data <= oggi && a.data > m) m = a.data; });
     return m;
   }
-  function anagDaRicontattare(c) {
-    const mesi = appSettingsCache.mesiRicontatto;
-    return !!(mesi && (Date.now() - (c.updatedAt || 0)) >= mesi * 30 * 24 * 3600 * 1000);
+  // Ultima "vita" di una cliente: l'ultima scheda salvata oppure l'appuntamento più recente
+  // (anche futuro) in agenda. Serve per "da ricontattare" e "da cancellare".
+  function ultimaAttivitaCliente(c) {
+    let m = Math.max(c.updatedAt || 0, c.tricho && c.tricho.updatedAt || 0, c.createdAt || 0);
+    (agendaCache.appuntamenti || []).forEach(a => {
+      if (a.clienteId !== c.id || a.tipo === 'lavoro' || !a.data) return;
+      const t = new Date(a.data + 'T00:00:00').getTime();
+      if (t > m) m = t;
+    });
+    return m;
   }
+  function senzaAttivitaDa(c, mesi) { return !!(mesi && (Date.now() - ultimaAttivitaCliente(c)) >= mesi * 30 * 24 * 3600 * 1000); }
+  function anagDaRicontattare(c) { return senzaAttivitaDa(c, appSettingsCache.mesiRicontatto); }
+  function anagDaCancellare(c) { return senzaAttivitaDa(c, appSettingsCache.mesiCancellazione); }
   function anagRiga(c) {
     return { c, nome: (c.nome || '').trim(), telefono: c.telefono || '', email: c.email || '', creato: c.createdAt || 0,
-      ultima: anagUltimaVisita(c), consenso: c.consensoAt || 0, ric: anagDaRicontattare(c) };
+      ultima: anagUltimaVisita(c), consenso: c.consensoAt || 0, ric: anagDaRicontattare(c), canc: anagDaCancellare(c) };
   }
   function anagRighe() {
     const q = anagTesto.trim().toLowerCase();
@@ -10071,6 +10096,7 @@
     let righe = clients.map(c => anagRiga(hydrate(c)));
     if (q) righe = righe.filter(r => r.nome.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || (qDigit && r.telefono.replace(/\D/g, '').includes(qDigit)));
     if (anagFiltro === 'ricontattare') righe = righe.filter(r => r.ric);
+    if (anagFiltro === 'dacancellare') righe = righe.filter(r => r.canc);
     if (anagFiltro === 'senzaconsenso') righe = righe.filter(r => !r.consenso);
     const k = anagOrd.key, dir = anagOrd.dir;
     righe.sort((a, b) => {
@@ -10269,13 +10295,13 @@
     const vuote = clients.filter(anagSenzaScheda);
     const cols = [['nome', I("Nome", "Name")], ['telefono', I("Telefono", "Phone")], ['email', 'Email'], ['creato', I("Prima registrazione", "First registered")], ['ultima', I("Ultima visita", "Last visit")], ['consenso', I("Consenso privacy", "Privacy consent")]];
     const frecce = k => anagOrd.key === k ? (anagOrd.dir === 1 ? ' ▲' : ' ▼') : '';
-    const filtri = [['tutti', I("Tutte", "All")], ['ricontattare', I("Da ricontattare", "To follow up")], ['senzaconsenso', I("Senza consenso", "No consent")]];
+    const filtri = [['tutti', I("Tutte", "All")], ['ricontattare', I("Da ricontattare", "To follow up")], ['senzaconsenso', I("Senza consenso", "No consent")]].concat(appSettingsCache.mesiCancellazione ? [['dacancellare', I("Da cancellare", "To delete")]] : []);
     return `${I("\n      <p class=\"hint\">Tutti i contatti in un unico elenco. Clicca una riga per vedere e modificare i dati, scaricarli o eliminarli.</p>\n      ", "\n      <p class=\"hint\">All contacts in a single list. Click a row to see and edit the details, download them or delete them.</p>\n      ")}${vuote.length ? `<div class="anag-avviso"><span>${vuote.length} ${vuote.length === 1 ? I("cliente compare", "client appears") : I("clienti compaiono", "clients appear")}${I(" tra le schede tecniche ma non ", " among the technical cards but ")}${vuote.length === 1 ? I("ha", "has") : I("hanno", "have")}${I(" nessuna scheda compilata. Spostandole resteranno solo qui in Anagrafica; le schede già compilate non vengono toccate.</span> <button type=\"button\" class=\"primary small\" id=\"anagFixVuote\">Sposta ", " no card filled in. Moving them will leave them only here in the Client directory; cards already filled in are not touched.</span> <button type=\"button\" class=\"primary small\" id=\"anagFixVuote\">Move ")}${vuote.length === 1 ? I("la cliente", "the client") : I("le " + vuote.length + " clienti", vuote.length + " clients")}${I(" solo in Anagrafica</button></div>", " to the Client directory only</button></div>")}` : ''}
       ${rip.length ? `<div class="anag-avviso"><span>${rip.length} ${rip.length === 1 ? I("nome ha", "name has") : 'nomi hanno'}${I(" il cognome ripetuto (es. «", " the surname repeated (e.g. «")}${escapeHtml(rip[0].c.nome)}» diventerebbe «${escapeHtml(rip[0].nuovo)}${I("»). Si cambia solo il nome: schede e foto restano.</span> <button type=\"button\" class=\"primary small\" id=\"anagFixNomi\">Correggi ", "»). Only the name is changed: cards and photos stay.</span> <button type=\"button\" class=\"primary small\" id=\"anagFixNomi\">Correggi ")}${rip.length === 1 ? I("il nome", "the name") : 'i ' + rip.length + ' nomi'}</button></div>` : ''}${I("\n      <div class=\"anag-top\">\n        <input type=\"text\" id=\"anagCerca\" placeholder=\"Cerca per nome, telefono o email…\" value=\"", "\n      <div class=\"anag-top\">\n        <input type=\"text\" id=\"anagCerca\" placeholder=\"Search by name, phone or email…\" value=\"")}${escapeHtml(anagTesto)}${I("\">\n        <button type=\"button\" class=\"ghost small\" id=\"anagNuova\">+ Nuova cliente</button>\n        <button type=\"button\" class=\"ghost small\" id=\"anagCsv\">Scarica elenco (CSV)</button>\n        <button type=\"button\" class=\"ghost small\" id=\"anagImporta\">Importa elenco (CSV)</button>\n        <input type=\"file\" id=\"anagCsvFile\" accept=\".csv,.txt,text/csv,text/plain\" hidden>\n      </div>\n      <div class=\"anag-filtri\">", "\">\n        <button type=\"button\" class=\"ghost small\" id=\"anagNuova\">+ New client</button>\n        <button type=\"button\" class=\"ghost small\" id=\"anagCsv\">Download list (CSV)</button>\n        <button type=\"button\" class=\"ghost small\" id=\"anagImporta\">Import list (CSV)</button>\n        <input type=\"file\" id=\"anagCsvFile\" accept=\".csv,.txt,text/csv,text/plain\" hidden>\n      </div>\n      <div class=\"anag-filtri\">")}${filtri.map(([k, l]) => `<button type="button" class="ghost small${anagFiltro === k ? ' attivo' : ''}" data-anag-filtro="${k}">${l}</button>`).join('')}</div>
       <p class="anag-conta">${righe.length} ${righe.length === 1 ? I("cliente", "client") : I("clienti", "clients")}</p>
       <div class="anag-tabella-wrap"><table class="anag-tabella"><thead><tr>${cols.map(([k, l]) => `<th data-anag-ord="${k}">${l}${frecce(k)}</th>`).join('')}<th></th></tr></thead><tbody>
         ${righe.length ? righe.map(r => `<tr data-anag-id="${escapeHtml(r.c.id)}">
-          <td>${escapeHtml(r.nome || I("Senza nome", "Unnamed"))}${r.ric ? I("<span class=\"recontact-badge\">Da ricontattare</span>", "<span class=\"recontact-badge\">To follow up</span>") : ''}${I("</td>\n          <td data-label=\"Telefono\">", "</td>\n          <td data-label=\"Phone\">")}${escapeHtml(r.telefono)}</td><td data-label="Email">${escapeHtml(r.email)}${I("</td>\n          <td data-label=\"Prima registrazione\">", "</td>\n          <td data-label=\"First registered\">")}${anagData(r.creato)}${I("</td><td data-label=\"Ultima visita\">", "</td><td data-label=\"Last visit\">")}${r.ultima ? anagDataISO(r.ultima) : '—'}${I("</td>\n          <td data-label=\"Consenso privacy\">", "</td>\n          <td data-label=\"Privacy consent\">")}${r.consenso ? '<span class="anag-si">✓ ' + anagData(r.consenso) + '</span>' : '<span class="anag-no">—</span>'}</td>
+          <td>${escapeHtml(r.nome || I("Senza nome", "Unnamed"))}${r.ric ? I("<span class=\"recontact-badge\">Da ricontattare</span>", "<span class=\"recontact-badge\">To follow up</span>") : ''}${r.canc ? I("<span class=\"recontact-badge canc-badge\">Da cancellare</span>", "<span class=\"recontact-badge canc-badge\">To delete</span>") : ''}${I("</td>\n          <td data-label=\"Telefono\">", "</td>\n          <td data-label=\"Phone\">")}${escapeHtml(r.telefono)}</td><td data-label="Email">${escapeHtml(r.email)}${I("</td>\n          <td data-label=\"Prima registrazione\">", "</td>\n          <td data-label=\"First registered\">")}${anagData(r.creato)}${I("</td><td data-label=\"Ultima visita\">", "</td><td data-label=\"Last visit\">")}${r.ultima ? anagDataISO(r.ultima) : '—'}${I("</td>\n          <td data-label=\"Consenso privacy\">", "</td>\n          <td data-label=\"Privacy consent\">")}${r.consenso ? '<span class="anag-si">✓ ' + anagData(r.consenso) + '</span>' : '<span class="anag-no">—</span>'}</td>
           <td>${r.ric && anagLinkWhatsapp(r.c) ? '<a href="' + escapeHtml(anagLinkWhatsapp(r.c, true)) + '" target="_blank" rel="noopener" class="anag-wa" data-anag-wa title="WhatsApp">WhatsApp</a>' : ''}</td>
         </tr>`).join('') : I("<tr><td colspan=\"7\" class=\"anag-no\">Nessuna cliente trovata.</td></tr>", "<tr><td colspan=\"7\" class=\"anag-no\">No clients found.</td></tr>")}
       </tbody></table></div>`;
@@ -10519,6 +10545,13 @@
     saveSettings({ linkRecensioni: v || null });
   });
   document.getElementById('settingsContatto').addEventListener('input', (e) => { saveSettings({ contattoAssistenza: e.target.value.trim() || null }); });
+  document.getElementById('settingsCancellazione').addEventListener('input', (e) => {
+    let n = parseInt(e.target.value, 10);
+    if (!Number.isFinite(n) || n < 0) n = 0;
+    if (n > 120) n = 120;
+    saveSettings({ mesiCancellazione: n || null });
+    if (viewingAnagrafica) renderAnagrafica();
+  });
   document.getElementById('settingsRicontatto').addEventListener('input', (e) => {
     let n = parseInt(e.target.value, 10);
     if (!Number.isFinite(n) || n < 0) n = 0;
@@ -10535,7 +10568,7 @@
     });
   })();
   document.getElementById('settingsResetBtn').addEventListener('click', () => {
-    saveSettings({ nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, linkRecensioni: null, contattoAssistenza: null })
+    saveSettings({ nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, mesiCancellazione: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, linkRecensioni: null, contattoAssistenza: null })
       .then(ok => { if (ok) notifyTop('Aspetto ripristinato.'); });
   });
   // Lingua: scelta per dispositivo, salvata solo in locale (non su Firestore). La pagina si ricarica
