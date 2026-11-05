@@ -1766,6 +1766,12 @@
     </div>
 
     <div class="settings-section">
+      <label for="settingsContatto" data-i18n="settings.contatto.label" data-it="Contatto per dubbi e assistenza">Contact for questions and support</label>
+      <input type="text" id="settingsContatto" maxlength="120" placeholder="Es. Nome Cognome · 333 1234567" autocomplete="off">
+      <p class="hint" data-i18n="settings.contatto.hint" data-it="Compare in fondo alle schede e nelle stampe. Se lo lasci vuoto non compare niente.">Shown at the bottom of the cards and on printouts. Leave it empty and nothing is shown.</p>
+    </div>
+
+    <div class="settings-section">
       <label for="settingsRicontatto" data-i18n="settings.recontact.label" data-it="Segnala le clienti da ricontattare">Flag clients to follow up with</label>
       <div class="settings-number-row">
         <input type="number" id="settingsRicontatto" min="0" max="36" step="1">
@@ -1937,7 +1943,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.172-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.173-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -1963,6 +1969,8 @@
       'settings.contact.label': 'Salon address and phone number', 'settings.contact.addressPh': 'Street, city',
       'settings.contact.phonePh': 'Phone',
       'settings.contact.hint': 'Shown under the name at the top and on the "Printable form", if you fill them in. Leave blank to show nothing.',
+      'settings.contatto.label': 'Contact for questions and support',
+      'settings.contatto.hint': 'Shown at the bottom of the cards and on printouts. Leave it empty and nothing is shown.',
       'settings.recontact.label': 'Flag clients to follow up with',
       'settings.recontact.suffix': 'months without an updated record (0 = off)',
       'settings.recontact.hint': 'Anyone without a record filled in or saved for longer than this gets a "Follow up" tag in the list on the left.',
@@ -2280,7 +2288,7 @@
   let agendaModificaId = null; // id dell'appuntamento in modifica (null = si sta creando un nuovo appuntamento)
   let agendaEditingId = null; // id dell'appuntamento aperto nel calendario a slot (null = tutti chiusi, solo targhette)
   // Aspetto dell'app (logo, nome, colore): condiviso tra tutte, si cambia da "Impostazioni".
-  let appSettingsCache = { linkRecensioni: null, nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null, paese: null };
+  let appSettingsCache = { linkRecensioni: null, nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, contattoAssistenza: null };
   // Paese e formati (valuta, data, settimana, prefisso telefonico): si sceglie in Impostazioni.
   const PAESI = {
     IT: { locale: 'en-GB', valuta: '€', prefisso: '39', primoGiorno: 1 },
@@ -3406,6 +3414,8 @@
     if (operatriciInput && document.activeElement !== operatriciInput) operatriciInput.value = (appSettingsCache.operatrici || []).join(', ');
     const assenzaSel = document.getElementById('assenzaOperatore');
     if (assenzaSel) { const cur = assenzaSel.value; assenzaSel.innerHTML = elencoOperatrici().map(o => '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + '</option>').join(''); if (cur) assenzaSel.value = cur; }
+    const contattoInput = document.getElementById('settingsContatto');
+    if (contattoInput && document.activeElement !== contattoInput) contattoInput.value = appSettingsCache.contattoAssistenza || '';
     const ricontattoInput = document.getElementById('settingsRicontatto');
     if (ricontattoInput && document.activeElement !== ricontattoInput) ricontattoInput.value = appSettingsCache.mesiRicontatto || 0;
   }
@@ -3604,6 +3614,7 @@
           linee: (aspettoData.linee && aspettoData.linee.length) ? aspettoData.linee : null,
           etichettaFinale: aspettoData.etichettaFinale || null,
           paese: aspettoData.paese || null,
+          contattoAssistenza: aspettoData.contattoAssistenza || null,
           linkRecensioni: aspettoData.linkRecensioni || null
         };
         appBackupCache = { ultimoBackupAt: (backup.exists && backup.data().ultimoBackupAt) || null };
@@ -6948,12 +6959,29 @@
     h += '<div class="p-row"><span class="p-l">' + I("Sentire il medico", "Ask a doctor") + '</span><span class="p-opt"><span class="p-box' + (!vuota && T.medico ? ' on' : '') + '"></span>' + I("Consigliato", "Advised") + '</span><span class="p-v">' + val(T.medicoNote) + '</span></div>';
     h += row(I("Prossimo controllo", "Next check"), dd(T.prossimo));
     h += '<h2>' + I("Consenso", "Consent") + '</h2><div class="p-row"><span class="p-opt"><span class="p-box' + (!vuota && T.consensoSalute ? ' on' : '') + '"></span>' + I("Acconsento al trattamento dei dati sulla salute (cute, capelli, foto) per questa scheda.", "I consent to processing of health data (scalp, hair, photos) for this card.") + '</span></div>' + row(I("Data e firma", "Date and signature"), '');
+    h += '<p style="margin-top:14px;font-size:11px">' + escapeHtml(triAvviso()) + (contattoPie() ? '<br>' + contattoPie() : '') + '</p>';
     triPrintMode = { html: h, id: c.id };
     renderSheet();
     window.scrollTo({ top: 0 });
   }
 
-  function renderSheet() {
+  function triAvviso() { return I("Questa scheda raccoglie osservazioni, non è una diagnosi. Per dubbi di salute: sentire il medico.", "This card records observations; it is not a diagnosis. For any health concern: ask a doctor."); }
+  function contattoPie() { const c = appSettingsCache.contattoAssistenza; return c ? I("Per dubbi: ", "Questions: ") + escapeHtml(c) : ''; }
+  // Piè di pagina delle schede (e del modulo vuoto): avviso fisso nella scheda tricologica + contatto scelto in Impostazioni (vuoto = niente)
+  function aggiornaPie() {
+    const panel = document.getElementById('sheetPanel'); if (!panel) return;
+    const old = panel.querySelector('.scheda-pie'); if (old) old.remove();
+    const tri = viewingTricologo && (triPrintMode || (activeTricoId && !altraSezioneAperta()));
+    const tec = !viewingTricologo && (viewingBlankSheet || (activeId && !altraSezioneAperta() && getClient(activeId)));
+    if (triPrintMode && tri) return; // l'anteprima di stampa ha già il suo piè di pagina
+    if (!tri && !tec) return;
+    const parti = [tri ? escapeHtml(triAvviso()) : '', contattoPie()].filter(Boolean);
+    if (!parti.length) return;
+    const d = document.createElement('p'); d.className = 'hint scheda-pie'; d.style.cssText = 'margin-top:18px;text-align:center'; d.innerHTML = parti.join('<br>');
+    panel.appendChild(d);
+  }
+  function renderSheet() { renderSheetInner(); aggiornaPie(); }
+  function renderSheetInner() {
     const panel = document.getElementById('sheetPanel');
     const floatingSave = document.getElementById('floatingSaveBtn');
     if (floatingSave) floatingSave.hidden = true; // riappare solo per una vera scheda cliente, più sotto
@@ -10403,6 +10431,7 @@
     const v = e.target.value.trim();
     saveSettings({ linkRecensioni: v || null });
   });
+  document.getElementById('settingsContatto').addEventListener('input', (e) => { saveSettings({ contattoAssistenza: e.target.value.trim() || null }); });
   document.getElementById('settingsRicontatto').addEventListener('input', (e) => {
     let n = parseInt(e.target.value, 10);
     if (!Number.isFinite(n) || n < 0) n = 0;
@@ -10419,7 +10448,7 @@
     });
   })();
   document.getElementById('settingsResetBtn').addEventListener('click', () => {
-    saveSettings({ nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, linkRecensioni: null })
+    saveSettings({ nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, linkRecensioni: null, contattoAssistenza: null })
       .then(ok => { if (ok) notifyTop('Aspetto ripristinato.'); });
   });
   // Lingua: scelta per dispositivo, salvata solo in locale (non su Firestore). La pagina si ricarica
