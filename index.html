@@ -1982,7 +1982,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.190-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-05.191-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -7667,7 +7667,6 @@
                   <button type="button" class="ghost small home-online-conflitto-elimina" data-id="${r.id}${I("\">Ho risolto, elimina</button>\n                </li>", "\">Resolved, delete</button>\n                </li>")}`).join('')}
             </ul>
           </div>` : ''}
-          ${primiPassiHtml()}
           ${I("\n          <p class=\"home-hint\">Scegli una scheda dall'elenco a sinistra, oppure iniziane una nuova.</p>\n\n          <div class=\"home-agenda\">\n            <div class=\"home-agenda-head\">\n              <div class=\"notes-title\">Agenda</div>\n            </div>\n            ", "\n          <p class=\"home-hint\">Choose a card from the list on the left, or start a new one.</p>\n\n          <div class=\"home-agenda\">\n            <div class=\"home-agenda-head\">\n              <div class=\"notes-title\">Calendar</div>\n            </div>\n            ")}${agendaDateNavHtml()}
             <div class="agenda-date-label">${fmtDateISOLong(agendaDataSelezionata)}</div>
             <div id="agendaGridWrap">
@@ -7679,7 +7678,6 @@
       `;
       const homeNewBtn = document.getElementById('homeNewBtn');
       if (homeNewBtn) homeNewBtn.addEventListener('click', () => createNewClient());
-      bindPrimiPassi();
       document.querySelectorAll('.home-online-conflitto-elimina').forEach(btn => {
         btn.addEventListener('click', () => eliminaRichiestaOnlineConflitto(btn.dataset.id));
       });
