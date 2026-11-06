@@ -795,6 +795,11 @@
   .agenda-chip-ora { display: block; font-size: 11.5px; font-weight: 700; color: var(--ink-soft); }
   .agenda-slot-filled[data-righe="1"] .agenda-chip-ora { display: none; }
   .agenda-multi .agenda-chip-edit { font-size: 12px; padding: 0 2px; }
+  .agenda-multi .agenda-slot-fuoriturno { background: color-mix(in srgb, var(--ink-soft) 4%, transparent); }
+  .settings-orari { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .settings-orari-riga { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .settings-orari-giorno { flex: 0 0 110px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+  .settings-orari-riga input[type=time] { width: auto; }
   .agenda-multi .agenda-slot-chiuso { background: color-mix(in srgb, var(--ink-soft) 9%, transparent); }
   .agenda-multi .agenda-slot-assente { background: rgba(122, 59, 86, 0.08); }
   .agenda-multi .agenda-slot-assente-label { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1803,6 +1808,12 @@
     </div>
 
     <div class="settings-section">
+      <label data-it="Orari di apertura del salone">Salon opening hours</label>
+      <p class="hint" data-it="In agenda le ore di chiusura appaiono leggermente più scure, ma si possono prendere appuntamenti anche lì. I turni di ogni operatrice (Agenda → Turni di lavoro) restano separati e non cambiano.">In the calendar, closing hours look slightly darker, but you can still book appointments there. Each stylist’s shifts (Calendar → Work shifts) stay separate and do not change.</p>
+      <div class="settings-orari" id="settingsOrariSalone"></div>
+    </div>
+
+    <div class="settings-section">
       <label style="font-size:17px;font-weight:700" data-it="Linee colore e tempi di posa">Colour lines and processing times</label>
       <p class="hint" data-it="Per ogni linea di colore che usi scrivi il nome e, se vuoi, le tabelle dei tempi di posa: compaiono nella scheda cliente con una casella da spuntare e il tempo da scrivere. Il nome si può cambiare anche direttamente nella scheda.">For each colour line you use, write its name and, if you like, the processing-time tables: they appear in the client card with a box to tick and the time to write. The name can also be changed directly in the card.</p>
       <div id="settingsLineeList"></div>
@@ -2028,7 +2039,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-06.198-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-06.199-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3433,6 +3444,51 @@
     });
   }
 
+  // Orari di apertura del salone (facoltativi): per ogni giorno, aperto/chiuso e dalle-alle. In agenda
+  // le ore fuori apertura sono un po' piu' scure, ma restano prenotabili. Se non sono impostati, l'agenda
+  // usa come prima i turni delle operatrici. I turni delle operatrici non cambiano.
+  function orariSaloneImpostati() { const o = appSettingsCache && appSettingsCache.orariSalone; return (o && typeof o === 'object') ? o : null; }
+  // true/false se il salone e' aperto in quel momento; null se gli orari del salone non sono impostati.
+  function saloneApertoA(dateISO, time) {
+    const o = orariSaloneImpostati();
+    if (!o || !dateISO) return null;
+    const [y, m, d] = dateISO.split('-').map(Number);
+    const r = o[new Date(y, m - 1, d).getDay()];
+    if (!r) return false;
+    const t = hhmmToMinuti(time);
+    return t >= r[0] && t < r[1];
+  }
+  function renderSettingsOrariSalone(forza) {
+    const box = document.getElementById('settingsOrariSalone');
+    if (!box) return;
+    const o = orariSaloneImpostati();
+    const firma = JSON.stringify(o) + '|' + giorniSettimanaOrdine().join('');
+    if (!forza && box.dataset.firma === firma && box.innerHTML) return;
+    box.dataset.firma = firma;
+    box.innerHTML = giorniSettimanaOrdine().map(day => {
+      const r = o && o[day];
+      return '<div class="settings-orari-riga" data-day="' + day + '">' +
+        '<label class="settings-orari-giorno"><input type="checkbox" class="os-check"' + (r ? ' checked' : '') + '> ' + escapeHtml(nomeGiornoSettimana(day)) + '</label>' +
+        '<input type="time" class="os-start" value="' + minutiToHHMM(r ? r[0] : 9 * 60) + '"' + (r ? '' : ' disabled') + '>' +
+        '<span>–</span>' +
+        '<input type="time" class="os-end" value="' + minutiToHHMM(r ? r[1] : 18 * 60) + '"' + (r ? '' : ' disabled') + '>' +
+        '</div>';
+    }).join('') + (o ? '<div><button type="button" class="ghost small" id="settingsOrariAzzera">' + I("Non impostare gli orari (usa i turni delle operatrici)", "Do not set hours (use the stylists’ shifts)") + '</button></div>' : '<p class="hint">' + I("Non impostati: l'agenda scurisce le ore fuori dai turni delle operatrici.", "Not set: the calendar darkens the hours outside the stylists’ shifts.") + '</p>');
+  }
+  function salvaOrariSaloneDaForm() {
+    const box = document.getElementById('settingsOrariSalone');
+    if (!box) return;
+    const nuovo = {};
+    let valido = true;
+    box.querySelectorAll('.settings-orari-riga').forEach(riga => {
+      if (!riga.querySelector('.os-check').checked) return;
+      const a = hhmmToMinuti(riga.querySelector('.os-start').value), b = hhmmToMinuti(riga.querySelector('.os-end').value);
+      if (b > a) nuovo[riga.dataset.day] = [a, b]; else valido = false;
+    });
+    if (!valido) { notifyTop(I("L'ora di chiusura deve essere dopo quella di apertura.", "Closing time must be after opening time."), true); renderSettingsOrariSalone(true); return; }
+    saveSettings({ orariSalone: nuovo }).then(() => { try { renderSheetMantenendoScroll(); } catch (er) {} });
+  }
+
   function saveSettings(partial) {
     appSettingsCache = Object.assign({}, appSettingsCache, partial);
     applySettings();
@@ -3504,6 +3560,7 @@
     const paeseSel = document.getElementById('settingsPaese');
     if (paeseSel) paeseSel.value = paeseCorrente();
     renderSettingsOperatriciFoto();
+    renderSettingsOrariSalone();
     const operatriciInput = document.getElementById('settingsOperatrici');
     if (operatriciInput && document.activeElement !== operatriciInput) operatriciInput.value = (appSettingsCache.operatrici || []).join(', ');
     const assenzaSel = document.getElementById('assenzaOperatore');
@@ -3709,6 +3766,7 @@
           mesiCancellazione: aspettoData.mesiCancellazione || null,
           operatrici: (aspettoData.operatrici && aspettoData.operatrici.length) ? aspettoData.operatrici : null,
           operatriciFoto: aspettoData.operatriciFoto || null,
+          orariSalone: aspettoData.orariSalone || null,
           linee: (aspettoData.linee && aspettoData.linee.length) ? aspettoData.linee : null,
           etichettaFinale: aspettoData.etichettaFinale || null,
           paese: aspettoData.paese || null,
@@ -6208,7 +6266,7 @@
     return '';
   }
   function renderAgendaSlotVuotoHtml(time, minutiFine, opts) {
-    const assenza = opts.assenza, chiuso = opts.chiuso, operatore = opts.operatore, dateISO = opts.dateISO;
+    const assenza = opts.assenza, chiuso = opts.chiuso, fuoriTurno = !!opts.fuoriTurno, operatore = opts.operatore, dateISO = opts.dateISO;
     const minuti = hhmmToMinuti(time);
     const etichetta = agendaMostraEtichettaOra(minuti) ? time : '';
     const classiExtra = agendaClasseBordo(minutiFine);
@@ -6221,10 +6279,8 @@
         </div>`;
     }
     if (chiuso) {
-      // "vorrei poter prendere appuntamento anche nei fuori orario se
-      // volessi quindi lascia la grafica com'è ma dammi la possibilità di aggiungere lo stesso un
-      // appuntamento" — stessa grafica "chiuso" (righe grigie) di sempre, ma con lo stesso tasto
-      // "+" degli slot normali, per poter prenotare comunque fuori dall'orario di apertura vero.
+      // Grafica "chiuso" (leggermente piu' scura), ma con lo stesso tasto "+" degli slot normali:
+      // si puo' prenotare comunque anche fuori dall'orario di apertura.
       return `
         <div class="agenda-slot agenda-slot-chiuso${classiExtra}" data-time="${time}" data-fine="${minutiToHHMM(minutiFine)}">
           <div class="agenda-slot-time">${etichetta}</div>
@@ -6232,7 +6288,7 @@
         </div>`;
     }
     return `
-      <div class="agenda-slot${classiExtra}" data-time="${time}" data-fine="${minutiToHHMM(minutiFine)}">
+      <div class="agenda-slot${fuoriTurno ? ' agenda-slot-fuoriturno' : ''}${classiExtra}" data-time="${time}" data-fine="${minutiToHHMM(minutiFine)}">
         <div class="agenda-slot-time">${etichetta}</div>
         <button type="button" class="agenda-slot-add" data-time="${time}" data-date="${escapeHtml(dateISO || '')}" data-operatore="${escapeHtml(operatore || '')}${I("\" aria-label=\"Nuovo appuntamento alle ", "\" aria-label=\"New appointment at ")}${time}">+</button>
       </div>`;
@@ -6287,8 +6343,13 @@
           </div>`;
         return;
       }
-      const chiuso = !oraNelTurno(operatore, dateISO, time);
-      html += renderAgendaSlotVuotoHtml(time, minuti + 15, { assenza, chiuso, operatore, dateISO });
+      // Se sono impostati gli orari del salone, "chiuso" = fuori da quegli orari (uguale per tutte le colonne);
+      // le ore aperte ma fuori turno dell'operatrice restano appena piu' scure. Senza orari del salone: come prima.
+      const salone = saloneApertoA(dateISO, time);
+      const inTurno = oraNelTurno(operatore, dateISO, time);
+      const chiuso = salone === null ? !inTurno : !salone;
+      const fuoriTurno = salone === true && !inTurno;
+      html += renderAgendaSlotVuotoHtml(time, minuti + 15, { assenza, chiuso, fuoriTurno, operatore, dateISO });
     });
     return html;
   }
@@ -10842,6 +10903,18 @@
     saveSettings({ paese: PAESI[e.target.value] && e.target.value !== 'IT' ? e.target.value : null }).then(() => { try { pubblicaDisponibilitaOnline(); renderSheetMantenendoScroll(); } catch (er) {} });
   });
   (function () {
+    const box = document.getElementById('settingsOrariSalone');
+    if (!box) return;
+    box.addEventListener('change', (e) => {
+      const chk = e.target.closest('.os-check');
+      if (chk) { const riga = chk.closest('.settings-orari-riga'); riga.querySelectorAll('input[type=time]').forEach(t => { t.disabled = !chk.checked; }); }
+      salvaOrariSaloneDaForm();
+    });
+    box.addEventListener('click', (e) => {
+      if (e.target.closest('#settingsOrariAzzera')) saveSettings({ orariSalone: null }).then(() => { try { renderSheetMantenendoScroll(); } catch (er) {} });
+    });
+  })();
+  (function () {
     const box = document.getElementById('settingsOperatriciFoto');
     const inp = document.getElementById('settingsOpFotoInput');
     if (!box || !inp) return;
@@ -10904,7 +10977,7 @@
     });
   })();
   document.getElementById('settingsResetBtn').addEventListener('click', () => {
-    saveSettings({ operatriciFoto: null, nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, mesiCancellazione: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, linkRecensioni: null, contattoAssistenza: null })
+    saveSettings({ operatriciFoto: null, orariSalone: null, nome: null, logo: null, colore: null, font: null, indirizzo: null, telefono: null, mesiRicontatto: null, mesiCancellazione: null, operatrici: null, linee: null, etichettaFinale: null, paese: null, linkRecensioni: null, contattoAssistenza: null })
       .then(ok => { if (ok) notifyTop('Aspetto ripristinato.'); });
   });
   // Lingua: scelta per dispositivo, salvata solo in locale (non su Firestore). La pagina si ricarica
