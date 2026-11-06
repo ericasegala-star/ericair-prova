@@ -1114,6 +1114,13 @@
   .anag-tabella th { cursor: pointer; font-weight: 600; font-size: 12px; color: var(--ink-soft); background: var(--paper); position: sticky; top: 0; user-select: none; }
   .anag-tabella tbody tr { cursor: pointer; }
   .anag-tabella tbody tr:hover { background: var(--berry-soft); }
+  .anag-check-th { width: 44px; cursor: default !important; text-align: center !important; }
+  .anag-check-td { width: 44px; text-align: center !important; cursor: pointer; touch-action: none; }
+  .anag-row-check, #anagSelectAll { width: 18px; height: 18px; cursor: pointer; }
+  .anag-riga-sel { background: var(--berry-soft); }
+  .anag-selbarra { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 12px; margin: 8px 0; background: var(--berry-soft); border: 1px solid var(--line); border-radius: var(--radius); font-size: 13.5px; }
+  .anag-selbarra:empty { display: none; }
+  .anag-selbarra .anag-sel-n { font-weight: 600; flex: 1 1 auto; }
   .anag-si { color: var(--ok); font-weight: 600; }
   .anag-no { color: var(--ink-soft); }
   @media (max-width: 700px) {
@@ -1125,7 +1132,9 @@
     .anag-tabella td { border: none; padding: 2px 0; white-space: normal; overflow-wrap: anywhere; }
     .anag-tabella td:empty { display: none; }
     .anag-tabella td[data-label]::before { content: attr(data-label) ': '; color: var(--ink-soft); font-size: 12px; }
-    .anag-tabella td:first-child { font-weight: 600; font-size: 15px; }
+    .anag-tabella td:nth-child(2) { font-weight: 600; font-size: 15px; padding-right: 52px; }
+    .anag-tabella tbody tr { position: relative; }
+    .anag-tabella td.anag-check-td { position: absolute; top: 4px; right: 4px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; padding: 0; }
     .anag-tabella td[data-label="First registered"], .anag-tabella td[data-label="Last visit"] { display: none; } /* si vedono aprendo la cliente */
     .anag-tabella td[data-label="Privacy consent"] { font-size: 12.5px; }
     .anag-tabella tbody tr { padding: 10px 12px; }
@@ -2026,7 +2035,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-06.195-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-06.196-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -10535,6 +10544,121 @@
   function anagNomiRipetuti() {
     return clients.map(c => ({ c, nuovo: anagNomeSenzaRipetizione(c.nome) })).filter(x => x.nuovo && x.nuovo !== x.c.nome);
   }
+  // Selezione di più clienti in Anagrafica (per eliminarle insieme): caselle a sinistra di ogni riga,
+  // "seleziona tutte" in testa e, su iPad/iPhone, trascinamento del dito sulla colonna delle caselle
+  // come in Magazzino. L'eliminazione chiede DUE conferme di seguito.
+  let anagSelezionati = new Set(), anagDelStage = 0;
+  let anagDragAttivo = false, anagDragMosso = false, anagDragStato = false, anagDragStartId = null, anagDragUltimo = null, anagDragStartXY = null, anagSuppressFinoA = 0;
+  function anagIdsVisibili() { return Array.from(document.querySelectorAll('#anagraficaBody tr[data-anag-id]')).map(tr => tr.getAttribute('data-anag-id')); }
+  function anagDipingi(id) {
+    if (!id || id === anagDragUltimo) return;
+    anagDragUltimo = id;
+    if (anagDragStato) anagSelezionati.add(id); else anagSelezionati.delete(id);
+    const tr = document.querySelector('#anagraficaBody tr[data-anag-id="' + id + '"]');
+    if (tr) { tr.classList.toggle('anag-riga-sel', anagDragStato); const c = tr.querySelector('.anag-row-check'); if (c) c.checked = anagDragStato; }
+  }
+  document.addEventListener('touchmove', (e) => {
+    if (!anagDragAttivo) return;
+    const t = e.touches[0]; if (!t) return;
+    if (!anagDragMosso) {
+      if (Math.abs(t.clientX - anagDragStartXY.x) < 6 && Math.abs(t.clientY - anagDragStartXY.y) < 6) return;
+      anagDragMosso = true; anagDipingi(anagDragStartId);
+    }
+    e.preventDefault();
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const tr = el && el.closest('tr[data-anag-id]');
+    if (tr && el.closest('.anag-check-td')) anagDipingi(tr.getAttribute('data-anag-id'));
+  }, { passive: false });
+  function anagFineDrag() {
+    if (!anagDragAttivo) return;
+    anagDragAttivo = false;
+    if (anagDragMosso) { anagSuppressFinoA = Date.now() + 300; anagDelStage = 0; anagAggiornaBarra(); }
+    anagDragMosso = false; anagDragStartId = null; anagDragUltimo = null; anagDragStartXY = null;
+  }
+  document.addEventListener('touchend', anagFineDrag);
+  document.addEventListener('touchcancel', anagFineDrag);
+  function anagAggiornaBarra() {
+    const bar = document.getElementById('anagSelBarra');
+    if (!bar) return;
+    const ids = anagIdsVisibili();
+    const n = ids.filter(id => anagSelezionati.has(id)).length;
+    const all = document.getElementById('anagSelectAll');
+    if (all) all.checked = ids.length > 0 && n === ids.length;
+    document.querySelectorAll('#anagraficaBody tr[data-anag-id]').forEach(tr => {
+      const sel = anagSelezionati.has(tr.getAttribute('data-anag-id'));
+      tr.classList.toggle('anag-riga-sel', sel);
+      const c = tr.querySelector('.anag-row-check'); if (c) c.checked = sel;
+    });
+    if (!n) { anagDelStage = 0; bar.innerHTML = ''; return; }
+    const nCl = n + ' ' + (n === 1 ? I("cliente", "client") : I("clienti", "clients"));
+    if (anagDelStage === 0) {
+      bar.innerHTML = '<span class="anag-sel-n">' + n + ' ' + (n === 1 ? I("selezionata", "selected") : I("selezionate", "selected")) + '</span>' +
+        '<button type="button" class="ghost small" id="anagDeselez">' + I("Deseleziona tutto", "Deselect all") + '</button>' +
+        '<button type="button" class="magazzino-delete-bulk" id="anagEliminaSel">' + I("Elimina selezionate", "Delete selected") + ' (' + n + ')</button>';
+    } else if (anagDelStage === 1) {
+      bar.innerHTML = '<span class="anag-sel-n">' + I("Stai per eliminare", "You are about to delete") + ' ' + nCl + ', ' + I("con schede e foto. Non si può annullare.", "with their cards and photos. This cannot be undone.") + '</span>' +
+        '<button type="button" class="ghost small" id="anagAnnullaDel">' + I("Annulla", "Cancel") + '</button>' +
+        '<button type="button" class="magazzino-delete-bulk armed" id="anagContinuaDel">' + I("Sì, continua", "Yes, continue") + '</button>';
+    } else {
+      bar.innerHTML = '<span class="anag-sel-n">' + I("Ultima conferma: l'eliminazione è definitiva.", "Last confirmation: deletion is permanent.") + '</span>' +
+        '<button type="button" class="ghost small" id="anagAnnullaDel">' + I("Annulla", "Cancel") + '</button>' +
+        '<button type="button" class="magazzino-delete-bulk armed" id="anagConfermaDel">' + I("Sicura? Elimina definitivamente", "Sure? Delete permanently") + ' (' + n + ')</button>';
+      clearTimeout(window.__anagDelT); window.__anagDelT = setTimeout(() => { if (anagDelStage === 2) { anagDelStage = 1; anagAggiornaBarra(); } }, 6000);
+    }
+    const on_ = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+    on_('anagDeselez', () => { anagSelezionati.clear(); anagDelStage = 0; anagAggiornaBarra(); });
+    on_('anagEliminaSel', () => { anagDelStage = 1; anagAggiornaBarra(); });
+    on_('anagAnnullaDel', () => { anagDelStage = 0; anagAggiornaBarra(); });
+    on_('anagContinuaDel', () => { anagDelStage = 2; anagAggiornaBarra(); });
+    on_('anagConfermaDel', () => {
+      clearTimeout(window.__anagDelT);
+      const daEliminare = anagIdsVisibili().filter(id => anagSelezionati.has(id));
+      anagSelezionati.clear(); anagDelStage = 0;
+      anagCancellaClienti(daEliminare).then(() => {
+        anagModificata = true; renderAnagrafica();
+        notifyTop(daEliminare.length + ' ' + (daEliminare.length === 1 ? I("cliente eliminata.", "client deleted.") : I("clienti eliminate.", "clients deleted.")));
+      });
+    });
+  }
+  function anagCancellaClienti(ids) {
+    const set = new Set(ids);
+    clients = clients.filter(cl => !set.has(cl.id));
+    (agendaCache.appuntamenti || []).forEach(a => { if (set.has(a.clienteId)) { a.clienteId = null; a.nomeManuale = I("Cliente eliminata", "Client deleted"); a.telefonoManuale = ''; } });
+    saveAgenda();
+    if (set.has(activeId)) { const prima = clients.find(x => !x.soloAnagrafica); activeId = prima ? prima.id : null; }
+    if (set.has(activeTricoId)) activeTricoId = null;
+    return Promise.all(ids.map(id => deleteClientCompletely(id)));
+  }
+  function anagBindSelezione(body) {
+    body.querySelectorAll('.anag-row-check').forEach(chk => chk.addEventListener('change', () => {
+      const id = chk.closest('tr').getAttribute('data-anag-id');
+      if (chk.checked) anagSelezionati.add(id); else anagSelezionati.delete(id);
+      anagDelStage = 0; anagAggiornaBarra();
+    }));
+    body.querySelectorAll('.anag-check-td').forEach(td => {
+      td.addEventListener('click', e => {
+        e.stopPropagation();
+        if (Date.now() < anagSuppressFinoA) return;
+        if (e.target.closest('.anag-row-check')) return;
+        const chk = td.querySelector('.anag-row-check');
+        if (chk) { chk.checked = !chk.checked; chk.dispatchEvent(new Event('change', { bubbles: true })); }
+      });
+      td.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) return;
+        const tr = td.closest('tr'), chk = td.querySelector('.anag-row-check');
+        if (!tr || !chk) return;
+        anagDragAttivo = true; anagDragMosso = false; anagDragStartId = tr.getAttribute('data-anag-id');
+        anagDragStato = !chk.checked; anagDragUltimo = null;
+        anagDragStartXY = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }, { passive: true });
+    });
+    const all = document.getElementById('anagSelectAll');
+    if (all) all.addEventListener('change', () => {
+      anagIdsVisibili().forEach(id => { if (all.checked) anagSelezionati.add(id); else anagSelezionati.delete(id); });
+      anagDelStage = 0; anagAggiornaBarra();
+    });
+    anagAggiornaBarra();
+  }
   function renderAnagraficaLista() {
     const righe = anagRighe();
     const rip = anagNomiRipetuti();
@@ -10545,11 +10669,12 @@
     return `${I("\n      <p class=\"hint\">Tutti i contatti in un unico elenco. Clicca una riga per vedere e modificare i dati, scaricarli o eliminarli.</p>\n      ", "\n      <p class=\"hint\">All contacts in a single list. Click a row to see and edit the details, download them or delete them.</p>\n      ")}${vuote.length ? `<div class="anag-avviso"><span>${vuote.length} ${vuote.length === 1 ? I("cliente compare", "client appears") : I("clienti compaiono", "clients appear")}${I(" tra le schede tecniche ma non ", " among the technical cards but ")}${vuote.length === 1 ? I("ha", "has") : I("hanno", "have")}${I(" nessuna scheda compilata. Spostandole resteranno solo qui in Anagrafica; le schede già compilate non vengono toccate.</span> <button type=\"button\" class=\"primary small\" id=\"anagFixVuote\">Sposta ", " no card filled in. Moving them will leave them only here in the Client directory; cards already filled in are not touched.</span> <button type=\"button\" class=\"primary small\" id=\"anagFixVuote\">Move ")}${vuote.length === 1 ? I("la cliente", "the client") : I("le " + vuote.length + " clienti", vuote.length + " clients")}${I(" solo in Anagrafica</button></div>", " to the Client directory only</button></div>")}` : ''}
       ${rip.length ? `<div class="anag-avviso"><span>${rip.length} ${rip.length === 1 ? I("nome ha", "name has") : 'nomi hanno'}${I(" il cognome ripetuto (es. «", " the surname repeated (e.g. «")}${escapeHtml(rip[0].c.nome)}» diventerebbe «${escapeHtml(rip[0].nuovo)}${I("»). Si cambia solo il nome: schede e foto restano.</span> <button type=\"button\" class=\"primary small\" id=\"anagFixNomi\">Correggi ", "»). Only the name is changed: cards and photos stay.</span> <button type=\"button\" class=\"primary small\" id=\"anagFixNomi\">Correggi ")}${rip.length === 1 ? I("il nome", "the name") : 'i ' + rip.length + ' nomi'}</button></div>` : ''}${I("\n      <div class=\"anag-top\">\n        <input type=\"text\" id=\"anagCerca\" placeholder=\"Cerca per nome, telefono o email…\" value=\"", "\n      <div class=\"anag-top\">\n        <input type=\"text\" id=\"anagCerca\" placeholder=\"Search by name, phone or email…\" value=\"")}${escapeHtml(anagTesto)}${I("\">\n        <button type=\"button\" class=\"ghost small\" id=\"anagNuova\">+ Nuova cliente</button>\n        <button type=\"button\" class=\"ghost small\" id=\"anagCsv\">Scarica elenco (CSV)</button>\n        <button type=\"button\" class=\"ghost small\" id=\"anagImporta\">Importa elenco (CSV)</button>\n        <input type=\"file\" id=\"anagCsvFile\" accept=\".csv,.txt,text/csv,text/plain\" hidden>\n      </div>\n      <div class=\"anag-filtri\">", "\">\n        <button type=\"button\" class=\"ghost small\" id=\"anagNuova\">+ New client</button>\n        <button type=\"button\" class=\"ghost small\" id=\"anagCsv\">Download list (CSV)</button>\n        <button type=\"button\" class=\"ghost small\" id=\"anagImporta\">Import list (CSV)</button>\n        <input type=\"file\" id=\"anagCsvFile\" accept=\".csv,.txt,text/csv,text/plain\" hidden>\n      </div>\n      <div class=\"anag-filtri\">")}${filtri.map(([k, l]) => `<button type="button" class="ghost small${anagFiltro === k ? ' attivo' : ''}" data-anag-filtro="${k}">${l}</button>`).join('')}</div>
       <p class="anag-conta">${righe.length} ${righe.length === 1 ? I("cliente", "client") : I("clienti", "clients")}</p>
-      <div class="anag-tabella-wrap"><table class="anag-tabella"><thead><tr>${cols.map(([k, l]) => `<th data-anag-ord="${k}">${l}${frecce(k)}</th>`).join('')}<th></th></tr></thead><tbody>
-        ${righe.length ? righe.map(r => `<tr data-anag-id="${escapeHtml(r.c.id)}">
+      <div class="anag-selbarra" id="anagSelBarra"></div>
+      <div class="anag-tabella-wrap"><table class="anag-tabella"><thead><tr><th class="anag-check-th"><input type="checkbox" id="anagSelectAll" title="${I("Seleziona tutte", "Select all")}"></th>${cols.map(([k, l]) => `<th data-anag-ord="${k}">${l}${frecce(k)}</th>`).join('')}<th></th></tr></thead><tbody>
+        ${righe.length ? righe.map(r => `<tr data-anag-id="${escapeHtml(r.c.id)}" class="${anagSelezionati.has(r.c.id) ? 'anag-riga-sel' : ''}"><td class="anag-check-td"><input type="checkbox" class="anag-row-check" ${anagSelezionati.has(r.c.id) ? 'checked' : ''}></td>
           <td>${escapeHtml(r.nome || I("Senza nome", "Unnamed"))}${r.ric ? I("<span class=\"recontact-badge\">Da ricontattare</span>", "<span class=\"recontact-badge\">To follow up</span>") : ''}${r.canc ? I("<span class=\"recontact-badge canc-badge\">Da cancellare</span>", "<span class=\"recontact-badge canc-badge\">To delete</span>") : ''}${I("</td>\n          <td data-label=\"Telefono\">", "</td>\n          <td data-label=\"Phone\">")}${escapeHtml(r.telefono)}</td><td data-label="Email">${escapeHtml(r.email)}${I("</td>\n          <td data-label=\"Prima registrazione\">", "</td>\n          <td data-label=\"First registered\">")}${anagData(r.creato)}${I("</td><td data-label=\"Ultima visita\">", "</td><td data-label=\"Last visit\">")}${r.ultima ? anagDataISO(r.ultima) : '—'}${I("</td>\n          <td data-label=\"Consenso privacy\">", "</td>\n          <td data-label=\"Privacy consent\">")}${r.consenso ? '<span class="anag-si">✓ ' + anagData(r.consenso) + '</span>' : '<span class="anag-no">—</span>'}</td>
           <td>${r.ric && anagLinkWhatsapp(r.c) ? '<a href="' + escapeHtml(anagLinkWhatsapp(r.c, true)) + '" target="_blank" rel="noopener" class="anag-wa" data-anag-wa title="WhatsApp">WhatsApp</a>' : ''}</td>
-        </tr>`).join('') : I("<tr><td colspan=\"7\" class=\"anag-no\">Nessuna cliente trovata.</td></tr>", "<tr><td colspan=\"7\" class=\"anag-no\">No clients found.</td></tr>")}
+        </tr>`).join('') : I("<tr><td colspan=\"8\" class=\"anag-no\">Nessuna cliente trovata.</td></tr>", "<tr><td colspan=\"8\" class=\"anag-no\">No clients found.</td></tr>")}
       </tbody></table></div>`;
   }
   function renderAnagraficaDettaglio(c) {
@@ -10627,12 +10752,13 @@
     }
     const cerca = document.getElementById('anagCerca');
     if (cerca) cerca.addEventListener('input', e => {
-      anagTesto = e.target.value;
+      anagTesto = e.target.value; anagSelezionati.clear(); anagDelStage = 0;
       const pos = e.target.selectionStart;
       renderAnagrafica();
       const n = document.getElementById('anagCerca'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} }
     });
     document.getElementById('anagCsv').addEventListener('click', anagEsportaCsv);
+    anagBindSelezione(body);
     const fixVuote = document.getElementById('anagFixVuote');
     if (fixVuote) fixVuote.addEventListener('click', () => {
       const v = clients.filter(anagSenzaScheda);
@@ -10661,19 +10787,19 @@
       save(clients); anagSel = nuova.id; renderAnagrafica();
       const n = document.getElementById('anagNome'); if (n) n.focus();
     });
-    body.querySelectorAll('[data-anag-filtro]').forEach(b => b.addEventListener('click', () => { anagFiltro = b.getAttribute('data-anag-filtro'); renderAnagrafica(); }));
+    body.querySelectorAll('[data-anag-filtro]').forEach(b => b.addEventListener('click', () => { anagFiltro = b.getAttribute('data-anag-filtro'); anagSelezionati.clear(); anagDelStage = 0; renderAnagrafica(); }));
     body.querySelectorAll('[data-anag-ord]').forEach(th => th.addEventListener('click', () => {
       const k = th.getAttribute('data-anag-ord');
       anagOrd = anagOrd.key === k ? { key: k, dir: -anagOrd.dir } : { key: k, dir: 1 };
       renderAnagrafica();
     }));
     body.querySelectorAll('tr[data-anag-id]').forEach(tr => tr.addEventListener('click', e => {
-      if (e.target.closest('[data-anag-wa]')) return;
+      if (e.target.closest('[data-anag-wa]') || e.target.closest('.anag-check-td')) return;
       anagSel = tr.getAttribute('data-anag-id'); renderAnagrafica();
     }));
   }
   function apriAnagrafica() {
-    anagSel = null; anagTesto = ''; anagFiltro = 'tutti'; anagModificata = false; anagImport = null;
+    anagSelezionati.clear(); anagDelStage = 0; anagSel = null; anagTesto = ''; anagFiltro = 'tutti'; anagModificata = false; anagImport = null;
     chiudiAltreSezioniEApri('anagrafica'); // come le altre sezioni (Magazzino, Servizi…): si apre nel pannello principale
     // l'ultima visita viene dall'Agenda: se non è ancora stata caricata, la leggo ora
     if (db && !(agendaCache.appuntamenti || []).length) {
