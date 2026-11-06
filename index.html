@@ -165,8 +165,7 @@
     .floating-save-label { font-size: 9px; }
   }
 
-  /* Schermata di apertura (la titolare, 19/10: tolta la scelta "Chi sei?" — si entra diretti — e
-     anche il lampo del suo nome che restava visibile mentre l'app caricava): al suo posto, un
+  /* Schermata di apertura: al suo posto, un
      saluto animato col nome del salone, che gira su se stesso e sfuma verso l'alto, dove poi
      compare il logo vero. */
   .app-splash {
@@ -180,8 +179,7 @@
     font-size: 26px; font-weight: 700; color: var(--berry); text-align: center;
     animation: appSplashAnim 1.8s forwards;
   }
-  /* Tre fasi ben distinte (la titolare, 19/10: "non gira" — con una sola rotazione veloce e
-     ease-in-out non si notava): un ingresso rapido, poi una girata vera e propria a velocità
+  /* Tre fasi ben distinte: un ingresso rapido, poi una girata vera e propria a velocità
      costante (due giri interi, non uno solo, per farla notare bene), infine la sfumatura verso
      l'alto. */
   @keyframes appSplashAnim {
@@ -202,7 +200,7 @@
 
   .layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
   @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
-  /* Richiesta di la titolare (15/10): in Magazzino deve vedersi SOLO il Magazzino (niente elenco
+  /* in Magazzino deve vedersi SOLO il Magazzino (niente elenco
      clienti, niente menu) e sfruttare tutto lo spazio della pagina — l'elenco/menu (.sidebar-
      stack) si nasconde del tutto (vedi JS) e questa colonna da 260px va tolta, non solo svuotata. */
   .layout.layout-magazzino-full { grid-template-columns: 1fr; }
@@ -254,7 +252,7 @@
   .client-list li.empty-list { color: var(--ink-soft); font-size: 13px; padding: 10px; display: block; }
   /* Scorciatoia "Agenda" appena sotto l'elenco delle schede: sta nella sidebar vera e propria,
      non nel menu (che su tablet/cellulare diventa la barra a icone in basso), quindi resta
-     raggiungibile allo stesso modo su qualunque dispositivo o browser (richiesta di la titolare, 14/10). */
+     raggiungibile allo stesso modo su qualunque dispositivo o browser. */
   .agenda-shortcut {
     display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
     margin-top: 10px; padding: 10px; border-radius: var(--radius); border: 1px solid var(--berry);
@@ -377,7 +375,7 @@
   .choice.checked { background: var(--berry-soft); border-color: var(--berry); }
   .hint { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; line-height: 1.4; }
   /* I contatti (scheda a schermo e scheda da stampare): più grandi e visibili, non persi in mezzo
-     agli altri avvisi piccoli e grigi (richiesta di la titolare, 14/10). */
+     agli altri avvisi piccoli e grigi. */
   .hint-contatti { font-size: 16px; font-weight: 700; color: var(--berry); line-height: 1.45; }
 
   .foto-grid { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
@@ -478,9 +476,7 @@
   .version-delete:hover, .magazzino-delete:hover { color: #A8433C; text-decoration-color: #A8433C; }
   .version-delete.armed, .magazzino-delete.armed { color: #A8433C; font-weight: 600; text-decoration-color: #A8433C; }
   /* Cestino del Magazzino: stessa icona sempre (niente testo che cambia). Il solo cambio di
-     colore dell'icona era troppo discreto per notare che il primo clic aveva "armato" il tasto
-     (la titolare, 15/10: "il tasto cestino non funziona" - in realtà funzionava, ma il primo clic non
-     si vedeva): ora da armato il tasto ha uno sfondo rosso pieno, ben visibile, come un vero
+     colore dell'icona era troppo discreto per notare che il primo clic aveva "armato" il tasto: ora da armato il tasto ha uno sfondo rosso pieno, ben visibile, come un vero
      tasto di conferma. */
   .magazzino-row-delete {
     display: inline-flex; align-items: center; justify-content: center;
@@ -618,7 +614,7 @@
   /* Su iPad/tablet e cellulare (qualunque dispositivo "touch", riconosciuto dal puntatore
      impreciso, indipendentemente dalla larghezza: così un iPad in orizzontale, più largo dei
      soliti 860px, resta comunque un dispositivo touch) il menu si sposta in basso, fisso, a icone
-     — come nello screenshot di la titolare — invece dell'elenco a tendina che si apre sopra il
+     invece dell'elenco a tendina che si apre sopra il
      contenuto. Da PC/Mac (puntatore preciso: mouse/trackpad) il menu resta quello di sempre, non
      cambia nulla. */
   @media (pointer: coarse) {
@@ -669,15 +665,14 @@
   .home-quote-text { font-family: 'Fraunces', serif; font-size: 18px; line-height: 1.5; margin: 2px 0 0; font-style: italic; }
   .home-hint { color: var(--ink-soft); font-size: 14px; margin: 0 0 16px; max-width: 560px; }
 
-  /* Agenda sotto la schermata iniziale: calendario a quarti d'ora per il giorno scelto. la titolare ha
-     provato la vista a 7 colonne (settimana intera) il 15/10 ma l'ha trovata confusionaria, quindi
-     è tornata alla vista di un giorno solo com'era prima. */
+  /* Agenda sotto la schermata iniziale: calendario a quarti d'ora per il giorno scelto: la vista è di un
+     giorno solo (la settimana intera a 7 colonne era troppo affollata). */
   .home-agenda { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 18px; }
   .home-agenda-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
   .agenda-date-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .agenda-date-nav input[type=date] { width: auto; flex: none; }
   .agenda-date-nav button { flex: none; }
-  /* Selettore della data in stile "mese + striscia della settimana" (la titolare, 22/10): il nome del
+  /* Selettore della data in stile "mese + striscia della settimana": il nome del
      mese si tocca per scegliere un'altra data (campo data nativo, invisibile, sopra il nome);
      sotto, i 7 giorni della settimana: lettera, numero; il giorno scelto è un cerchio pieno, oggi
      è colorato, sabato e domenica più chiari. Su telefono/tablet si scorre per cambiare settimana. */
@@ -713,7 +708,7 @@
     border-bottom: 1px solid var(--line); min-height: 34px; flex-shrink: 0;
   }
   .agenda-slot:last-child { border-bottom: none; }
-  /* Tre livelli di riga (richiesta di la titolare, 14/10, affinata più volte): il cambio d'ORA piena ha
+  /* Tre livelli di riga: il cambio d'ORA piena ha
      un bordo marcato ma sottile (non grosso); la mezz'ora (:30) ha solo il bordo leggero di
      sempre, con la sua etichetta scritta; i quarti puri (:15/:45) non hanno NESSUN bordo, solo
      spazio vuoto — restano comunque prenotabili col tasto "+". */
@@ -747,8 +742,7 @@
   .agenda-field-servizio { flex: 1.2 1 140px; }
   .agenda-field-note { flex: 1.6 1 180px; }
   .agenda-field-note textarea { min-height: 38px; resize: vertical; }
-  /* Ricorrenza ("ogni settimana"/"ogni due settimane") e storico appuntamenti precedenti
-     (la titolare, 16/10), nel modulo di modifica appuntamento. */
+  /* Ricorrenza ("ogni settimana"/"ogni due settimane") e storico appuntamenti precedenti, nel modulo di modifica appuntamento. */
   .agenda-field-ricorrenza { flex: 1.4 1 200px; }
   .agenda-ricorrenza-extra { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; }
   .agenda-ricorrenza-extra[hidden] { display: none; }
@@ -823,7 +817,7 @@
   .agenda-slot-occupato { background: var(--paper-raised); }
   /* Ore fuori dall'orario di apertura vero (prima/dopo il turno, o giorno di chiusura totale):
      restano visibili per tenere la griglia sempre dalle 7:00 alle 20:00, con lo stesso colore
-     diverso e discreto di sempre — ma da richiesta di la titolare (15/10) hanno anche loro il tasto "+"
+     diverso e discreto di sempre — ma hanno anche loro il tasto "+"
      (stessa grafica "chiuso", ma prenotabili lo stesso se lo si desidera). */
   .agenda-slot-chiuso { background: repeating-linear-gradient(135deg, var(--paper-raised), var(--paper-raised) 6px, var(--paper) 6px, var(--paper) 12px); }
   .agenda-slot-chiuso .agenda-slot-time { color: var(--ink-soft); opacity: 0.55; }
@@ -952,7 +946,7 @@
   .catalogo-hp-card-all .catalogo-hp-card-label { color: var(--berry); font-weight: 600; }
 
   /* "Cerca nell'app" ora raggruppa i risultati per sezione (schede clienti, magazzino, servizi,
-     ispirazione, consigli di utilizzo…), con un titoletto per gruppo (la titolare, 15/10). */
+     ispirazione, consigli di utilizzo…), con un titoletto per gruppo. */
   .search-results-group + .search-results-group { margin-top: 18px; }
   .search-results-group-title {
     font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em;
@@ -1296,8 +1290,7 @@
        voce alla volta. minmax() tiene le altre colonne leggibili anche quando "Prodotto" cresce. */
     /* Quantità ridotta a 64px (lo spazio di un numero a 3 cifre CON le freccette su/giù native,
        senza tagliarlo) e l'ultima colonna (solo il cestino, 30px) ridotta a 40px: restava
-       altrimenti vuota per buona parte, con il cestino staccato dalla quantità (la titolare, 15/10,
-       con foto). Lo spazio recuperato va al margine massimo della colonna "Prodotto" qui sotto. */
+       altrimenti vuota per buona parte, con il cestino staccato dalla quantità. Lo spazio recuperato va al margine massimo della colonna "Prodotto" qui sotto. */
     grid-template-columns: 26px minmax(130px, var(--mag-nome-w, 2fr)) minmax(90px, 1.3fr) minmax(110px, 1.6fr) minmax(70px, 0.9fr) 64px 60px 40px;
     align-items: center; gap: 10px;
     padding: 8px 12px; background: var(--paper-raised);
@@ -1350,7 +1343,7 @@
      di fianco, come richiesto. */
   .magazzino-row .magazzino-field-qty .magazzino-qty-input,
   .magazzino-row .magazzino-field-qtymin .magazzino-qty-input { width: 100%; text-align: center; padding: 9px 4px; }
-  /* Quantità minima opzionale per prodotto (richiesta di la titolare, 15/10): sotto quella soglia il
+  /* Quantità minima opzionale per prodotto: sotto quella soglia il
      prodotto si evidenzia da solo (riga + targhetta "Da riordinare", qui con lo stesso rosso
      già usato per "Delete" armato) ed entra nella "Lista riordini" scaricabile. */
   .magazzino-row-sotto-soglia { background: rgba(168, 67, 60, 0.07); }
@@ -1360,7 +1353,7 @@
     letter-spacing: 0.02em; text-transform: uppercase; border-radius: var(--radius);
     padding: 3px 6px; white-space: nowrap;
   }
-  /* Storico prezzi (la titolare, 22/10): piccola freccia sul campo Prezzo (▲ aumentato, ▼ calato
+  /* Storico prezzi: piccola freccia sul campo Prezzo (▲ aumentato, ▼ calato
      nell'ultima variazione) che apre l'elenco delle variazioni di quel prodotto. */
   .magazzino-field-prezzo { position: relative; }
   .magazzino-field-prezzo.ha-storico .magazzino-input { padding-right: 20px; }
@@ -1389,7 +1382,7 @@
     font-family: inherit; font-size: 13.5px; padding: 7px 9px; width: 220px;
   }
   /* Stessa barra di "Rinomina selezionati", ma per impostare la quantità minima su più prodotti
-     insieme (la titolare, 15/10): il campo numerico può essere più corto di quello del nome. */
+     insieme: il campo numerico può essere più corto di quello del nome. */
   .magazzino-bulk-qtymin input { width: 100px; }
   .mag-head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   /* Filtri Tipo/Fornitore, sopra la ricerca: stessa logica dei gruppi del PDF, ma selezionabile. */
@@ -1619,7 +1612,7 @@
       <button type="button" class="mode-switch-btn" id="modeTricologoBtn" data-i18n="nav.tricologo" data-it="Tricologo">Trichologist</button>
     </div>
     <div class="top-actions">
-      <!-- Visibile solo in Magazzino (richiesta di la titolare, 15/10), quando il resto del menu/
+      <!-- Visibile solo in Magazzino, quando il resto del menu/
            elenco clienti è nascosto per dare tutto lo spazio al Magazzino: resta comunque un
            modo per raggiungere l'Agenda senza restarne "bloccati" fuori. -->
       <button type="button" class="ghost" id="topAgendaBtn" hidden data-i18n="nav.agenda" data-it="Agenda">Calendar</button>
@@ -2035,7 +2028,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-06.197-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-06.198-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -2278,7 +2271,7 @@
   }
 
   // le operatrici condividono un unico account del salone, senza distinzioni
-  // (richiesta di la titolare, 19/10): Ispirazione si può modificare da chiunque usi l'app.
+  //: Ispirazione si può modificare da chiunque usi l'app.
   function canEditIspirazione() {
     return true;
   }
@@ -2338,7 +2331,7 @@
   let magazzinoSuppressRowClickFinoA = 0;
   let magazzinoSearchEraFocus = false; // true solo se si stava scrivendo nel campo "Cerca prodotto" prima del ridisegno
   // Trascinamento col dito sulla colonna delle caselle per selezionare più prodotti di seguito,
-  // come in Gmail da cellulare/tablet (la titolare, 16/10): su touch non c'è lo shift+clic, quindi si
+  // come in Gmail da cellulare/tablet: su touch non c'è lo shift+clic, quindi si
   // tiene premuto sul primo prodotto e si scorre il dito sugli altri, che si "dipingono" con lo
   // stesso stato (selezionati o deselezionati) di quello da cui si è partiti.
   let magazzinoDragAttivo = false;
@@ -2351,7 +2344,7 @@
   // colore per riconoscerlo a vista nell'agenda. Una "combo" somma i tempi di più servizi
   // semplici (comboDi: i loro id) invece di averne propri.
   let serviziCache = { servizi: [] };
-  // "Scheda generica": modulo generico (non legato a un marchio), separato dalla scheda cliente — la titolare, 19/10.
+  // "Scheda generica": modulo generico (non legato a un marchio), separato dalla scheda cliente.
   let schedeGenericheCache = { schede: [] };
   // Agenda: appuntamenti condivisi tra tutte (stessa logica del Magazzino).
   let agendaCache = { appuntamenti: [] };
@@ -2621,7 +2614,7 @@
       return { id: a && a.id, voce: (a && a.voce) || '' };
     });
   }
-  // Account unico del salone, senza distinzione operatrici (la titolare, 19/10): gli
+  // Account unico del salone, senza distinzione operatrici: gli
   // appunti sono un unico posto condiviso, non più separati per persona.
   function appuntiDocPath(section) {
     return 'appunti/' + section;
@@ -2856,14 +2849,6 @@
   // Agenda: un unico documento condiviso ("app/agenda") con dentro l'elenco appuntamenti,
   // stessa logica del Magazzino — leggero, caricato solo quando si apre la sezione.
   function loadAgenda() { return agendaCache; }
-  function loadAgendaFromDb() {
-    if (!db) { showStorageError(); return; }
-    db.doc('app/agenda').get().then(doc => {
-      agendaCache.appuntamenti = (doc.exists && doc.data() && doc.data().appuntamenti) || [];
-      hideStorageError();
-      if (viewingAgenda) renderSheet();
-    }).catch(() => { /* resta quello che c'era (vuoto, la prima volta): si riprova riaprendo la sezione */ });
-  }
   function saveAgenda() {
     if (!db) { showStorageError(); return Promise.resolve(false); }
     return db.doc('app/agenda').set({ appuntamenti: agendaCache.appuntamenti })
@@ -2886,13 +2871,6 @@
   // lavorano entrambe: la titolare resta sul colore del brand (personalizzabile in Impostazioni),
   // un'altra operatrice su un viola già presente nella tavolozza dell'app, per non introdurne uno nuovo.
   function operatoreColore(op) { const i = elencoOperatrici().indexOf(op); return OPERATRICE_COLORI[(i < 0 ? 0 : i) % OPERATRICE_COLORI.length]; }
-  function loadAgendaTurniFromDb() {
-    if (!db) return;
-    db.doc('app/agendaTurni').get().then(doc => {
-      if (doc.exists && doc.data() && doc.data().turni) { agendaTurniCache = doc.data().turni; agendaTurniImpostati = true; }
-      if (viewingHome || viewingAgenda) renderSheet();
-    }).catch(() => { /* resta il predefinito: si riprova riaprendo la sezione */ });
-  }
   function saveAgendaTurni() {
     if (!db) { showStorageError(); return Promise.resolve(false); }
     return db.doc('app/agendaTurni').set({ turni: agendaTurniCache })
@@ -2905,13 +2883,6 @@
     const [y, m, d] = dateISO.split('-').map(Number);
     const day = new Date(y, m - 1, d).getDay();
     return elencoOperatrici().filter(op => agendaTurniCache[op] && agendaTurniCache[op][day]);
-  }
-  function loadAssenzeFromDb() {
-    if (!db) return;
-    db.doc('app/assenze').get().then(doc => {
-      assenzeCache.assenze = (doc.exists && doc.data() && doc.data().assenze) || [];
-      if (viewingHome || viewingAgenda) renderSheet();
-    }).catch(() => { /* resta quello che c'era: si riprova riaprendo la sezione */ });
   }
   function saveAssenze() {
     if (!db) { showStorageError(); return Promise.resolve(false); }
@@ -2959,8 +2930,7 @@
       titolo: data.titolo || '',
       clienteId: data.clienteId || null,
       nomeManuale: data.nomeManuale || '',
-      // Prenotazione online di una cliente senza scheda (la titolare, 21/10: "se la cliente non ce l'ha
-      // non bisogna crearla"): il telefono resta sull'appuntamento, così il promemoria WhatsApp
+      // Prenotazione online di una cliente senza scheda: il telefono resta sull'appuntamento, così il promemoria WhatsApp
       // funziona comunque; richiestaId/tokenModifica servono a riconoscere una richiesta di
       // modifica fatta dalla cliente col suo link (vedi elaboraRichiesteOnlineInSospeso).
       telefonoManuale: data.telefonoManuale || '',
@@ -2982,7 +2952,7 @@
       // cliente o si elimina (si elimina tutta la combo, non solo il pezzo su cui si clicca).
       comboGroupId: data.comboGroupId || null,
       note: data.note || '',
-      // Appuntamento ricorrente (la titolare, 16/10: "ogni settimana"/"ogni due settimane"): tutti gli
+      // Appuntamento ricorrente: tutti gli
       // appuntamenti della stessa serie condividono "serieId", creato una volta sola insieme agli
       // altri (vedi creaSerieRicorrente). Serve a chiedere, eliminandone uno, se togliere solo
       // quello o anche i successivi della serie.
@@ -3006,8 +2976,7 @@
     a.serieFino = fino;
     // Se l'appuntamento da cui si preme "Crea serie" fa parte di una combo esplosa in più
     // blocchi (es. Colore, poi Taglio, poi Piega), la serie deve riprodurre TUTTI i pezzi della
-    // combo per ogni data futura — non solo quello su cui si è cliccato (la titolare, 19/10: "mi mette
-    // solo la voce colore in quelli futuri, il resto no"). I "fratelli" (stesso comboGroupId)
+    // combo per ogni data futura — non solo quello su cui si è cliccato. I "fratelli" (stesso comboGroupId)
     // entrano anche loro nella stessa serie, così eliminandola si tolgono insieme.
     const fratelli = a.comboGroupId
       ? agendaCache.appuntamenti.filter(x => x.comboGroupId === a.comboGroupId && x.id !== a.id)
@@ -3043,7 +3012,7 @@
     agendaCache.appuntamenti = agendaCache.appuntamenti.filter(x => !(x.serieId === serieId && x.data >= dataDa));
     saveAgenda();
   }
-  // Storico delle volte precedenti di questa cliente (la titolare, 16/10): date e servizio dei suoi
+  // Storico delle volte precedenti di questa cliente: date e servizio dei suoi
   // appuntamenti passati, più recenti prima. Solo per appuntamenti collegati a una scheda vera
   // (clienteId), non per i nomi liberi o gli impegni di lavoro.
   function storicoAppuntamentiCliente(a, limite) {
@@ -3116,8 +3085,7 @@
       if (s) { a.durataMin = durataServizioMin(s); a.durataLavorazioneMin = durataLavorazioneServizioMin(s); }
     }
   }
-  // ---- Prenotazione online (la titolare, 16/10: "vorrei impostare gli appuntamenti online con
-  // promemoria") ----------------------------------------------------------------------------
+  // ---- Prenotazione online ----------------------------------------------------------------------------
   // Toglie spazi/parentesi/trattini da un numero, per confrontare "333 123 4567" e "333-1234567"
   // come lo stesso numero.
   function normalizzaTelefono(t) { return (t || '').replace(/[^\d+]/g, ''); }
@@ -3153,15 +3121,14 @@
     }).catch(() => { /* non bloccante: la pagina pubblica semplicemente resterà con dati vecchi finché non si riprova */ });
   }
   // Trova la cliente dal telefono scritto nella richiesta online. Se non ha una scheda NON se ne
-  // crea una (la titolare, 21/10): l'appuntamento resta col solo nome e telefono scritti da lei.
+  // crea una: l'appuntamento resta col solo nome e telefono scritti da lei.
   function trovaClienteDaTelefono(telefono) {
     const norm = normalizzaTelefono(telefono);
     if (!norm) return null;
     return clients.find(c => normalizzaTelefono(c.telefono) && normalizzaTelefono(c.telefono) === norm) || null;
   }
   // Controlla le nuove richieste di prenotazione online (scritte dalla pagina pubblica) e le
-  // trasforma subito in appuntamenti veri in agenda, senza bisogno di approvarle a mano (la titolare,
-  // 16/10: "la pagina pubblica deve confermarsi senza il mio intervento"). Se nel frattempo quello
+  // trasforma subito in appuntamenti veri in agenda, senza bisogno di approvarle a mano. Se nel frattempo quello
   // slot si è occupato, la richiesta resta segnata "in conflitto": va risolta a mano (si contatta
   // la cliente). Richiamata all'avvio e ogni volta che si riapre la Home/Agenda.
   function elaboraRichiesteOnlineInSospeso() {
@@ -3250,8 +3217,7 @@
       return puliziaOccupatiProvvisori(elaborate);
     }).catch(() => { /* si riprova alla prossima apertura */ });
   }
-  // Toglie i blocchi provvisori (la titolare, 16/10, sul rischio di due clienti che prenotano lo
-  // stesso orario online: "può succedere che... c'è un conflitto?") lasciati dalla pagina
+  // Toglie i blocchi provvisori lasciati dalla pagina
   // pubblica per le richieste appena elaborate (ora che sono diventate appuntamenti veri o sono
   // segnate in conflitto, il blocco provvisorio non serve più) e quelli ormai vecchi/orfani
   // (più di un giorno, o riferiti a una data già passata) che per qualche motivo non sono mai
@@ -3281,12 +3247,6 @@
     richiesteOnlineConflitto = richiesteOnlineConflitto.filter(r => r.id !== id);
     if (db) db.doc('richiesteOnline/' + id).delete().catch(() => {});
     renderSheet();
-  }
-  function updateAppuntamento(id, patch) {
-    const a = agendaCache.appuntamenti.find(x => x.id === id);
-    if (!a) return;
-    Object.assign(a, patch);
-    saveAgenda();
   }
   // Eliminare un appuntamento che fa parte di una combo esplosa in più blocchi (es. Colore, poi
   // Taglio, poi Piega, uno via l'altro) elimina tutto il gruppo insieme: altrimenti resterebbero
@@ -3777,7 +3737,7 @@
   const USAGE_TIPS_HTML_GLOSS = ``;
   const USAGE_TIPS_HTML_PART2B = `${I("\n    <h3>Usare l'app</h3>\n    <ul>\n      <li>Crea una nuova scheda con \"+ Nuova scheda\" e scrivi il nome della cliente.</li>\n      <li>Usa la barra di ricerca per ritrovare velocemente una cliente già schedata.</li>\n      <li>Carica le foto prima/dopo dalla sezione \"Per la prossima volta\" e aggiungi un commento a ciascuna.</li>\n      <li>Ogni modifica salvata resta visibile in \"Storico versioni\", in sola lettura.</li>\n      <li>Usa \"Scarica scheda (PDF)\" per avere una copia stampabile della scheda.</li>\n    </ul>\n  ", "\n    <h3>Using the app</h3>\n    <ul>\n      <li>Create a new card with \"+ New card\" and write the client’s name.</li>\n      <li>Use the search bar to quickly find a client who already has a card.</li>\n      <li>Upload the before/after photos from the \"For next time\" section and add a comment to each.</li>\n      <li>Every saved change stays visible in \"Version history\", read-only.</li>\n      <li>Use \"Download card (PDF)\" to get a printable copy of the card.</li>\n    </ul>\n  ")}`;
 
-  // Richiesta di la titolare (19/10): "Consigli generici" — nozioni di colorimetria di base valide
+  // "Consigli generici" — nozioni di colorimetria di base valide
   // con qualsiasi marca (non legato a un marchio), per rendere l'app adatta anche ad altri saloni. Testo
   // scritto da zero (non ricopiato da alcuna fonte), per restare libera da vincoli di licenza
   // anche se un giorno l'app verrà ceduta ad altri.
@@ -3809,9 +3769,7 @@
   let viewingAgenda = false; // true quando il pannello principale mostra "Agenda"
   let viewingSearchApp = false; // true quando il pannello principale mostra "Cerca nell'app"
   // Sezione "Tricologo": mostra SOLO Magazzino, Catalogo prodotti e Cerca nell'app — niente
-  // schede clienti, niente Agenda, niente altre voci del menu del Tecnico (la titolare, 15/10, dopo
-  // vari tentativi: "facciamo che rimane solo: magazzino, catalogo prodotti, cerca nell'app.
-  // visibili e funzionanti"). Si entra/esce solo con i due pulsanti Tecnico/Tricologo in alto,
+  // schede clienti, niente Agenda, niente altre voci del menu del Tecnico. Si entra/esce solo con i due pulsanti Tecnico/Tricologo in alto,
   // che restano sempre visibili. Per non perdere la sezione (e l'eventuale cliente) che si
   // stava usando nel Tecnico passando per Tricologia, quello stato viene "congelato" in
   // tecnicoViewSnapshot quando si entra in Tricologo (che riparte sempre pulito, sul Magazzino),
@@ -3826,7 +3784,7 @@
   let viewingCatalogoHp = false; // true quando il pannello principale mostra "Catalogo prodotti"
   let viewingHome = false; // true quando il pannello principale mostra la schermata iniziale (nessuna scheda aperta ancora)
   let launcherAttivo = true; // schermata iniziale con i due tasti Tecnico/Tricologo: all\'apertura e col tasto Home
-  // Richiesta di la titolare (19/10): contenuti generici (non legati a un marchio), per rendere l'app
+  // contenuti generici (non legati a un marchio), per rendere l'app
   // adatta anche ad altri saloni — due voci di menu NUOVE e SEPARATE, che non toccano in
   // nessun modo "Consigli di utilizzo" o la scheda cliente esistenti.
   // "Consigli generici" e "Scheda generica" (build .96) fanno parte di un altro progetto: per ora
@@ -3925,12 +3883,6 @@
   function fmtDate(ts) {
     const d = new Date(ts);
     return d.toLocaleDateString(localeFmt(), { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
-  function fmtDateStr(s) { return escapeHtml(s); }
-  function fmtDateTime(ts) {
-    const d = new Date(ts);
-    return d.toLocaleDateString(localeFmt(), { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-      ' · ' + d.toLocaleTimeString(localeFmt(), { hour: '2-digit', minute: '2-digit' });
   }
   function fmtDateLong(ts) {
     const d = new Date(ts);
@@ -4343,13 +4295,12 @@
   }
   // Solo i prodotti con quantità e prezzo diversi da zero vanno esportati (PDF ed Excel): una
   // riga a zero non serve nell'inventario che si scarica. Senza "tipoKey" prende tutti i
-  // prodotti esportabili, materie prime e merci vendita insieme (richiesta di la titolare, 14/10: nel
-  // PDF non serve più tenerli distinti, basta un unico elenco per entrambi).
+  // prodotti esportabili, materie prime e merci vendita insieme.
   function magazzinoEsportabili(tipoKey) {
     return magazzinoCache.prodotti.filter(p => (!tipoKey || p.tipo === tipoKey) && (p.quantita || 0) > 0 && p.prezzo != null && p.prezzo > 0);
   }
 
-  // Richiesta di la titolare (15/10): una "Quantità minima" opzionale per prodotto — quando la
+  // una "Quantità minima" opzionale per prodotto — quando la
   // quantità reale scende sotto quella soglia, il prodotto si segnala da solo (riga evidenziata)
   // ed entra nella "Lista riordini" scaricabile qui sotto. Senza soglia impostata (o a 0) il
   // prodotto non si segnala mai: è facoltativo, prodotto per prodotto.
@@ -4611,7 +4562,7 @@
     await saveBlobAsFile(blob, 'magazzino-' + fmtDate(Date.now()).replace(/\//g, '-') + '.xlsx');
   }
 
-  // "Lista riordini" (richiesta di la titolare, 15/10): un PDF semplice con solo i prodotti sotto la
+  // "Lista riordini": un PDF semplice con solo i prodotti sotto la
   // loro "Quantità minima" (vedi magazzinoDaRiordinare), da portare o mandare al fornitore. Niente
   // dorso verticale per marca come nell'inventario completo: qui basta un elenco semplice, con la
   // marca come colonna, raggruppato comunque per marca/fornitore per comodità.
@@ -5245,13 +5196,6 @@
     if (viewer) viewer.hidden = true;
   }
 
-  // Scarica un file statico pubblicato insieme all'app.
-  async function downloadStaticFile(href, filename) {
-    const resp = await fetch(href);
-    if (!resp.ok) throw new Error('fetch failed: ' + resp.status);
-    const blob = await resp.blob();
-    await saveBlobAsFile(blob, filename);
-  }
 
   // Le immagini del disco di Newton sono incluse nell'app stessa (nessun file collegato da
   // scaricare): il PDF viene quindi costruito al volo, in una sola pagina, attorno all'immagine.
@@ -5665,8 +5609,7 @@
   // restituisce i risultati che la riguardano (titolo, eventuali righe trovate, e cosa fare se
   // ci si clicca sopra). "Cerca nell'app" li raccoglie tutti insieme, raggruppati per sezione:
   // una sezione nuova in futuro si aggiunge con una sola chiamata a registerSearchAppSource(),
-  // senza dover toccare il motore di ricerca stesso (la titolare, 15/10: "cerca nell'app deve cercare
-  // in qualsiasi sezione, anche quelle future").
+  // senza dover toccare il motore di ricerca stesso.
   const searchAppSources = [];
   function registerSearchAppSource(source) { searchAppSources.push(source); }
   function chiudiAltreSezioniEApri(flagDaAttivare) {
@@ -5942,8 +5885,7 @@
       </div>`;
   }
 
-  // Riga sempre interamente modificabile (come prima della versione "compatta" del 14/10, che
-  // non piaceva più a la titolare: "mi piaceva di più prima"). Un tap sulla casella (o sulla colonna
+  // Riga sempre interamente modificabile (niente versione "compatta"). Un tap sulla casella (o sulla colonna
   // della casella) seleziona il prodotto per le azioni in blocco; i campi restano sempre quelli
   // scrivibili, senza bisogno di una matitina per aprirli.
   function renderMagazzinoRowEditHtml(p) {
@@ -6040,7 +5982,7 @@
   // colonne restano allineate e si vede a colpo d'occhio quanto manca all'apertura/dopo la
   // chiusura, invece di far sparire del tutto i giorni o gli orari di chiusura. Le ore fuori
   // dall'orario di apertura vero (vedi oraNelTurno) restano colorate in modo diverso ("chiuso"),
-  // ma da richiesta di la titolare (15/10) si può prendere un appuntamento anche lì, se lo si desidera.
+  // ma si può prendere un appuntamento anche lì, se lo si desidera.
   const AGENDA_VISTA_INIZIO_MIN = 7 * 60;
   const AGENDA_VISTA_FINE_MIN = 20 * 60;
   // Su qualunque dispositivo, la vista dell'agenda si posiziona da sola sulle 8:30 (il vero inizio
@@ -6194,7 +6136,7 @@
   }
   // Messaggio di promemoria pronto per quell'appuntamento: cliente, data, ora, servizio e nome
   // del salone (se impostato in Impostazioni). operatrici premono "invia" su WhatsApp Web/app,
-  // già aperto col numero e il testo pronti (la titolare, 16/10: "iniziamo col tasto whatsapp").
+  // già aperto col numero e il testo pronti.
   function agendaLinkWhatsappPromemoria(a) {
     const numero = telefonoPerWhatsapp(agendaTelefonoPerPromemoria(a));
     if (!numero) return '';
@@ -6246,11 +6188,9 @@
   // dove la titolare è libera, resta uno slot normale prenotabile), bloccato da una ferie/permesso
   // dell'operatore (niente tasto "+", solo l'etichetta), oppure "chiuso" (fuori dall'orario di
   // apertura vero: visibile solo per allineare la griglia 7:00-20:00, con la stessa grafica
-  // discreta di sempre, ma con il tasto "+" anche lì, da richiesta di la titolare (15/10): "vorrei poter
-  // prendere appuntamento anche nei fuori orario se volessi quindi lascia la grafica com'è ma
-  // dammi la possibilità di aggiungere lo stesso un appuntamento").
+  // discreta di sempre, ma con il tasto "+" anche lì, per poter prendere
+  // appuntamento anche fuori orario se serve.
   //
-  // Richiesta di la titolare (14/10, con foto di esempio, affinata più volte lo stesso giorno):
   // l'etichetta scritta compare su :00 e :30 (mezz'ore); il bordo ha tre livelli — marcato (ma
   // sottile, non grosso) al cambio d'ORA piena, leggero di sempre alla mezz'ora (:30), e NESSUN
   // bordo sui quarti puri (:15/:45), che restano spazio vuoto ma comunque prenotabili col "+". E
@@ -6281,7 +6221,7 @@
         </div>`;
     }
     if (chiuso) {
-      // Richiesta di la titolare (15/10): "vorrei poter prendere appuntamento anche nei fuori orario se
+      // "vorrei poter prendere appuntamento anche nei fuori orario se
       // volessi quindi lascia la grafica com'è ma dammi la possibilità di aggiungere lo stesso un
       // appuntamento" — stessa grafica "chiuso" (righe grigie) di sempre, ma con lo stesso tasto
       // "+" degli slot normali, per poter prenotare comunque fuori dall'orario di apertura vero.
@@ -6400,7 +6340,7 @@
       if (nuovoGrid && scrollGridTop != null) nuovoGrid.scrollTop = scrollGridTop;
     });
   }
-  // ---- "Primi passi" (la titolare, 3/11): per un salone nuovo, una lista di cose da impostare,
+  // ---- "Primi passi": per un salone nuovo, una lista di cose da impostare,
   // ciascuna con un tasto che apre la schermata giusta; si spunta da sola e sparisce quando è
   // tutto fatto (o con "Nascondi"). ----
   const PRIMI_PASSI_T = {
@@ -6871,7 +6811,6 @@
     ['trattamenti', 'strumenti', 'sintomi', 'osservazioni', 'zone', 'sedute'].forEach(k => { if (!Array.isArray(t[k])) t[k] = []; });
     return t;
   }
-  function tricoElenco() { return clients.filter(c => c.tricho); }
   const TRI_OPZ = {
     gravidanza: [['no', I("No", "No")], ['gravidanza', I("Gravidanza", "Pregnancy")], ['allattamento', I("Allattamento", "Breastfeeding")]],
     fumo: [['no', I("No", "No")], ['si', I("Sì", "Yes")], ['ex', I("Ex", "Former")]],
@@ -7348,9 +7287,7 @@
     if (apptModalDefault) apptModalDefault.hidden = true;
 
     // Tricologo: nel menu deve restare visibile e funzionante SOLO Magazzino, Catalogo prodotti
-    // Catalogo e Cerca nell'app — niente schede clienti, niente altre voci del menu (la titolare, 15/10,
-    // dopo vari tentativi: "facciamo che rimane solo: magazzino, catalogo prodotti, cerca
-    // nell'app. visibili e funzionanti"). IMPORTANTE, trovato dopo che i tentativi precedenti
+    // Catalogo e Cerca nell'app — niente schede clienti, niente altre voci del menu. IMPORTANTE, trovato dopo che i tentativi precedenti
     // sembravano non avere ALCUN effetto: l'attributo "hidden" da solo non basta, perché queste
     // voci hanno già una regola CSS con un loro "display" (es. ".notes-banner { display: flex }"
     // e, sui dispositivi touch, ".menu-collapsible { display:flex !important }" per il menu
@@ -7358,11 +7295,11 @@
     // per "hidden", quindi l'elemento restava visibile comunque. Si forza invece lo stile inline
     // "display:none", che vince sempre (tranne sulle regole "!important", qui assenti per le
     // singole voci): una per una sulle voci non ammesse, più sull'intero elenco clienti.
-    // Richiesta di la titolare (15/10, poi 19/10): in Magazzino, in qualunque modalità (Tecnico o
+    // in Magazzino, in qualunque modalità (Tecnico o
     // Tricologo), deve vedersi SOLO il Magazzino — niente elenco clienti — che deve sfruttare
     // tutto lo spazio della pagina. Su PC/Mac si nasconde l'intera colonna sidebar-stack (elenco
     // + menu); su iPhone/tablet (puntatore impreciso) il menu in basso a icone deve restare
-    // visibile "come il resto" (la titolare, 19/10): lì si nasconde solo l'elenco clienti/ricerca,
+    // visibile "come il resto": lì si nasconde solo l'elenco clienti/ricerca,
     // non il menu fisso in basso, perché quest'ultimo vive nello stesso .sidebar-stack ma è
     // "fixed" fuori dal flusso — nasconderne il contenitore lo nasconderebbe anche lui.
     const isTouchDevice = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -7385,7 +7322,7 @@
     const topAgendaBtnEl = document.getElementById('topAgendaBtn');
     if (topAgendaBtnEl) topAgendaBtnEl.hidden = !viewingMagazzino;
 
-    // Tricologo apre subito sull'Agenda (la titolare, 15/10: "deve aprire subito su agenda"), non su
+    // Tricologo apre subito sull'Agenda, non su
     // Magazzino: stessa Agenda condivisa vista nella schermata iniziale del Tecnico, senza
     // elenco clienti né saluto del giorno (qui non servono).
     if (launcherMostrato()) { renderLauncher(panel); return; }
@@ -7469,7 +7406,7 @@
       // si perderebbe il punto in cui si stava scrivendo); va ricordato ORA, prima che il
       // ridisegno sottostante distrugga il campo e sposti da solo il focus altrove. Senza questo
       // controllo il focus tornava sulla ricerca ad ogni ridisegno (es. spuntando una casella),
-      // e su telefono/tablet questo faceva comparire la tastiera senza motivo (la titolare, 15/10).
+      // e su telefono/tablet questo faceva comparire la tastiera senza motivo.
       magazzinoSearchEraFocus = !!(document.activeElement && document.activeElement.id === 'magazzinoSearch');
       const mag = loadMagazzino();
       const term = magazzinoSearchTerm.trim().toLowerCase();
@@ -7503,7 +7440,7 @@
             <button class="ghost small" id="magazzinoStatsBtn">${t('mag.statistiche', I("Statistiche riordini", "Reorder statistics"))}</button>
             <button class="ghost small" id="magazzinoRiordiniBtn">${t('mag.listaRiordini', I("Scarica lista riordini", "Download reorder list"))}</button>
             <button class="ghost small" id="magazzinoFornitoriBtn">${t('mag.fornitori', I("Fornitori", "Suppliers"))}</button>
-            <!-- "Business Plan" nascosto per ora (la titolare, 15/10: "non mi serve"): il codice resta,
+            <!-- "Business Plan" nascosto per ora: il codice resta,
                  così si può rimettere facilmente il tasto se dovesse servire di nuovo. -->
           </div>
         </div>
@@ -7592,7 +7529,7 @@
       return;
     }
 
-    // Richiesta di la titolare (19/10): contenuti generici (non legato a un marchio), per rendere l'app adatta
+    // contenuti generici (non legato a un marchio), per rendere l'app adatta
     // anche ad altri saloni — due sezioni NUOVE e SEPARATE, puramente aggiuntive: "Consigli
     // di utilizzo" e la scheda cliente restano identiche a prima.
     if (viewingConsigliGenerici) {
@@ -8086,7 +8023,7 @@
     }
   }
 
-  // Stesso problema già risolto in Agenda (richiesta di la titolare, 14/10): toccare una casellina di
+  // Stesso problema già risolto in Agenda: toccare una casellina di
   // una voce a metà dell'elenco (una spunta, il "Tipo", "Delete"…) non deve far "tornare su" la
   // pagina — chi ridisegna il Magazzino per un'azione "sul posto" (non una vera ragione per
   // tornare in cima, come aprire o cercare) avvolge renderSheet() con questa funzione, che
@@ -8100,8 +8037,7 @@
 
   // Spuntare un prodotto nel Magazzino: di norma sceglie/togli solo quello (e diventa il nuovo
   // punto di partenza per un eventuale shift). Con shift premuto, invece, seleziona tutto
-  // l'intervallo tra l'ultimo prodotto spuntato senza shift e questo (richiesto da la titolare,
-  // 15/10, per non dover spuntare tante voci consecutive una per una): l'intervallo si
+  // l'intervallo tra l'ultimo prodotto spuntato senza shift e questo: l'intervallo si
   // SELEZIONA sempre, indipendentemente da come il browser ha appena mosso questa casella.
   function gestisciSpuntaMagazzino(id, nuovoChecked, shiftAttivo) {
     if (shiftAttivo && magazzinoUltimoCheckId && magazzinoUltimoCheckId !== id) {
@@ -8192,7 +8128,7 @@
       // Il focus torna alla ricerca solo se si stava scrivendo lì (per non perdere il punto in
       // cui si stava scrivendo): altrimenti, dopo QUALSIASI ridisegno (spuntare una casella,
       // aggiungere un prodotto…), il focus tornava comunque sulla ricerca, e su telefono/
-      // tablet questo faceva comparire la tastiera senza motivo (la titolare, 15/10). preventScroll
+      // tablet questo faceva comparire la tastiera senza motivo. preventScroll
       // evita anche che, se la ricerca è fuori schermo, il focus faccia "tornare su" la pagina.
       if (magazzinoSearchEraFocus) {
         searchInput.focus({ preventScroll: true });
@@ -8237,7 +8173,7 @@
     // La casella di spunta vera e propria, 17x17, è piccola per un dito: su tablet/cellulare si
     // tocca tutta la colonna (vedi "touch-action"/area più larga qui sotto), non solo il
     // quadratino, altrimenti serviva un secondo tocco più preciso per far scattare la spunta
-    // (segnalato da la titolare, 14/10: "devo fare doppio tap per selezionare").
+    //.
     document.querySelectorAll('.magazzino-row-check').forEach(chk => {
       // Il clic arriva prima del change: qui si registra solo se era con shift premuto (serve
       // al change, subito dopo, per decidere se selezionare un intervallo).
@@ -8304,8 +8240,7 @@
       });
     }
 
-    // Imposta la quantità minima in blocco su tutti i prodotti selezionati in un colpo (la titolare,
-    // 15/10: "se volessi impostare una soglia minima per tipo dieci prodotti in un solo colpo").
+    // Imposta la quantità minima in blocco su tutti i prodotti selezionati in un colpo.
     const bulkQtyMinBtn = document.getElementById('magazzinoBulkQtyMinBtn');
     const bulkQtyMinInput = document.getElementById('magazzinoBulkQtyMinInput');
     if (bulkQtyMinBtn && bulkQtyMinInput) {
@@ -8364,7 +8299,7 @@
         function onMove(ev2) {
           // Il massimo è salito di 56px in tutto (90px→64px della colonna Quantità, 70px→40px
           // della colonna del cestino): lo spazio recuperato lì va proprio nel margine massimo
-          // di allargamento di "Prodotto" (richiesto da la titolare, 15/10).
+          // di allargamento di "Prodotto".
           const nuova = Math.max(110, Math.min(616, startW + (ev2.clientX - startX)));
           magazzinoNomeColWidth = nuova;
           document.documentElement.style.setProperty('--mag-nome-w', nuova + 'px');
@@ -8775,7 +8710,7 @@
         if (!btn.classList.contains('armed')) {
           btn.classList.add('armed');
           if (a && a.serieId) {
-            // Fa parte di una serie ricorrente (la titolare, 16/10: "chiedo ogni volta"): due tasti
+            // Fa parte di una serie ricorrente: due tasti
             // invece di uno solo, per scegliere se togliere solo questo o anche i successivi.
             btn.textContent = t('agenda.soloQuesto', I("Solo questo", "Just this one"));
             let altroBtn = btn.parentElement.querySelector('.agenda-delete-serie-successivi');
@@ -8813,7 +8748,7 @@
       });
     });
 
-    // Ricorrenza (la titolare, 16/10: "ogni settimana"/"ogni due settimane"): scegliendo una ripetizione
+    // Ricorrenza: scegliendo una ripetizione
     // compaiono la data "fino al" e il tasto per crearla davvero; finché non si preme "Crea
     // serie" non cambia nulla (si può anche tornare su "Nessuna" senza conseguenze).
     document.querySelectorAll('.agenda-ricorrenza-sel').forEach(sel => {
@@ -9296,7 +9231,7 @@
   // nome prodotto, vanno fuse in una sola PRIMA di mostrare la revisione: altrimenti
   // l'abbinamento ai prodotti già a magazzino viene calcolato riga per riga, e due righe
   // "nuove" con lo stesso nome restavano due voci separate invece di una con la quantità
-  // sommata (segnalato da la titolare, 15/10: due fatture con lo stesso prodotto davano due voci).
+  // sommata.
   function fondiRigheImportDuplicate(righe) {
     const indicePerNome = new Map();
     const fuse = [];
@@ -10063,7 +9998,7 @@
   // caricano solo quando si apre la loro sezione (sono "pesanti" da tenere sempre in memoria),
   // quindi se non erano ancora mai state aperte in questa sessione la ricerca su di loro
   // risultava vuota: ora si caricano anche qui, così "Cerca nell'app" li trova sempre, anche
-  // senza averle visitate prima (la titolare, 15/10).
+  // senza averle visitate prima.
   document.getElementById('cercaAppEntry').addEventListener('click', () => {
     viewingSearchApp = true;
     viewingNotes = false;
@@ -10163,8 +10098,8 @@
   // Scorciatoia "Agenda": porta dritta all'Agenda da qualunque punto dell'app, indipendentemente
   // dal menu. L'Agenda vive dentro la schermata iniziale, quindi il risultato è lo stesso del
   // logo: si torna alla home e ci si posiziona subito sulle 8:30 dell'Agenda. Condivisa da due
-  // tasti: quello sotto l'elenco delle schede (la titolare, 14/10) e quello in alto (vedi topAgendaBtn)
-  // che resta l'unico modo di raggiungere l'Agenda quando si è in Magazzino (la titolare, 15/10), dato
+  // tasti: quello sotto l'elenco delle schede e quello in alto (vedi topAgendaBtn)
+  // che resta l'unico modo di raggiungere l'Agenda quando si è in Magazzino, dato
   // che lì il resto del menu/elenco — incluso il primo tasto — è nascosto apposta.
   function vaiAllAgenda() {
     if (activeId) { const prev = getClient(activeId); if (prev) { commitVersion(prev); save(clients); } }
@@ -10193,10 +10128,8 @@
   // Tecnico/Tricologo: due pulsanti sempre visibili in alto, per passare da una sezione
   // all'altra. Lo stato del Tecnico (sezione aperta + eventuale cliente) viene salvato in
   // tecnicoViewSnapshot entrando in Tricologo e ripristinato tornando su "Tecnico": si ritrova
-  // così esattamente dove si era (la titolare, 15/10, dopo vari tentativi: "facciamo che rimane
-  // solo: magazzino, catalogo prodotti, cerca nell'app. visibili e funzionanti") — mentre
-  // Tricologia riparte sempre pulita, aperta sull'Agenda (la titolare, 15/10: "deve aprire subito su
-  // agenda").
+  // così esattamente dove si era — mentre
+  // Tricologia riparte sempre pulita, aperta sull'Agenda.
   const modeTecnicoBtn = document.getElementById('modeTecnicoBtn');
   const modeTricologoBtn = document.getElementById('modeTricologoBtn');
   function aggiornaModeSwitch() {
@@ -11423,19 +11356,17 @@
     storageErrorCloseBtn.addEventListener('click', hideStorageError);
   }
 
-  // la titolare l'ha segnalato con un video (14/10): "appena seleziono qualcosa si sposta su". Causa
-  // trovata guardando il video fotogramma per fotogramma: il riquadro dell'agenda ha un suo scroll
+  // Problema noto: "appena seleziono qualcosa si sposta su". Causa: il riquadro dell'agenda ha un suo scroll
   // INTERNO (.agenda-grid, vedi sopra "renderSheetMantenendoScroll"), separato da quello
   // della pagina — era quello a "tornare su" ogni volta che l'HTML veniva ridisegnato (es.
   // eliminando un appuntamento), perché veniva ricreato da zero e ripartiva dall'alto. Risolto
   // preservando anche lo scroll di quel riquadro, non solo quello della pagina (vedi sopra).
 
-  // L'app si apre diretta, senza più la schermata "Chi sei?" (la titolare, 16/10: "togli il mio
-  // account all'inizio"): si entra già come la titolare, senza scegliere il nome né inserire un
+  // L'app si apre diretta, senza più la schermata "Chi sei?": si entra già come la titolare, senza scegliere il nome né inserire un
   // codice. L'infrastruttura (currentOperator, sopra) resta intatta, per
   // poterla ripristinare facilmente se un giorno servisse di nuovo (es. per un'altra operatrice).
-  // Al posto della vecchia schermata (che per un attimo lasciava intravedere il nome "la titolare"
-  // mentre l'app caricava, la titolare 19/10: "c'è sempre il mio nome all'avvio"), una schermata
+  // Al posto della vecchia schermata (che per un attimo lasciava intravedere un nome
+  // mentre l'app caricava), una schermata
   // d'apertura animata col nome del salone, che resta a schermo un tempo fisso (gira su se
   // stessa e sfuma verso l'alto) finché i dati non sono pronti, così non si vede mai nulla
   // "a scatti" sotto.
