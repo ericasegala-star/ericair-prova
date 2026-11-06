@@ -206,6 +206,10 @@
      clienti, niente menu) e sfruttare tutto lo spazio della pagina — l'elenco/menu (.sidebar-
      stack) si nasconde del tutto (vedi JS) e questa colonna da 260px va tolta, non solo svuotata. */
   .layout.layout-magazzino-full { grid-template-columns: 1fr; }
+  /* Schermata iniziale: lo stesso menu delle sezioni, ma solo con le voci in comune
+     (Magazzino, Anagrafica clienti, Cerca nell'app); niente elenco clienti. */
+  .layout.launcher-menu .sidebar-stack .sidebar { display: none; }
+  .layout.launcher-menu .menu-collapsible .notes-banner:not(:has(#magazzinoEntry, #anagraficaEntry, #cercaAppEntry)) { display: none; }
 
   .panel {
     background: var(--paper-raised); border: 1px solid var(--line);
@@ -2022,7 +2026,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-05.194-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-06.195-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -7289,14 +7293,6 @@
           <div id="agendaGridWrap">${renderAgendaGridHtml(agendaDataSelezionata)}</div>
           <span class="save-status" id="agendaSaveStatus"></span>
         </div>
-        <div class="launcher-shared">
-          <div class="launcher-shared-label">${I("In comune", "Shared")}</div>
-          <div class="launcher-shared-btns">
-            <button type="button" class="launcher-link" data-entry="magazzinoEntry">${I("Magazzino", "Inventory")}</button>
-            <button type="button" class="launcher-link" data-entry="anagraficaEntry">${I("Anagrafica clienti", "Client directory")}</button>
-            <button type="button" class="launcher-link" data-entry="cercaAppEntry">${I("Cerca nell'app", "Search the app")}</button>
-          </div>
-        </div>
         ${primiPassiHtml()}
       </div>`;
     document.getElementById('launchTecnico').addEventListener('click', () => modeTecnicoBtn.click());
@@ -7373,9 +7369,10 @@
 
     const layoutEl = document.querySelector('.layout');
     const sidebarStackEl = document.querySelector('.sidebar-stack');
-    if (layoutEl) layoutEl.classList.toggle('layout-magazzino-full', sezionePaginaIntera() || launcherMostrato());
+    if (layoutEl) layoutEl.classList.toggle('layout-magazzino-full', sezionePaginaIntera());
+    if (layoutEl) layoutEl.classList.toggle('launcher-menu', launcherMostrato());
     { const nb = document.getElementById('newBtn'); if (nb) nb.style.display = launcherMostrato() ? 'none' : ''; const ms = document.getElementById('modeSwitch'); if (ms) ms.style.display = launcherMostrato() ? 'none' : ''; aggiornaModeSwitch(); } // nella schermata iniziale non c'è "+ Nuova scheda" (Tecnico o Tricologo?)
-    if (sidebarStackEl) sidebarStackEl.style.display = ((sezionePaginaIntera() && !isTouchDevice) || launcherMostrato()) ? 'none' : '';
+    if (sidebarStackEl) sidebarStackEl.style.display = (sezionePaginaIntera() && !isTouchDevice) ? 'none' : '';
     const topAgendaBtnEl = document.getElementById('topAgendaBtn');
     if (topAgendaBtnEl) topAgendaBtnEl.hidden = !viewingMagazzino;
 
