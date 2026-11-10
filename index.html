@@ -285,6 +285,21 @@
   .lg-nota { font-size: 13px; color: var(--ink-soft); margin: 4px 0; }
   .lg-dil { margin: 4px 0 14px 12px; padding-left: 12px; border-left: 3px solid var(--line); }
   .lg-dil-riga { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: flex-end; margin-top: 10px; }
+  .lg-tab { margin: 10px 0 14px; }
+  .lg-t { width: 100%; border-collapse: collapse; margin: 6px 0 8px; }
+  .lg-t th { background: var(--cream, #f3e6da); font-size: 12px; text-align: left; padding: 6px 8px; border: 1px solid var(--line); }
+  .lg-t td { border: 1px solid var(--line); padding: 4px; }
+  .lg-t input[type=text], .lg-t select { width: 100%; min-width: 0; font-size: 16px; padding: 6px; }
+  .lg-t-c { text-align: center; } .lg-t-c input { width: 20px; height: 20px; }
+  .lg-t th:nth-child(1) { width: 78px; } .lg-t th:nth-child(3) { width: 78px; } .lg-t th:nth-child(4) { width: 22%; }
+  .lg-passo-solo { font-weight: 700; margin: 12px 0 8px; font-size: 16px; }
+  .lg-dil-sum { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); margin: 6px 0; }
+  .lg-dil-sum small { color: var(--ink-soft, #7b6d66); }
+  .lg-dil-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .lg-dil-tog { border: 0; background: none; color: var(--berry); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; padding: 4px 6px; }
+  .lg-dil { border-left: 0; border: 1.5px solid var(--berry); border-radius: 10px; padding: 8px 12px 10px; margin: 6px 0 12px; }
+  .lg-dil-riga { margin-top: 6px; gap: 6px 8px; }
+  .lg-vol-tit { font-size: 14px; margin-top: 8px; }
   .lg-vol-tit { font-weight: 700; margin-top: 12px; }
   .lg-f { display: flex; flex-direction: column; font-size: 12px; color: var(--ink-soft, #6b5e57); flex: 1 1 140px; }
   .lg-f input { font-size: 16px; margin-top: 2px; color: var(--ink, inherit); }
@@ -2070,7 +2085,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-10.219-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-10.223-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -3156,7 +3171,8 @@
     db.doc('app/disponibilitaPubblica').set({
       generatoAt: Date.now(),
       paese: paeseCorrente(),
-      turni: agendaTurniCache,
+      // solo le operatrici dell'elenco attuale (Impostazioni): i nomi vecchi non devono comparire online
+      turni: Object.fromEntries(elencoOperatrici().filter(op => agendaTurniCache[op]).map(op => [op, agendaTurniCache[op]])),
       servizi: serviziOnline,
       occupati: occupati,
       assenze: assenzePubbliche
@@ -10936,7 +10952,7 @@
   // Compilazione guidata dei tempi di posa: si spuntano ossigeni, volumi e schiaritura, poi si scrivono solo i minuti.
   // Da questi dati nasce il testo "titolo / etichetta | minuti" che la scheda gia' sa leggere.
   const OSS_BASE = ['1+1', '1+1,5', '1+2'], VOL_BASE = ['10', '20', '30', '40'], SCH_BASE = []; // i toni di schiaritura li scrive chi compila (cambiano da azienda ad azienda)
-  function cfgVuota() { return { oss: [], vol: [], sch: [], cop: [], ossX: [], volX: [], schX: [], min: {}, ossRighe: 1, dil: {} }; }
+  function cfgVuota() { return { oss: [], vol: [], sch: [], cop: [], ossX: [], volX: [], schX: [], min: {}, ossRighe: 1, dil: {}, tab: {} }; }
   function cfgNorm(c) {
     c = Object.assign(cfgVuota(), c || {});
     c.sch.forEach(v => { if (c.schX.indexOf(v) < 0) c.schX.push(v); });
@@ -10967,13 +10983,11 @@
     ossLista(c).filter(o => c.oss.indexOf(o) >= 0).forEach(o => {
       const d = (c.dil && c.dil[o]) || {};
       const rows = [];
-      VOL_BASE.filter(v => (d.vols || []).indexOf(v) >= 0).forEach(v => {
-        righeVol(d, v).forEach(r => {
-          let m = pulisciCampoTabella(r.min);
-          if (m && /^[\d\s.,\-–\/]+$/.test(m)) m += ' minuti';
-          const sc = pulisciCampoTabella(r.sch);
-          if (m) rows.push({ label: sc ? etichettaRigaTabella(v, sc, !!r.cop) : v + ' vol', hint: m });
-        });
+      righeTab(c, o).forEach(r => {
+        let m = pulisciCampoTabella(r.min);
+        if (m && /^[\d\s.,\-–\/]+$/.test(m)) m += ' minuti';
+        const sc = pulisciCampoTabella(r.sch);
+        if (m) rows.push({ label: sc ? etichettaRigaTabella(r.vol || '30', sc, !!r.cop) : (r.vol || '30') + ' vol', hint: m });
       });
       const titolo = 'Ossigeno ' + ossEt(o);
       const g = gruppi.find(x => x.title === titolo);
@@ -10991,13 +11005,36 @@
   function extraHtml(passo, segnaposto) {
     return `<div class="lg-extra"><input type="text" class="lg-extra-in lg-in" data-passo="${passo}" maxlength="20" placeholder="${segnaposto}"><button type="button" class="lg-extra-add" data-passo="${passo}">${I("Aggiungi", "Add")}</button></div>`;
   }
+  function righeTab(c, o) {
+    if (c.tab && c.tab[o]) return c.tab[o];
+    const d = c.dil && c.dil[o];
+    if (!d) return [];
+    const out = [];
+    VOL_BASE.filter(v => (d.vols || []).indexOf(v) >= 0).forEach(v => righeVol(d, v).forEach(r => out.push({ vol: v, sch: r.sch, cop: r.cop, min: r.min })));
+    return out;
+  }
+  function tabHtml(c, o) {
+    let rr = righeTab(c, o);
+    if (!rr.length) rr = [{ vol: '30' }];
+    const rows = rr.map(r => `<tr><td><select class="lg-t-vol lg-in">${VOL_BASE.map(v => `<option value="${v}"${(r.vol || '30') === v ? ' selected' : ''}>${v}</option>`).join('')}</select></td>
+      <td><input type="text" class="lg-t-sch lg-in" maxlength="40" value="${escapeHtml(r.sch || '')}"></td>
+      <td class="lg-t-c"><input type="checkbox" class="lg-t-cop"${r.cop ? ' checked' : ''}></td>
+      <td><input type="text" class="lg-t-min lg-in" maxlength="30" value="${escapeHtml(r.min || '')}"></td></tr>`).join('');
+    return `<div class="lg-tab" data-o="${escapeHtml(o)}"><div class="lg-min-tit">${I("Ossigeno ", "Developer ")}${escapeHtml(ossEt(o))}</div>
+      <table class="lg-t"><thead><tr><th>${I("Volume", "Volume")}</th><th>${I("Schiaritura", "Lift")}</th><th>${I("+ copertura", "+ coverage")}</th><th>${I("Minuti", "Minutes")}</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="lg-chips"><button type="button" class="lg-altro lg-t-piu">${I("Aggiungi riga", "Add row")}</button>${rr.length > 1 ? `<button type="button" class="lg-altro lg-t-meno">${I("Togli", "Remove")}</button>` : ''}</div></div>`;
+  }
   function righeVol(d, v) {
     const r = d && d.righe && d.righe[v];
     return Array.isArray(r) && r.length ? r : (r && !Array.isArray(r) ? [r] : [{}]);
   }
-  function dilHtml(c, o) {
+  function dilHtml(c, o, aperta) {
     const d = (c.dil && c.dil[o]) || {};
     const vols = d.vols || [];
+    if (!aperta) {
+      const vv = VOL_BASE.filter(v => vols.indexOf(v) >= 0);
+      return `<div class="lg-dil-sum" data-o="${escapeHtml(o)}"><span><b>${escapeHtml(ossEt(o))}</b> <small>· ${vv.length ? vv.join(I(' e ', ' & ')) + ' vol' : I('nessun volume', 'no volume')}</small></span><button type="button" class="lg-dil-tog" data-o="${escapeHtml(o)}">${I('Apri', 'Open')} ▾</button></div>`;
+    }
     const chips = VOL_BASE.map(v => `<label class="lg-chip"><input type="checkbox" class="lg-vsel" data-o="${escapeHtml(o)}" data-v="${v}"${vols.indexOf(v) >= 0 ? ' checked' : ''}> ${v} vol</label>`).join('');
     const righe = VOL_BASE.filter(v => vols.indexOf(v) >= 0).map(v => {
       const rr = righeVol(d, v);
@@ -11007,16 +11044,18 @@
         <label class="lg-f">${I("minuti", "minutes")}<input type="text" class="lg-d-min lg-in" maxlength="30" value="${escapeHtml(r.min || '')}"></label>
       </div>`).join('') + `</div>`;
     }).join('');
-    return `<div class="lg-dil" data-o="${escapeHtml(o)}"><div class="lg-min-tit">${I("Ossigeno ", "Developer ")}${escapeHtml(ossEt(o))}: ${I("quali volumi?", "which volumes?")}</div><div class="lg-chips">${chips}</div>${righe}</div>`;
+    return `<div class="lg-dil" data-o="${escapeHtml(o)}"><div class="lg-dil-head"><span class="lg-min-tit">${I("Ossigeno ", "Developer ")}${escapeHtml(ossEt(o))}: ${I("quali volumi?", "which volumes?")}</span><button type="button" class="lg-dil-tog" data-o="${escapeHtml(o)}">${I("Chiudi", "Close")} ▴</button></div><div class="lg-chips">${chips}</div>${righe}</div>`;
   }
   function ossPassoHtml(c, titolo) {
     const righe = [];
+    const ticc = ossLista(c).filter(v => c.oss.indexOf(v) >= 0);
+    const ap = c.aperta === undefined ? ticc[ticc.length - 1] : c.aperta;
     for (let r = 1; r <= c.ossRighe; r++) {
       const vals = ossLista(c).filter(v => r === 1 ? !/#\d+$/.test(v) : v.slice(-('#' + r).length) === '#' + r);
-      const bott = r === c.ossRighe ? `<button type="button" class="lg-altro">${I("Aggiungi", "Add")}</button>` + (r > 1 ? `<button type="button" class="lg-altro lg-togli">${I("Togli", "Remove")}</button>` : '') : '';
-      righe.push(`<div class="lg-chips lg-oss-riga" data-passo="oss">${vals.map(v => chipHtml('oss', v, c.oss.indexOf(v) >= 0, OSS_BASE.indexOf(ossEt(v)) < 0, ossEt(v))).join('')}${bott}</div>` + vals.filter(v => c.oss.indexOf(v) >= 0).map(v => dilHtml(c, v)).join(''));
+      const bott = '';
+      righe.push(`<div class="lg-chips lg-oss-riga" data-passo="oss">${vals.map(v => chipHtml('oss', v, c.oss.indexOf(v) >= 0, OSS_BASE.indexOf(ossEt(v)) < 0, ossEt(v))).join('')}${bott}</div>` + vals.filter(v => c.oss.indexOf(v) >= 0).map(v => tabHtml(c, v)).join(''));
     }
-    return `<div class="lg-passo"><b>1</b> ${titolo}</div>${righe.join('')}`;
+    return `<div class="lg-passo lg-passo-solo">${titolo}</div>${righe.join('')}`;
   }
   function passoHtml(n, titolo, passo, base, extra, sel, num, labelFn) {
     return `<div class="lg-passo"><b>${n}</b> ${titolo}</div>
@@ -11051,6 +11090,12 @@
       if (el.dataset.x) c[k + 'X'].push(v);
     });
     item.querySelectorAll('.lg-cop-sel').forEach(el => { if (el.checked && !el.disabled) c.cop.push(el.dataset.v); });
+    c.tab = Object.assign({}, item._tab || {});
+    item.querySelectorAll('.lg-tab').forEach(b => {
+      c.tab[b.dataset.o] = [...b.querySelectorAll('tbody tr')].map(tr => ({ vol: tr.querySelector('.lg-t-vol').value, sch: tr.querySelector('.lg-t-sch').value.trim(), cop: tr.querySelector('.lg-t-cop').checked, min: tr.querySelector('.lg-t-min').value.trim() }));
+    });
+    item._tab = c.tab;
+    c.aperta = item._aperta;
     c.dil = Object.assign({}, item._dil || {});
     item.querySelectorAll('.lg-dil').forEach(b => {
       const d = { vols: [], righe: {} };
@@ -11085,7 +11130,7 @@
       box.querySelectorAll('.linea-item').forEach((el, i) => {
         if (el.contains(document.activeElement)) return;
         const x = linee[i];
-        if (tabelleCombinate(leggiCfgDaDom(el), gruppiToText(gruppiDaDom(el))) !== x.tabelle) { el._min = null; el._dil = null; el.querySelector('.linea-tempi').innerHTML = tempiEditorHtml(x); el._min = cfgNorm(x.cfg).min; el._dil = cfgNorm(x.cfg).dil; }
+        if (tabelleCombinate(leggiCfgDaDom(el), gruppiToText(gruppiDaDom(el))) !== x.tabelle) { el._min = null; el._dil = null; el.querySelector('.linea-tempi').innerHTML = tempiEditorHtml(x); el._min = cfgNorm(x.cfg).min; el._dil = cfgNorm(x.cfg).dil; el._aperta = x.cfg ? x.cfg.aperta : undefined; el._tab = cfgNorm(x.cfg).tab; }
       });
       return;
     }
@@ -11098,7 +11143,7 @@
         </div>
         <div class="linea-tempi">${tempiEditorHtml(x)}</div>
       </div>`).join('');
-    box.querySelectorAll('.linea-item').forEach((el, i) => { el._min = Object.assign({}, cfgNorm(linee[i].cfg).min); el._dil = Object.assign({}, cfgNorm(linee[i].cfg).dil); });
+    box.querySelectorAll('.linea-item').forEach((el, i) => { el._min = Object.assign({}, cfgNorm(linee[i].cfg).min); el._dil = Object.assign({}, cfgNorm(linee[i].cfg).dil); el._aperta = linee[i].cfg ? linee[i].cfg.aperta : undefined; el._tab = Object.assign({}, cfgNorm(linee[i].cfg).tab); });
   }
   function leggiLineeDaImpostazioni() {
     const prec = configLinee();
@@ -11114,6 +11159,7 @@
     const item = e.target.closest('.linea-item');
     if (item && e.target.closest('.lg-sel, .lg-vsel')) {
       const c = leggiCfgDaDom(item);
+      if (e.target.classList.contains('lg-sel') && e.target.checked) { c.aperta = e.target.dataset.v; item._aperta = c.aperta; }
       item.querySelector('.linea-guida').innerHTML = guidaHtml({ cfg: c });
     }
     if (item) salvaLinee(leggiLineeDaImpostazioni(), false);
@@ -11123,21 +11169,20 @@
     const salvaTabelle = () => salvaLinee(leggiLineeDaImpostazioni(), false);
     const rigaAdd = e.target.closest('.lg-riga-add'), rigaDel = e.target.closest('.lg-riga-del');
     const grAdd = e.target.closest('.lg-gruppo-add'), grDel = e.target.closest('.lg-gruppo-del');
+    const tpm = e.target.closest('.lg-t-piu, .lg-t-meno');
+    if (item && tpm) {
+      const c = leggiCfgDaDom(item), o = tpm.closest('.lg-tab').dataset.o;
+      const arr = c.tab[o];
+      if (tpm.classList.contains('lg-t-piu')) arr.push({ vol: arr.length ? arr[arr.length - 1].vol : '30' }); else if (arr.length > 1) arr.pop();
+      item._tab = c.tab;
+      item.querySelector('.linea-guida').innerHTML = guidaHtml({ cfg: c });
+      salvaLinee(leggiLineeDaImpostazioni(), false);
+      return;
+    }
     const altra = e.target.closest('.lg-altra');
     if (item && altra) {
       const bx = item.querySelector('.lg-altra-box');
       bx.hidden = false; bx.querySelector('input').focus();
-      return;
-    }
-    const piuMeno = e.target.closest('.lg-riga-piu, .lg-riga-meno');
-    if (item && piuMeno) {
-      const bl = piuMeno.closest('.lg-vol-blocco'), dil = piuMeno.closest('.lg-dil');
-      const c = leggiCfgDaDom(item);
-      const arr = c.dil[dil.dataset.o].righe[bl.dataset.v];
-      if (piuMeno.classList.contains('lg-riga-piu')) arr.push({}); else if (arr.length > 1) arr.pop();
-      item._dil = c.dil;
-      item.querySelector('.linea-guida').innerHTML = guidaHtml({ cfg: c });
-      salvaLinee(leggiLineeDaImpostazioni(), false);
       return;
     }
     const altro = e.target.closest('.lg-altro');
@@ -11149,6 +11194,8 @@
         Object.keys(c.min).forEach(k => { if (k.split('|')[0].slice(-suf.length) === suf) delete c.min[k]; });
         item._min = c.min;
         Object.keys(c.dil).forEach(k => { if (k.slice(-suf.length) === suf) delete c.dil[k]; });
+        Object.keys(c.tab).forEach(k => { if (k.slice(-suf.length) === suf) delete c.tab[k]; });
+        item._tab = c.tab;
         item._dil = c.dil;
         c.ossRighe = Math.max(1, c.ossRighe - 1);
       } else c.ossRighe = Math.min(20, c.ossRighe + 1);
