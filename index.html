@@ -269,7 +269,23 @@
   }
   .name-field { flex: 1 1 240px; min-width: 0; }
   .lg-in { box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
-  .linea-gruppi:not(:empty) ~ .lg-esempio { display: none; }
+  .lg-passo { margin: 12px 0 6px; font-size: 14px; font-weight: 600; }
+  .lg-passo b { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; background: var(--berry); color: #fff; font-size: 12px; margin-right: 6px; }
+  .lg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lg-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); font-size: 15px; cursor: pointer; }
+  .lg-chip input { width: 20px; height: 20px; margin: 0; }
+  .lg-sch-riga { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .lg-cop { font-size: 14px; }
+  .lg-extra { display: flex; gap: 6px; margin-top: 8px; }
+  .lg-extra-in { flex: 1; min-width: 0; font-size: 16px; }
+  .lg-nota { font-size: 13px; color: var(--ink-soft); margin: 4px 0; }
+  .lg-min-oss { margin-bottom: 12px; }
+  .lg-min-tit { font-weight: 600; font-size: 14px; margin: 6px 0; color: var(--berry); }
+  .lg-min-riga { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 6px; }
+  .lg-min-riga span { flex: 1 1 200px; font-size: 14px; }
+  .lg-min-riga input { flex: 0 0 120px; font-size: 16px; }
+  .lg-manuale { margin-top: 14px; }
+  .lg-manuale summary { cursor: pointer; font-size: 13px; color: var(--ink-soft); }
   .name-field input {
     font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px;
     border: none; border-bottom: 2px solid var(--line); background: transparent;
@@ -2045,7 +2061,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-10.203-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-10.204-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -4216,7 +4232,7 @@
     const l = (typeof appSettingsCache !== 'undefined' && appSettingsCache && appSettingsCache.linee) || null;
     if (!l || !l.length) return LINEE_DEFAULT;
     // vecchie configurazioni senza id: si assegnano per posizione; la seconda linea con nome vuoto era "spenta"
-    return l.map((x, i) => ({ id: x.id || (i === 0 ? 'time' : i === 1 ? 'green' : 'l' + (i + 1)), nome: x.nome || '', tabelle: x.tabelle || '' }));
+    return l.map((x, i) => ({ id: x.id || (i === 0 ? 'time' : i === 1 ? 'green' : 'l' + (i + 1)), nome: x.nome || '', tabelle: x.tabelle || '', cfg: x.cfg || null, manuale: x.manuale != null ? x.manuale : (x.cfg ? '' : (x.tabelle || '')) }));
   }
   function nuovoIdLinea(esistenti) {
     const usati = new Set(esistenti.map(x => x.id));
@@ -10908,11 +10924,85 @@
     </div>`;
   }
   function gruppiEditorHtml(txt) { return tabelleToGruppi(txt).map(gruppoTabellaHtml).join(''); }
-  function esempioTabelle() {
-    return [
-      { title: I("Ossigeno 1+1", "Developer 1+1"), rows: [{ label: I("30 vol — 1 tono", "30 vol — 1 level"), hint: I("10 minuti", "10 minutes") }, { label: I("40 vol — 2 toni", "40 vol — 2 levels"), hint: I("15 minuti", "15 minutes") }] },
-      { title: I("Ossigeno 1+2", "Developer 1+2"), rows: [{ label: I("20 vol — 1 tono", "20 vol — 1 level"), hint: I("30 minuti", "30 minutes") }] }
-    ];
+  // Compilazione guidata dei tempi di posa: si spuntano ossigeni, volumi e schiaritura, poi si scrivono solo i minuti.
+  // Da questi dati nasce il testo "titolo / etichetta | minuti" che la scheda gia' sa leggere.
+  const OSS_BASE = ['1+1', '1+1,5', '1+2'], VOL_BASE = ['10', '20', '30', '40'], SCH_BASE = ['no schiaritura', '1 tono', '2 toni', '3 toni', '4 toni'];
+  function cfgVuota() { return { oss: [], vol: [], sch: [], cop: [], ossX: [], volX: [], schX: [], min: {} }; }
+  function cfgNorm(c) { return Object.assign(cfgVuota(), c || {}); }
+  function opzioniPasso(base, extra, num) {
+    const l = base.concat((extra || []).filter(v => base.indexOf(v) < 0));
+    return num ? l.sort((a, b) => parseFloat(a) - parseFloat(b)) : l;
+  }
+  function etichettaRigaTabella(v, sch, cop) {
+    return v + ' vol — ' + sch + (/^no /i.test(sch) ? '' : ' schiaritura') + (cop ? ' + copertura' : '');
+  }
+  function cfgToText(c) {
+    c = cfgNorm(c);
+    const vols = opzioniPasso(VOL_BASE, c.volX, true).filter(v => c.vol.indexOf(v) >= 0);
+    const schs = opzioniPasso(SCH_BASE, c.schX, false).filter(v => c.sch.indexOf(v) >= 0);
+    return opzioniPasso(OSS_BASE, c.ossX, false).filter(o => c.oss.indexOf(o) >= 0).map(o => {
+      const rows = [];
+      vols.forEach(v => schs.forEach(sc => {
+        const m = pulisciCampoTabella(c.min[o + '|' + v + '|' + sc]);
+        if (m) rows.push({ label: etichettaRigaTabella(v, sc, c.cop.indexOf(sc) >= 0), hint: m });
+      }));
+      return { title: 'Ossigeno ' + o, rows };
+    }).filter(g => g.rows.length).map(g => gruppiToText([g])).join('\n\n');
+  }
+  function tabelleCombinate(cfg, manuale) { return [cfgToText(cfg), manuale].filter(Boolean).join('\n\n'); }
+  function chipHtml(passo, v, on, extra, label) {
+    return `<label class="lg-chip"><input type="checkbox" class="lg-sel" data-passo="${passo}" data-v="${escapeHtml(v)}"${extra ? ' data-x="1"' : ''}${on ? ' checked' : ''}> ${escapeHtml(label || v)}</label>`;
+  }
+  function passoHtml(n, titolo, passo, base, extra, sel, num, labelFn) {
+    return `<div class="lg-passo"><b>${n}</b> ${titolo}</div>
+      <div class="lg-chips" data-passo="${passo}">${opzioniPasso(base, extra, num).map(v => chipHtml(passo, v, sel.indexOf(v) >= 0, base.indexOf(v) < 0, labelFn ? labelFn(v) : v)).join('')}</div>
+      <div class="lg-extra"><input type="text" class="lg-extra-in lg-in" data-passo="${passo}" maxlength="20" placeholder="${I("Un altro? Scrivilo qui", "Another one? Write it here")}"><button type="button" class="ghost small lg-extra-add" data-passo="${passo}">${I("Aggiungi", "Add")}</button></div>`;
+  }
+  function minutiHtml(c, min) {
+    c = cfgNorm(c);
+    const vols = opzioniPasso(VOL_BASE, c.volX, true).filter(v => c.vol.indexOf(v) >= 0);
+    const schs = opzioniPasso(SCH_BASE, c.schX, false).filter(v => c.sch.indexOf(v) >= 0);
+    const oss = opzioniPasso(OSS_BASE, c.ossX, false).filter(o => c.oss.indexOf(o) >= 0);
+    if (!oss.length || !vols.length || !schs.length) return `<p class="lg-nota">${I("Scegli almeno un ossigeno, un volume e una schiaritura: qui compare la tabella dei minuti.", "Pick at least one developer, one volume and one lift option: the minutes table appears here.")}</p>`;
+    return oss.map(o => `<div class="lg-min-oss"><div class="lg-min-tit">${I("Ossigeno ", "Developer ")}${escapeHtml(o)}</div>
+      ${vols.map(v => schs.map(sc => {
+        const k = o + '|' + v + '|' + sc;
+        return `<div class="lg-min-riga"><span>${escapeHtml(trDose(etichettaRigaTabella(v, sc, c.cop.indexOf(sc) >= 0)))}</span><input type="text" class="lg-min lg-in" data-key="${escapeHtml(k)}" maxlength="30" placeholder="${I("minuti", "minutes")}" value="${escapeHtml(min[k] || '')}"></div>`;
+      }).join('')).join('')}</div>`).join('');
+  }
+  function guidaHtml(x) {
+    const c = cfgNorm(x.cfg);
+    const schHtml = opzioniPasso(SCH_BASE, c.schX, false).map(v => `<div class="lg-sch-riga">${chipHtml('sch', v, c.sch.indexOf(v) >= 0, SCH_BASE.indexOf(v) < 0, trDose(v))}<label class="lg-chip lg-cop"><input type="checkbox" class="lg-cop-sel" data-v="${escapeHtml(v)}"${c.cop.indexOf(v) >= 0 ? ' checked' : ''}${c.sch.indexOf(v) >= 0 ? '' : ' disabled'}> ${I("+ copertura", "+ coverage")}</label></div>`).join('');
+    return `<div class="lg-guida">
+      ${passoHtml(1, I("Quali ossigeni usi?", "Which developers do you use?"), 'oss', OSS_BASE, c.ossX, c.oss, false)}
+      ${passoHtml(2, I("Quali volumi?", "Which volumes?"), 'vol', VOL_BASE, c.volX, c.vol, true, v => v + ' vol')}
+      <div class="lg-passo"><b>3</b> ${I("Quanta schiaritura?", "How much lift?")}</div>
+      <div class="lg-sch" data-passo="sch">${schHtml}</div>
+      <div class="lg-extra"><input type="text" class="lg-extra-in lg-in" data-passo="sch" maxlength="20" placeholder="${I("Un'altra? Per esempio: 1–2 toni", "Another one? For example: 1–2 levels")}"><button type="button" class="ghost small lg-extra-add" data-passo="sch">${I("Aggiungi", "Add")}</button></div>
+      <div class="lg-passo"><b>4</b> ${I("Scrivi i minuti, come da istruzioni dell'azienda", "Write the minutes, as the manufacturer instructs")}</div>
+      <div class="lg-minuti">${minutiHtml(c, c.min)}</div>
+    </div>`;
+  }
+  function leggiCfgDaDom(item) {
+    const c = cfgVuota();
+    item.querySelectorAll('.lg-sel').forEach(el => {
+      const k = el.dataset.passo, v = el.dataset.v;
+      if (el.checked) c[k].push(v);
+      if (el.dataset.x) c[k + 'X'].push(v);
+    });
+    item.querySelectorAll('.lg-cop-sel').forEach(el => { if (el.checked && !el.disabled) c.cop.push(el.dataset.v); });
+    c.min = Object.assign({}, item._min || {});
+    item.querySelectorAll('.lg-min').forEach(el => { c.min[el.dataset.key] = el.value.trim(); });
+    Object.keys(c.min).forEach(k => { if (!c.min[k]) delete c.min[k]; });
+    item._min = c.min;
+    return c;
+  }
+  function tempiEditorHtml(x) {
+    return `<div class="linea-guida">${guidaHtml(x)}</div>
+      <details class="lg-manuale"${x.manuale ? ' open' : ''}><summary>${I("Altre righe scritte a mano (facoltativo)", "Other rows written by hand (optional)")}</summary>
+        <div class="linea-gruppi">${gruppiEditorHtml(x.manuale)}</div>
+        <button type="button" class="ghost small lg-gruppo-add" style="margin-top:6px">${I("+ Aggiungi un ossigeno", "+ Add a developer")}</button>
+      </details>`;
   }
   var lineeRenderSig = '';
   function renderSettingsLinee(forza) {
@@ -10925,7 +11015,8 @@
       box.querySelectorAll('.linea-nome').forEach((el, i) => { if (document.activeElement !== el) el.value = linee[i].nome; });
       box.querySelectorAll('.linea-item').forEach((el, i) => {
         if (el.contains(document.activeElement)) return;
-        if (gruppiToText(gruppiDaDom(el)) !== gruppiToText(tabelleToGruppi(linee[i].tabelle))) el.querySelector('.linea-gruppi').innerHTML = gruppiEditorHtml(linee[i].tabelle);
+        const x = linee[i];
+        if (tabelleCombinate(leggiCfgDaDom(el), gruppiToText(gruppiDaDom(el))) !== x.tabelle) { el._min = null; el.querySelector('.linea-tempi').innerHTML = tempiEditorHtml(x); el._min = cfgNorm(x.cfg).min; }
       });
       return;
     }
@@ -10937,36 +11028,54 @@
           ${linee.length > 1 ? I("<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Togli linea\">Togli</button>", "<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Remove line\">Remove</button>") : ''}
         </div>
         <label style="display:block;margin:4px 0 4px;font-size:13px;font-weight:600">${I("Tempi di posa (facoltativi)", "Processing times (optional)")}</label>
-        <p style="margin:0 0 8px;font-size:13px;color:var(--ink-soft);line-height:1.4">${I("Per ogni ossigeno scrivi, riga per riga: a sinistra volumi e toni, a destra i minuti.", "For each developer, write one row at a time: volume and levels on the left, minutes on the right.")}</p>
-        <div class="linea-gruppi">${gruppiEditorHtml(x.tabelle)}</div>
-        <button type="button" class="ghost small lg-gruppo-add" style="margin-top:6px">${I("+ Aggiungi un ossigeno", "+ Add a developer")}</button>
-        <button type="button" class="ghost small lg-esempio" style="margin-top:6px">${I("Inserisci un esempio da modificare", "Insert an example to edit")}</button>
+        <div class="linea-tempi">${tempiEditorHtml(x)}</div>
       </div>`).join('');
+    box.querySelectorAll('.linea-item').forEach((el, i) => { el._min = Object.assign({}, cfgNorm(linee[i].cfg).min); });
   }
   function leggiLineeDaImpostazioni() {
     const prec = configLinee();
-    return [...document.querySelectorAll('#settingsLineeList .linea-item')].map((el, i) => ({
-      id: el.dataset.id, nome: el.querySelector('.linea-nome').value.trim(), tabelle: gruppiToText(gruppiDaDom(el))
-    }));
+    return [...document.querySelectorAll('#settingsLineeList .linea-item')].map((el, i) => {
+      const cfg = leggiCfgDaDom(el), manuale = gruppiToText(gruppiDaDom(el));
+      return { id: el.dataset.id, nome: el.querySelector('.linea-nome').value.trim(), cfg, manuale, tabelle: tabelleCombinate(cfg, manuale) };
+    });
   }
   function salvaLinee(lista, forza) {
     saveSettings({ linee: lista }).then(() => { if (forza) renderSettingsLinee(true); try { renderSheetMantenendoScroll(); } catch (e) {} });
   }
   document.getElementById('settingsLineeList').addEventListener('change', (e) => {
-    if (e.target.closest('.linea-item')) salvaLinee(leggiLineeDaImpostazioni(), false);
+    const item = e.target.closest('.linea-item');
+    if (item && e.target.closest('.lg-sel, .lg-cop-sel')) {
+      const c = leggiCfgDaDom(item);
+      item.querySelector('.linea-guida').innerHTML = guidaHtml({ cfg: c });
+    }
+    if (item) salvaLinee(leggiLineeDaImpostazioni(), false);
   });
   document.getElementById('settingsLineeList').addEventListener('click', (e) => {
     const item = e.target.closest('.linea-item');
     const salvaTabelle = () => salvaLinee(leggiLineeDaImpostazioni(), false);
     const rigaAdd = e.target.closest('.lg-riga-add'), rigaDel = e.target.closest('.lg-riga-del');
-    const grAdd = e.target.closest('.lg-gruppo-add'), grDel = e.target.closest('.lg-gruppo-del'), esempio = e.target.closest('.lg-esempio');
-    if (item && (rigaAdd || rigaDel || grAdd || grDel || esempio)) {
+    const grAdd = e.target.closest('.lg-gruppo-add'), grDel = e.target.closest('.lg-gruppo-del');
+    const exAdd = e.target.closest('.lg-extra-add');
+    if (item && exAdd) {
+      const inp = item.querySelector('.lg-extra-in[data-passo="' + exAdd.dataset.passo + '"]');
+      const v = pulisciCampoTabella(inp.value);
+      if (v) {
+        const lista = leggiLineeDaImpostazioni().find(x => x.id === item.dataset.id);
+        const c = cfgNorm(lista.cfg), k = exAdd.dataset.passo;
+        const base = k === 'oss' ? OSS_BASE : k === 'vol' ? VOL_BASE : SCH_BASE;
+        if (base.indexOf(v) < 0 && c[k + 'X'].indexOf(v) < 0) c[k + 'X'].push(v);
+        if (c[k].indexOf(v) < 0) c[k].push(v);
+        item.querySelector('.linea-guida').innerHTML = guidaHtml({ cfg: c });
+        salvaLinee(leggiLineeDaImpostazioni(), false);
+      }
+      return;
+    }
+    if (item && (rigaAdd || rigaDel || grAdd || grDel)) {
       const cont = item.querySelector('.linea-gruppi');
       if (rigaAdd) { const r = rigaAdd.closest('.lg-gruppo').querySelector('.lg-righe'); r.insertAdjacentHTML('beforeend', rigaTabellaHtml({ label: '', hint: '' })); r.lastElementChild.querySelector('input').focus(); }
       else if (rigaDel) { const g = rigaDel.closest('.lg-gruppo'); rigaDel.closest('.lg-riga').remove(); if (!g.querySelector('.lg-riga')) g.remove(); salvaTabelle(); }
       else if (grDel) { grDel.closest('.lg-gruppo').remove(); salvaTabelle(); }
       else if (grAdd) { cont.insertAdjacentHTML('beforeend', gruppoTabellaHtml({ title: '', rows: [] })); cont.lastElementChild.querySelector('input').focus(); }
-      else if (esempio) { cont.innerHTML = esempioTabelle().map(gruppoTabellaHtml).join(''); salvaTabelle(); }
       return;
     }
     const del = e.target.closest('.linea-del');
