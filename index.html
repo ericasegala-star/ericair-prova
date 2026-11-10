@@ -267,7 +267,7 @@
     display: flex; justify-content: space-between; align-items: flex-start;
     gap: 12px; margin-bottom: 22px; flex-wrap: wrap;
   }
-  .name-field { flex: 1; min-width: 0; }
+  .name-field { flex: 1 1 240px; min-width: 0; }
   .name-field input {
     font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px;
     border: none; border-bottom: 2px solid var(--line); background: transparent;
@@ -554,6 +554,7 @@
     border: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top;
   }
   .dose-table thead th { font-weight: 500; font-size: 12px; color: var(--ink-soft); }
+  .dose-detail { display: block; margin-top: 2px; font-weight: 400; font-size: 11px; line-height: 1.3; }
   .line-block.lc0 .dose-table thead th { background: var(--copper-soft); }
   .line-block.lc1 .dose-table thead th { background: var(--leaf-soft); }
   .line-block.lc2 .dose-table thead th { background: var(--glicine-soft); }
@@ -2043,7 +2044,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-06.201-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-10.202-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -4042,7 +4043,7 @@
         ${g.title ? `<div class="dose-title">${trDose(g.title)}</div>` : ''}
         <div class="dose-table-wrap">
           <table class="dose-table">
-            <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}</th>`).join('')}</tr></thead>
+            <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}${col.detail ? `<span class="dose-detail">${escapeHtml(trDose(col.detail))}</span>` : ''}</th>`).join('')}</tr></thead>
             <tbody><tr>
               ${g.cols.map(col => {
                 const key = g.key + '|' + col.key;
@@ -4206,7 +4207,7 @@
       const conTitolo = righe.length >= 2 && !righe[0].includes('|') && righe.slice(1).some(r => r.includes('|'));
       return { key: 'g' + gi, title: conTitolo ? righe[0] : '', cols: (conTitolo ? righe.slice(1) : righe).map((r, ci) => {
         const p = r.split('|');
-        return { key: 'c' + ci, label: p[0].trim(), hint: (p[1] || '').trim() };
+        return { key: 'c' + ci, label: p[0].trim(), hint: (p[1] || '').trim(), detail: p.slice(2).join(' | ').trim() };
       }) };
     }).filter(Boolean);
   }
@@ -5866,7 +5867,7 @@
         ${g.title ? `<div class="dose-title">${trDose(g.title)}</div>` : ''}
         <div class="dose-table-wrap">
           <table class="dose-table">
-            <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}</th>`).join('')}</tr></thead>
+            <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}${col.detail ? `<span class="dose-detail">${escapeHtml(trDose(col.detail))}</span>` : ''}</th>`).join('')}</tr></thead>
             <tbody><tr>
               ${g.cols.map(col => {
                 const key = g.key + '|' + col.key;
@@ -10885,7 +10886,7 @@
       <div class="linea-item" data-id="${x.id}" style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;background:var(--paper-raised)">
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
           <input type="text" class="linea-nome" maxlength="40" placeholder="${i === 0 ? I("Per esempio: nome della linea colore", "For example: name of the colour line") : I("Nome della linea ", "Name of the line ") + (i + 1)}" value="${escapeHtml(x.nome)}" style="flex:1;font-size:16px;font-weight:600">
-          ${linee.length > 1 ? I("<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Togli linea\">Togli</button>", "<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Remove line\">Remove</button>") : ''}${I("\n        </div>\n        <label style=\"display:block;margin:4px 0 6px;font-size:13px;font-weight:600\">Tempi di posa (facoltativi)</label>\n        <textarea class=\"linea-tabelle\" rows=\"9\" style=\"min-height:190px;width:100%;box-sizing:border-box;font:inherit;font-size:14px;line-height:1.45;padding:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)\" placeholder=\"Tabelle dei tempi di posa (facoltative). Esempio:&#10;Ossigeno 1+1&#10;30 vol — 1 tono | 10 minuti&#10;40 vol — 2 toni | 15 minuti&#10;&#10;Ossigeno 1+2&#10;20 vol | 30 minuti\">", "\n        </div>\n        <label style=\"display:block;margin:4px 0 6px;font-size:13px;font-weight:600\">Processing times (optional)</label>\n        <textarea class=\"linea-tabelle\" rows=\"9\" style=\"min-height:190px;width:100%;box-sizing:border-box;font:inherit;font-size:14px;line-height:1.45;padding:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)\" placeholder=\"Processing-time tables (optional). Example:&#10;Oxygen 1+1&#10;30 vol — 1 level | 10 minutes&#10;40 vol — 2 levels | 15 minutes&#10;&#10;Oxygen 1+2&#10;20 vol | 30 minutes\">")}${escapeHtml(x.tabelle)}</textarea>
+          ${linee.length > 1 ? I("<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Togli linea\">Togli</button>", "<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Remove line\">Remove</button>") : ''}${I("\n        </div>\n        <label style=\"display:block;margin:4px 0 6px;font-size:13px;font-weight:600\">Tempi di posa (facoltativi)</label>\n        <textarea class=\"linea-tabelle\" rows=\"9\" style=\"min-height:190px;width:100%;box-sizing:border-box;font:inherit;font-size:14px;line-height:1.45;padding:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)\" placeholder=\"Tabelle dei tempi di posa (facoltative). Esempio:&#10;Ossigeno 1+1&#10;30 vol — 1 tono | 10 minuti&#10;40 vol — 2 toni | 15 minuti&#10;&#10;Ossigeno 1+2 | 30 minuti | 20 vol, 1 tono di schiaritura più copertura\">", "\n        </div>\n        <label style=\"display:block;margin:4px 0 6px;font-size:13px;font-weight:600\">Processing times (optional)</label>\n        <textarea class=\"linea-tabelle\" rows=\"9\" style=\"min-height:190px;width:100%;box-sizing:border-box;font:inherit;font-size:14px;line-height:1.45;padding:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)\" placeholder=\"Processing-time tables (optional). Example:&#10;Oxygen 1+1&#10;30 vol — 1 level | 10 minutes&#10;40 vol — 2 levels | 15 minutes&#10;&#10;Oxygen 1+2 | 30 minutes | 20 vol, 1 level of lift plus coverage\">")}${escapeHtml(x.tabelle)}</textarea>
       </div>`).join('');
   }
   function leggiLineeDaImpostazioni() {
