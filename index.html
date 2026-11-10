@@ -268,6 +268,8 @@
     gap: 12px; margin-bottom: 22px; flex-wrap: wrap;
   }
   .name-field { flex: 1 1 240px; min-width: 0; }
+  .lg-in { box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+  .linea-gruppi:not(:empty) ~ .lg-esempio { display: none; }
   .name-field input {
     font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px;
     border: none; border-bottom: 2px solid var(--line); background: transparent;
@@ -554,7 +556,6 @@
     border: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top;
   }
   .dose-table thead th { font-weight: 500; font-size: 12px; color: var(--ink-soft); }
-  .dose-detail { display: block; margin-top: 2px; font-weight: 400; font-size: 11px; line-height: 1.3; }
   .line-block.lc0 .dose-table thead th { background: var(--copper-soft); }
   .line-block.lc1 .dose-table thead th { background: var(--leaf-soft); }
   .line-block.lc2 .dose-table thead th { background: var(--glicine-soft); }
@@ -1823,7 +1824,7 @@
       <p class="hint" data-it="Per ogni linea di colore che usi scrivi il nome e, se vuoi, le tabelle dei tempi di posa: compaiono nella scheda cliente con una casella da spuntare e il tempo da scrivere. Il nome si può cambiare anche direttamente nella scheda.">For each colour line you use, write its name and, if you like, the processing-time tables: they appear in the client card with a box to tick and the time to write. The name can also be changed directly in the card.</p>
       <div id="settingsLineeList"></div>
       <button type="button" class="ghost small" id="settingsLineaAdd" style="margin:6px 0 10px" data-it="+ Aggiungi linea colore">+ Add colour line</button>
-      <p class="hint" data-it="Come si scrive: una riga con il titolo della tabella, poi una riga per ogni colonna nel formato «etichetta | tempo suggerito». Una riga vuota separa una tabella dall'altra. Impostale all'inizio: se le cambi dopo, le caselle già spuntate nelle schede non seguono più le nuove colonne. Togliere una linea non cancella i dati già scritti nelle schede.">How to write them: one line with the table title, then one line for each column in the format «label | suggested time». An empty line separates one table from the next. Set them at the start: if you change them later, the boxes already filled in will not be updated.</p>
+      <p class="hint" data-it="Compila una linea alla volta. Impostale all'inizio: se le cambi dopo, le caselle già spuntate nelle schede non seguono più le nuove colonne. Togliere una linea non cancella i dati già scritti nelle schede.">Fill in one line at a time. Set them at the start: if you change them later, the boxes already filled in will not be updated. Removing a line does not delete the data already written in the cards.</p>
       <label for="settingsEtichettaFinale" style="margin-top:12px" data-it="Nome del campo finale di tonalizzazione">Name of the final toning field</label>
       <input type="text" id="settingsEtichettaFinale" placeholder="Final toning" maxlength="50" data-it-placeholder="Tonalizzazione finale">
     </div>
@@ -2044,7 +2045,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-10.202-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-10.203-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -4043,7 +4044,7 @@
         ${g.title ? `<div class="dose-title">${trDose(g.title)}</div>` : ''}
         <div class="dose-table-wrap">
           <table class="dose-table">
-            <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}${col.detail ? `<span class="dose-detail">${escapeHtml(trDose(col.detail))}</span>` : ''}</th>`).join('')}</tr></thead>
+            <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}</th>`).join('')}</tr></thead>
             <tbody><tr>
               ${g.cols.map(col => {
                 const key = g.key + '|' + col.key;
@@ -4207,7 +4208,7 @@
       const conTitolo = righe.length >= 2 && !righe[0].includes('|') && righe.slice(1).some(r => r.includes('|'));
       return { key: 'g' + gi, title: conTitolo ? righe[0] : '', cols: (conTitolo ? righe.slice(1) : righe).map((r, ci) => {
         const p = r.split('|');
-        return { key: 'c' + ci, label: p[0].trim(), hint: (p[1] || '').trim(), detail: p.slice(2).join(' | ').trim() };
+        return { key: 'c' + ci, label: p[0].trim(), hint: (p[1] || '').trim() };
       }) };
     }).filter(Boolean);
   }
@@ -5867,7 +5868,7 @@
         ${g.title ? `<div class="dose-title">${trDose(g.title)}</div>` : ''}
         <div class="dose-table-wrap">
           <table class="dose-table">
-            <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}${col.detail ? `<span class="dose-detail">${escapeHtml(trDose(col.detail))}</span>` : ''}</th>`).join('')}</tr></thead>
+            <thead><tr>${g.cols.map(col => `<th>${trDose(col.label)}</th>`).join('')}</tr></thead>
             <tbody><tr>
               ${g.cols.map(col => {
                 const key = g.key + '|' + col.key;
@@ -10869,6 +10870,50 @@
   document.getElementById('settingsTelefono').addEventListener('input', (e) => {
     saveSettings({ telefono: e.target.value.trim() || null });
   });
+  // Editor guidato dei tempi di posa: ogni ossigeno ha le sue righe "volumi e toni | minuti".
+  // Si salva sempre come testo (stesso formato di prima), quindi le schede gia' compilate restano valide.
+  function tabelleToGruppi(txt) {
+    return parseTabellePosa(txt).map(g => ({ title: g.title, rows: g.cols.map(c => ({ label: c.label, hint: c.hint })) }));
+  }
+  function pulisciCampoTabella(v) { return String(v || '').replace(/[|\n\r]+/g, ' ').trim(); }
+  function gruppiToText(gs) {
+    return gs.map(g => {
+      const rows = g.rows.map(r => [pulisciCampoTabella(r.label), pulisciCampoTabella(r.hint)]).filter(r => r[0] || r[1]);
+      if (!rows.length) return '';
+      const t = pulisciCampoTabella(g.title);
+      return (t ? t + '\n' : '') + rows.map(r => r[0] + ' | ' + r[1]).join('\n');
+    }).filter(Boolean).join('\n\n');
+  }
+  function gruppiDaDom(item) {
+    return [...item.querySelectorAll('.lg-gruppo')].map(g => ({
+      title: g.querySelector('.lg-titolo').value,
+      rows: [...g.querySelectorAll('.lg-riga')].map(r => ({ label: r.querySelector('.lg-label').value, hint: r.querySelector('.lg-tempo').value }))
+    }));
+  }
+  function rigaTabellaHtml(r) {
+    return `<div class="lg-riga" style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+      <input type="text" class="lg-label lg-in" maxlength="80" placeholder="${I("30 vol — 1 tono", "30 vol — 1 level")}" value="${escapeHtml(r.label)}" style="flex:3;min-width:0;font-size:16px">
+      <input type="text" class="lg-tempo lg-in" maxlength="30" placeholder="${I("10 minuti", "10 minutes")}" value="${escapeHtml(r.hint)}" style="flex:2;min-width:84px;font-size:16px">
+      <button type="button" class="ghost small lg-riga-del" aria-label="${I("Togli riga", "Remove row")}">✕</button>
+    </div>`;
+  }
+  function gruppoTabellaHtml(g) {
+    return `<div class="lg-gruppo" style="border-left:3px solid var(--line);padding:2px 0 2px 10px;margin-bottom:12px">
+      <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+        <input type="text" class="lg-titolo lg-in" maxlength="40" placeholder="${I("Ossigeno (per esempio 1+1)", "Developer (for example 1+1)")}" value="${escapeHtml(g.title)}" style="flex:1;min-width:0;font-size:16px;font-weight:600">
+        <button type="button" class="ghost small lg-gruppo-del" aria-label="${I("Togli ossigeno", "Remove developer")}">${I("Togli", "Remove")}</button>
+      </div>
+      <div class="lg-righe">${(g.rows.length ? g.rows : [{ label: '', hint: '' }]).map(rigaTabellaHtml).join('')}</div>
+      <button type="button" class="ghost small lg-riga-add">${I("+ Aggiungi riga", "+ Add row")}</button>
+    </div>`;
+  }
+  function gruppiEditorHtml(txt) { return tabelleToGruppi(txt).map(gruppoTabellaHtml).join(''); }
+  function esempioTabelle() {
+    return [
+      { title: I("Ossigeno 1+1", "Developer 1+1"), rows: [{ label: I("30 vol — 1 tono", "30 vol — 1 level"), hint: I("10 minuti", "10 minutes") }, { label: I("40 vol — 2 toni", "40 vol — 2 levels"), hint: I("15 minuti", "15 minutes") }] },
+      { title: I("Ossigeno 1+2", "Developer 1+2"), rows: [{ label: I("20 vol — 1 tono", "20 vol — 1 level"), hint: I("30 minuti", "30 minutes") }] }
+    ];
+  }
   var lineeRenderSig = '';
   function renderSettingsLinee(forza) {
     const box = document.getElementById('settingsLineeList');
@@ -10878,7 +10923,10 @@
     if (!forza && sig === lineeRenderSig && box.contains(document.activeElement)) return;
     if (!forza && sig === lineeRenderSig) {
       box.querySelectorAll('.linea-nome').forEach((el, i) => { if (document.activeElement !== el) el.value = linee[i].nome; });
-      box.querySelectorAll('.linea-tabelle').forEach((el, i) => { if (document.activeElement !== el) el.value = linee[i].tabelle; });
+      box.querySelectorAll('.linea-item').forEach((el, i) => {
+        if (el.contains(document.activeElement)) return;
+        if (gruppiToText(gruppiDaDom(el)) !== gruppiToText(tabelleToGruppi(linee[i].tabelle))) el.querySelector('.linea-gruppi').innerHTML = gruppiEditorHtml(linee[i].tabelle);
+      });
       return;
     }
     lineeRenderSig = sig;
@@ -10886,13 +10934,19 @@
       <div class="linea-item" data-id="${x.id}" style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;background:var(--paper-raised)">
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
           <input type="text" class="linea-nome" maxlength="40" placeholder="${i === 0 ? I("Per esempio: nome della linea colore", "For example: name of the colour line") : I("Nome della linea ", "Name of the line ") + (i + 1)}" value="${escapeHtml(x.nome)}" style="flex:1;font-size:16px;font-weight:600">
-          ${linee.length > 1 ? I("<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Togli linea\">Togli</button>", "<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Remove line\">Remove</button>") : ''}${I("\n        </div>\n        <label style=\"display:block;margin:4px 0 6px;font-size:13px;font-weight:600\">Tempi di posa (facoltativi)</label>\n        <textarea class=\"linea-tabelle\" rows=\"9\" style=\"min-height:190px;width:100%;box-sizing:border-box;font:inherit;font-size:14px;line-height:1.45;padding:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)\" placeholder=\"Tabelle dei tempi di posa (facoltative). Esempio:&#10;Ossigeno 1+1&#10;30 vol — 1 tono | 10 minuti&#10;40 vol — 2 toni | 15 minuti&#10;&#10;Ossigeno 1+2 | 30 minuti | 20 vol, 1 tono di schiaritura più copertura\">", "\n        </div>\n        <label style=\"display:block;margin:4px 0 6px;font-size:13px;font-weight:600\">Processing times (optional)</label>\n        <textarea class=\"linea-tabelle\" rows=\"9\" style=\"min-height:190px;width:100%;box-sizing:border-box;font:inherit;font-size:14px;line-height:1.45;padding:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper)\" placeholder=\"Processing-time tables (optional). Example:&#10;Oxygen 1+1&#10;30 vol — 1 level | 10 minutes&#10;40 vol — 2 levels | 15 minutes&#10;&#10;Oxygen 1+2 | 30 minutes | 20 vol, 1 level of lift plus coverage\">")}${escapeHtml(x.tabelle)}</textarea>
+          ${linee.length > 1 ? I("<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Togli linea\">Togli</button>", "<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Remove line\">Remove</button>") : ''}
+        </div>
+        <label style="display:block;margin:4px 0 4px;font-size:13px;font-weight:600">${I("Tempi di posa (facoltativi)", "Processing times (optional)")}</label>
+        <p style="margin:0 0 8px;font-size:13px;color:var(--ink-soft);line-height:1.4">${I("Per ogni ossigeno scrivi, riga per riga: a sinistra volumi e toni, a destra i minuti.", "For each developer, write one row at a time: volume and levels on the left, minutes on the right.")}</p>
+        <div class="linea-gruppi">${gruppiEditorHtml(x.tabelle)}</div>
+        <button type="button" class="ghost small lg-gruppo-add" style="margin-top:6px">${I("+ Aggiungi un ossigeno", "+ Add a developer")}</button>
+        <button type="button" class="ghost small lg-esempio" style="margin-top:6px">${I("Inserisci un esempio da modificare", "Insert an example to edit")}</button>
       </div>`).join('');
   }
   function leggiLineeDaImpostazioni() {
     const prec = configLinee();
     return [...document.querySelectorAll('#settingsLineeList .linea-item')].map((el, i) => ({
-      id: el.dataset.id, nome: el.querySelector('.linea-nome').value.trim(), tabelle: el.querySelector('.linea-tabelle').value
+      id: el.dataset.id, nome: el.querySelector('.linea-nome').value.trim(), tabelle: gruppiToText(gruppiDaDom(el))
     }));
   }
   function salvaLinee(lista, forza) {
@@ -10902,6 +10956,19 @@
     if (e.target.closest('.linea-item')) salvaLinee(leggiLineeDaImpostazioni(), false);
   });
   document.getElementById('settingsLineeList').addEventListener('click', (e) => {
+    const item = e.target.closest('.linea-item');
+    const salvaTabelle = () => salvaLinee(leggiLineeDaImpostazioni(), false);
+    const rigaAdd = e.target.closest('.lg-riga-add'), rigaDel = e.target.closest('.lg-riga-del');
+    const grAdd = e.target.closest('.lg-gruppo-add'), grDel = e.target.closest('.lg-gruppo-del'), esempio = e.target.closest('.lg-esempio');
+    if (item && (rigaAdd || rigaDel || grAdd || grDel || esempio)) {
+      const cont = item.querySelector('.linea-gruppi');
+      if (rigaAdd) { const r = rigaAdd.closest('.lg-gruppo').querySelector('.lg-righe'); r.insertAdjacentHTML('beforeend', rigaTabellaHtml({ label: '', hint: '' })); r.lastElementChild.querySelector('input').focus(); }
+      else if (rigaDel) { const g = rigaDel.closest('.lg-gruppo'); rigaDel.closest('.lg-riga').remove(); if (!g.querySelector('.lg-riga')) g.remove(); salvaTabelle(); }
+      else if (grDel) { grDel.closest('.lg-gruppo').remove(); salvaTabelle(); }
+      else if (grAdd) { cont.insertAdjacentHTML('beforeend', gruppoTabellaHtml({ title: '', rows: [] })); cont.lastElementChild.querySelector('input').focus(); }
+      else if (esempio) { cont.innerHTML = esempioTabelle().map(gruppoTabellaHtml).join(''); salvaTabelle(); }
+      return;
+    }
     const del = e.target.closest('.linea-del');
     if (!del) return;
     const id = del.closest('.linea-item').dataset.id;
