@@ -271,14 +271,23 @@
   .lg-in { box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
   .lg-passo { margin: 12px 0 6px; font-size: 14px; font-weight: 600; }
   .lg-passo b { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; background: var(--berry); color: #fff; font-size: 12px; margin-right: 6px; }
-  .lg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lg-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .lg-sch { margin-top: 10px; }
+  .lg-extra[hidden], .lg-extra-add[hidden] { display: none; }
+  .lg-altro { padding: 8px 18px; border: 1.5px solid var(--berry); border-radius: 999px; background: var(--paper); color: var(--berry); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
   .lg-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); font-size: 15px; cursor: pointer; }
   .lg-chip input { width: 20px; height: 20px; margin: 0; }
   .lg-sch-riga { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; align-items: center; }
   .lg-cop { font-size: 14px; }
   .lg-extra { display: flex; gap: 6px; margin-top: 8px; }
+  .lg-extra-add { display: inline-flex; align-items: center; padding: 8px 14px; border: 1px solid var(--berry); border-radius: 999px; background: var(--paper); color: var(--berry); font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .lg-extra-in { flex: 1; min-width: 0; font-size: 16px; }
   .lg-nota { font-size: 13px; color: var(--ink-soft); margin: 4px 0; }
+  .lg-dil { margin: 4px 0 14px 12px; padding-left: 12px; border-left: 3px solid var(--line); }
+  .lg-dil-riga { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: flex-end; margin-top: 10px; }
+  .lg-vol-tit { font-weight: 700; margin-top: 12px; }
+  .lg-f { display: flex; flex-direction: column; font-size: 12px; color: var(--ink-soft, #6b5e57); flex: 1 1 140px; }
+  .lg-f input { font-size: 16px; margin-top: 2px; color: var(--ink, inherit); }
   .lg-min-oss { margin-bottom: 12px; }
   .lg-min-tit { font-weight: 600; font-size: 14px; margin: 6px 0; color: var(--berry); }
   .lg-min-riga { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 6px; }
@@ -2061,7 +2070,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-10.205-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-10.219-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -10927,11 +10936,23 @@
   // Compilazione guidata dei tempi di posa: si spuntano ossigeni, volumi e schiaritura, poi si scrivono solo i minuti.
   // Da questi dati nasce il testo "titolo / etichetta | minuti" che la scheda gia' sa leggere.
   const OSS_BASE = ['1+1', '1+1,5', '1+2'], VOL_BASE = ['10', '20', '30', '40'], SCH_BASE = []; // i toni di schiaritura li scrive chi compila (cambiano da azienda ad azienda)
-  function cfgVuota() { return { oss: [], vol: [], sch: [], cop: [], ossX: [], volX: [], schX: [], min: {} }; }
+  function cfgVuota() { return { oss: [], vol: [], sch: [], cop: [], ossX: [], volX: [], schX: [], min: {}, ossRighe: 1, dil: {} }; }
   function cfgNorm(c) {
     c = Object.assign(cfgVuota(), c || {});
     c.sch.forEach(v => { if (c.schX.indexOf(v) < 0) c.schX.push(v); });
+    c.oss.forEach(v => { const m = /#(\d+)$/.exec(v); if (m) c.ossRighe = Math.max(c.ossRighe, +m[1]); });
+    c.ossRighe = Math.max(1, Math.min(20, +c.ossRighe || 1));
     return c;
+  }
+  // ogni riga di diluizioni e' una scelta a se': dalla seconda in poi il valore porta un "#2", "#3"... che non si vede
+  function ossEt(v) { return String(v).replace(/#\d+$/, ''); }
+  function ossLista(c) {
+    const l = [];
+    for (let r = 1; r <= c.ossRighe; r++) {
+      OSS_BASE.forEach(v => l.push(r === 1 ? v : v + '#' + r));
+      if (r === 1) (c.ossX || []).forEach(v => { if (OSS_BASE.indexOf(v) < 0) l.push(v); });
+    }
+    return l;
   }
   function opzioniPasso(base, extra, num) {
     const l = base.concat((extra || []).filter(v => base.indexOf(v) < 0));
@@ -10942,33 +10963,73 @@
   }
   function cfgToText(c) {
     c = cfgNorm(c);
-    const vols = opzioniPasso(VOL_BASE, c.volX, true).filter(v => c.vol.indexOf(v) >= 0);
-    const schs = opzioniPasso(SCH_BASE, c.schX, false).filter(v => c.sch.indexOf(v) >= 0);
-    return opzioniPasso(OSS_BASE, c.ossX, false).filter(o => c.oss.indexOf(o) >= 0).map(o => {
+    const gruppi = [];
+    ossLista(c).filter(o => c.oss.indexOf(o) >= 0).forEach(o => {
+      const d = (c.dil && c.dil[o]) || {};
       const rows = [];
-      vols.forEach(v => schs.forEach(sc => {
-        const m = pulisciCampoTabella(c.min[o + '|' + v + '|' + sc]);
-        if (m) rows.push({ label: etichettaRigaTabella(v, sc, c.cop.indexOf(sc) >= 0), hint: m });
-      }));
-      return { title: 'Ossigeno ' + o, rows };
-    }).filter(g => g.rows.length).map(g => gruppiToText([g])).join('\n\n');
+      VOL_BASE.filter(v => (d.vols || []).indexOf(v) >= 0).forEach(v => {
+        righeVol(d, v).forEach(r => {
+          let m = pulisciCampoTabella(r.min);
+          if (m && /^[\d\s.,\-–\/]+$/.test(m)) m += ' minuti';
+          const sc = pulisciCampoTabella(r.sch);
+          if (m) rows.push({ label: sc ? etichettaRigaTabella(v, sc, !!r.cop) : v + ' vol', hint: m });
+        });
+      });
+      const titolo = 'Ossigeno ' + ossEt(o);
+      const g = gruppi.find(x => x.title === titolo);
+      if (g) g.rows = g.rows.concat(rows); else gruppi.push({ title: titolo, rows });
+    });
+    return gruppi.filter(g => g.rows.length).map(g => gruppiToText([g])).join('\n\n');
   }
   function tabelleCombinate(cfg, manuale) { return [cfgToText(cfg), manuale].filter(Boolean).join('\n\n'); }
   function chipHtml(passo, v, on, extra, label) {
-    return `<label class="lg-chip"><input type="checkbox" class="lg-sel" data-passo="${passo}" data-v="${escapeHtml(v)}"${extra ? ' data-x="1"' : ''}${on ? ' checked' : ''}> ${escapeHtml(label || v)}</label>`;
+    const box = `<input type="checkbox" class="lg-sel" data-passo="${passo}" data-v="${escapeHtml(v)}"${extra ? ' data-x="1"' : ''}${on ? ' checked' : ''}>`;
+    return passo === 'oss'
+      ? `<label class="lg-chip lg-dopo">${escapeHtml(label || ossEt(v))} ${box}</label>`
+      : `<label class="lg-chip">${box} ${escapeHtml(label || v)}</label>`;
+  }
+  function extraHtml(passo, segnaposto) {
+    return `<div class="lg-extra"><input type="text" class="lg-extra-in lg-in" data-passo="${passo}" maxlength="20" placeholder="${segnaposto}"><button type="button" class="lg-extra-add" data-passo="${passo}">${I("Aggiungi", "Add")}</button></div>`;
+  }
+  function righeVol(d, v) {
+    const r = d && d.righe && d.righe[v];
+    return Array.isArray(r) && r.length ? r : (r && !Array.isArray(r) ? [r] : [{}]);
+  }
+  function dilHtml(c, o) {
+    const d = (c.dil && c.dil[o]) || {};
+    const vols = d.vols || [];
+    const chips = VOL_BASE.map(v => `<label class="lg-chip"><input type="checkbox" class="lg-vsel" data-o="${escapeHtml(o)}" data-v="${v}"${vols.indexOf(v) >= 0 ? ' checked' : ''}> ${v} vol</label>`).join('');
+    const righe = VOL_BASE.filter(v => vols.indexOf(v) >= 0).map(v => {
+      const rr = righeVol(d, v);
+      return `<div class="lg-vol-blocco" data-v="${v}"><div class="lg-vol-tit">${v} vol</div>` + rr.map((r, k) => `<div class="lg-dil-riga">
+        <label class="lg-f">${I("schiaritura", "lift")}<input type="text" class="lg-d-sch lg-in" maxlength="40" value="${escapeHtml(r.sch || '')}"></label>
+        <label class="lg-chip"><input type="checkbox" class="lg-d-cop"${r.cop ? ' checked' : ''}> ${I("+ copertura", "+ coverage")}</label>
+        <label class="lg-f">${I("minuti", "minutes")}<input type="text" class="lg-d-min lg-in" maxlength="30" value="${escapeHtml(r.min || '')}"></label>
+      </div>`).join('') + `</div>`;
+    }).join('');
+    return `<div class="lg-dil" data-o="${escapeHtml(o)}"><div class="lg-min-tit">${I("Ossigeno ", "Developer ")}${escapeHtml(ossEt(o))}: ${I("quali volumi?", "which volumes?")}</div><div class="lg-chips">${chips}</div>${righe}</div>`;
+  }
+  function ossPassoHtml(c, titolo) {
+    const righe = [];
+    for (let r = 1; r <= c.ossRighe; r++) {
+      const vals = ossLista(c).filter(v => r === 1 ? !/#\d+$/.test(v) : v.slice(-('#' + r).length) === '#' + r);
+      const bott = r === c.ossRighe ? `<button type="button" class="lg-altro">${I("Aggiungi", "Add")}</button>` + (r > 1 ? `<button type="button" class="lg-altro lg-togli">${I("Togli", "Remove")}</button>` : '') : '';
+      righe.push(`<div class="lg-chips lg-oss-riga" data-passo="oss">${vals.map(v => chipHtml('oss', v, c.oss.indexOf(v) >= 0, OSS_BASE.indexOf(ossEt(v)) < 0, ossEt(v))).join('')}${bott}</div>` + vals.filter(v => c.oss.indexOf(v) >= 0).map(v => dilHtml(c, v)).join(''));
+    }
+    return `<div class="lg-passo"><b>1</b> ${titolo}</div>${righe.join('')}`;
   }
   function passoHtml(n, titolo, passo, base, extra, sel, num, labelFn) {
     return `<div class="lg-passo"><b>${n}</b> ${titolo}</div>
-      <div class="lg-chips" data-passo="${passo}">${opzioniPasso(base, extra, num).map(v => chipHtml(passo, v, sel.indexOf(v) >= 0, base.indexOf(v) < 0, labelFn ? labelFn(v) : v)).join('')}</div>
-      <div class="lg-extra"><input type="text" class="lg-extra-in lg-in" data-passo="${passo}" maxlength="20" placeholder="${I("Un altro? Scrivilo qui", "Another one? Write it here")}"><button type="button" class="ghost small lg-extra-add" data-passo="${passo}">${I("Aggiungi", "Add")}</button></div>`;
+      ${extraHtml(passo, '')}
+      <div class="lg-chips" data-passo="${passo}">${opzioniPasso(base, extra, num).map(v => chipHtml(passo, v, sel.indexOf(v) >= 0, base.indexOf(v) < 0, labelFn ? labelFn(v) : v)).join('')}</div>`;
   }
   function minutiHtml(c, min) {
     c = cfgNorm(c);
     const vols = opzioniPasso(VOL_BASE, c.volX, true).filter(v => c.vol.indexOf(v) >= 0);
     const schs = opzioniPasso(SCH_BASE, c.schX, false).filter(v => c.sch.indexOf(v) >= 0);
-    const oss = opzioniPasso(OSS_BASE, c.ossX, false).filter(o => c.oss.indexOf(o) >= 0);
+    const oss = ossLista(c).filter(o => c.oss.indexOf(o) >= 0);
     if (!oss.length || !vols.length || !schs.length) return `<p class="lg-nota">${I("Scegli almeno un ossigeno, un volume e una schiaritura: qui compare la tabella dei minuti.", "Pick at least one developer, one volume and one lift option: the minutes table appears here.")}</p>`;
-    return oss.map(o => `<div class="lg-min-oss"><div class="lg-min-tit">${I("Ossigeno ", "Developer ")}${escapeHtml(o)}</div>
+    return oss.map(o => `<div class="lg-min-oss"><div class="lg-min-tit">${I("Ossigeno ", "Developer ")}${escapeHtml(ossEt(o))}</div>
       ${vols.map(v => schs.map(sc => {
         const k = o + '|' + v + '|' + sc;
         return `<div class="lg-min-riga"><span>${escapeHtml(trDose(etichettaRigaTabella(v, sc, c.cop.indexOf(sc) >= 0)))}</span><input type="text" class="lg-min lg-in" data-key="${escapeHtml(k)}" maxlength="30" placeholder="${I("minuti", "minutes")}" value="${escapeHtml(min[k] || '')}"></div>`;
@@ -10978,23 +11039,27 @@
     const c = cfgNorm(x.cfg);
     const schHtml = opzioniPasso(SCH_BASE, c.schX, false).map(v => `<div class="lg-sch-riga">${chipHtml('sch', v, c.sch.indexOf(v) >= 0, SCH_BASE.indexOf(v) < 0, trDose(v))}<label class="lg-chip lg-cop"><input type="checkbox" class="lg-cop-sel" data-v="${escapeHtml(v)}"${c.cop.indexOf(v) >= 0 ? ' checked' : ''}${c.sch.indexOf(v) >= 0 ? '' : ' disabled'}> ${I("+ copertura", "+ coverage")}</label></div>`).join('');
     return `<div class="lg-guida">
-      ${passoHtml(1, I("Quali ossigeni usi?", "Which developers do you use?"), 'oss', OSS_BASE, c.ossX, c.oss, false)}
-      ${passoHtml(2, I("Quali volumi?", "Which volumes?"), 'vol', VOL_BASE, c.volX, c.vol, true, v => v + ' vol')}
-      <div class="lg-passo"><b>3</b> ${I("Quanta schiaritura? (la scrivi tu)", "How much lift? (you write it)")}</div>
-      <div class="lg-sch" data-passo="sch">${schHtml || `<p class="lg-nota">${I("Scrivi qui sotto la schiaritura che usi, per esempio «1 tono», e premi Aggiungi.", "Write the lift you use below, for example “1 level”, and press Add.")}</p>`}</div>
-      <div class="lg-extra"><input type="text" class="lg-extra-in lg-in" data-passo="sch" maxlength="20" placeholder="${I("Per esempio: 1 tono", "For example: 1 level")}"><button type="button" class="ghost small lg-extra-add" data-passo="sch">${I("Aggiungi", "Add")}</button></div>
-      <div class="lg-passo"><b>4</b> ${I("Scrivi i minuti, come da istruzioni dell'azienda", "Write the minutes, as the manufacturer instructs")}</div>
-      <div class="lg-minuti">${minutiHtml(c, c.min)}</div>
+      ${ossPassoHtml(c, I("Quale diluizione usi?", "Which dilution do you use?"))}
     </div>`;
   }
   function leggiCfgDaDom(item) {
     const c = cfgVuota();
+    c.ossRighe = Math.max(1, item.querySelectorAll('.lg-oss-riga').length);
     item.querySelectorAll('.lg-sel').forEach(el => {
       const k = el.dataset.passo, v = el.dataset.v;
       if (el.checked) c[k].push(v);
       if (el.dataset.x) c[k + 'X'].push(v);
     });
     item.querySelectorAll('.lg-cop-sel').forEach(el => { if (el.checked && !el.disabled) c.cop.push(el.dataset.v); });
+    c.dil = Object.assign({}, item._dil || {});
+    item.querySelectorAll('.lg-dil').forEach(b => {
+      const d = { vols: [], righe: {} };
+      b.querySelectorAll('.lg-vsel').forEach(e => { if (e.checked) d.vols.push(e.dataset.v); });
+      b.querySelectorAll('.lg-vol-blocco').forEach(bl => { d.righe[bl.dataset.v] = [...bl.querySelectorAll('.lg-dil-riga')].map(r => ({ sch: r.querySelector('.lg-d-sch').value.trim(), cop: r.querySelector('.lg-d-cop').checked, min: r.querySelector('.lg-d-min').value.trim() })); });
+      Object.keys(d.righe).forEach(v => { if (d.vols.indexOf(v) < 0) delete d.righe[v]; });
+      c.dil[b.dataset.o] = d;
+    });
+    item._dil = c.dil;
     c.min = Object.assign({}, item._min || {});
     item.querySelectorAll('.lg-min').forEach(el => { c.min[el.dataset.key] = el.value.trim(); });
     Object.keys(c.min).forEach(k => { if (!c.min[k]) delete c.min[k]; });
@@ -11020,7 +11085,7 @@
       box.querySelectorAll('.linea-item').forEach((el, i) => {
         if (el.contains(document.activeElement)) return;
         const x = linee[i];
-        if (tabelleCombinate(leggiCfgDaDom(el), gruppiToText(gruppiDaDom(el))) !== x.tabelle) { el._min = null; el.querySelector('.linea-tempi').innerHTML = tempiEditorHtml(x); el._min = cfgNorm(x.cfg).min; }
+        if (tabelleCombinate(leggiCfgDaDom(el), gruppiToText(gruppiDaDom(el))) !== x.tabelle) { el._min = null; el._dil = null; el.querySelector('.linea-tempi').innerHTML = tempiEditorHtml(x); el._min = cfgNorm(x.cfg).min; el._dil = cfgNorm(x.cfg).dil; }
       });
       return;
     }
@@ -11031,10 +11096,9 @@
           <input type="text" class="linea-nome" maxlength="40" placeholder="${i === 0 ? I("Per esempio: nome della linea colore", "For example: name of the colour line") : I("Nome della linea ", "Name of the line ") + (i + 1)}" value="${escapeHtml(x.nome)}" style="flex:1;font-size:16px;font-weight:600">
           ${linee.length > 1 ? I("<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Togli linea\">Togli</button>", "<button type=\"button\" class=\"ghost small linea-del\" aria-label=\"Remove line\">Remove</button>") : ''}
         </div>
-        <label style="display:block;margin:4px 0 4px;font-size:13px;font-weight:600">${I("Tempi di posa (facoltativi)", "Processing times (optional)")}</label>
         <div class="linea-tempi">${tempiEditorHtml(x)}</div>
       </div>`).join('');
-    box.querySelectorAll('.linea-item').forEach((el, i) => { el._min = Object.assign({}, cfgNorm(linee[i].cfg).min); });
+    box.querySelectorAll('.linea-item').forEach((el, i) => { el._min = Object.assign({}, cfgNorm(linee[i].cfg).min); el._dil = Object.assign({}, cfgNorm(linee[i].cfg).dil); });
   }
   function leggiLineeDaImpostazioni() {
     const prec = configLinee();
@@ -11048,7 +11112,7 @@
   }
   document.getElementById('settingsLineeList').addEventListener('change', (e) => {
     const item = e.target.closest('.linea-item');
-    if (item && e.target.closest('.lg-sel, .lg-cop-sel')) {
+    if (item && e.target.closest('.lg-sel, .lg-vsel')) {
       const c = leggiCfgDaDom(item);
       item.querySelector('.linea-guida').innerHTML = guidaHtml({ cfg: c });
     }
@@ -11059,6 +11123,39 @@
     const salvaTabelle = () => salvaLinee(leggiLineeDaImpostazioni(), false);
     const rigaAdd = e.target.closest('.lg-riga-add'), rigaDel = e.target.closest('.lg-riga-del');
     const grAdd = e.target.closest('.lg-gruppo-add'), grDel = e.target.closest('.lg-gruppo-del');
+    const altra = e.target.closest('.lg-altra');
+    if (item && altra) {
+      const bx = item.querySelector('.lg-altra-box');
+      bx.hidden = false; bx.querySelector('input').focus();
+      return;
+    }
+    const piuMeno = e.target.closest('.lg-riga-piu, .lg-riga-meno');
+    if (item && piuMeno) {
+      const bl = piuMeno.closest('.lg-vol-blocco'), dil = piuMeno.closest('.lg-dil');
+      const c = leggiCfgDaDom(item);
+      const arr = c.dil[dil.dataset.o].righe[bl.dataset.v];
+      if (piuMeno.classList.contains('lg-riga-piu')) arr.push({}); else if (arr.length > 1) arr.pop();
+      item._dil = c.dil;
+      item.querySelector('.linea-guida').innerHTML = guidaHtml({ cfg: c });
+      salvaLinee(leggiLineeDaImpostazioni(), false);
+      return;
+    }
+    const altro = e.target.closest('.lg-altro');
+    if (item && altro && !altro.classList.contains('lg-altra')) {
+      const c = leggiCfgDaDom(item);
+      if (altro.classList.contains('lg-togli')) {
+        const suf = '#' + c.ossRighe;
+        c.oss = c.oss.filter(v => v.slice(-suf.length) !== suf);
+        Object.keys(c.min).forEach(k => { if (k.split('|')[0].slice(-suf.length) === suf) delete c.min[k]; });
+        item._min = c.min;
+        Object.keys(c.dil).forEach(k => { if (k.slice(-suf.length) === suf) delete c.dil[k]; });
+        item._dil = c.dil;
+        c.ossRighe = Math.max(1, c.ossRighe - 1);
+      } else c.ossRighe = Math.min(20, c.ossRighe + 1);
+      item.querySelector('.linea-guida').innerHTML = guidaHtml({ cfg: c });
+      salvaLinee(leggiLineeDaImpostazioni(), false);
+      return;
+    }
     const exAdd = e.target.closest('.lg-extra-add');
     if (item && exAdd) {
       const inp = item.querySelector('.lg-extra-in[data-passo="' + exAdd.dataset.passo + '"]');
@@ -11087,6 +11184,25 @@
     const id = del.closest('.linea-item').dataset.id;
     const nuova = leggiLineeDaImpostazioni().filter(x => x.id !== id);
     if (nuova.length) salvaLinee(nuova, true);
+  });
+  function aggiungiAltraDiluizione(inp) {
+    const item = inp.closest('.linea-item');
+    const v = pulisciCampoTabella(inp.value);
+    inp.value = '';
+    if (!item || !v) return;
+    const c = leggiCfgDaDom(item);
+    if (OSS_BASE.indexOf(v) < 0 && c.ossX.indexOf(v) < 0) c.ossX.push(v);
+    if (c.oss.indexOf(v) < 0) c.oss.push(v);
+    item.querySelector('.linea-guida').innerHTML = guidaHtml({ cfg: c });
+    salvaLinee(leggiLineeDaImpostazioni(), false);
+  }
+  document.getElementById('settingsLineeList').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.classList.contains('lg-altra-in')) { e.preventDefault(); aggiungiAltraDiluizione(e.target); return; }
+    if (e.key === 'Enter' && e.target.classList.contains('lg-extra-in')) { e.preventDefault(); e.target.closest('.lg-extra').querySelector('.lg-extra-add').click(); }
+  });
+  document.getElementById('settingsLineeList').addEventListener('focusout', (e) => {
+    const inp = e.target;
+    if (inp.classList && inp.classList.contains('lg-altra-in')) aggiungiAltraDiluizione(inp);
   });
   document.getElementById('settingsLineaAdd').addEventListener('click', () => {
     const lista = leggiLineeDaImpostazioni();
