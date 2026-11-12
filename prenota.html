@@ -80,6 +80,9 @@
   .recensione a:hover { text-decoration: underline; }
   .contatti a:hover { transform: translateY(-2px); opacity: .9; }
   .contatti svg { width: 22px; height: 22px; fill: currentColor; }
+  .calwrap { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .conferma .calwrap { justify-content: center; }
+  .cal-btn { font-family: inherit; font-size: 14px; padding: 9px 16px; background: var(--paper-raised); border: 1px solid var(--berry); color: var(--berry); border-radius: var(--radius); cursor: pointer; text-decoration: none; display: inline-block; }
   button.annulla { font-family: inherit; font-size: 13px; padding: 9px 12px; background: none; border: none; color: #A5483F; cursor: pointer; text-decoration: underline; }
   [hidden] { display: none !important; }
 </style>
@@ -96,6 +99,8 @@
   <div id="tuaBox" class="tua" hidden>
     <h2>La tua prenotazione</h2>
     <p id="tuaTesto"></p>
+    <div class="calwrap" id="calTua"></div>
+    <p class="hint" id="calTuaH"></p>
     <button type="button" class="secondary" id="btnModifica">Sposta o modifica</button>
     <button type="button" class="annulla" id="btnAnnulla">Annulla appuntamento</button>
     <p class="hint" id="annullaConferma" hidden>Vuoi davvero annullare? <button type="button" class="annulla" id="btnAnnullaSi">Sì, annulla</button> <button type="button" class="annulla" id="btnAnnullaNo" style="color: var(--ink-soft);">No, lo tengo</button></p>
@@ -153,9 +158,12 @@
   <div id="confermaBox" class="conferma" hidden>
     <h2>Richiesta inviata!</h2>
     <p id="confermaTesto"></p>
+    <div class="calwrap" id="calConferma"></div>
+    <p class="hint" id="calConfermaH"></p>
     <p class="hint">Se per qualche motivo quell'orario non fosse più disponibile, ti contattiamo noi al numero che hai scritto.</p>
     <a id="linkModifica" class="link-modifica" href="#"></a>
     <p class="hint">Hai bisogno di cambiare giorno, orario o servizio? Salva questo link tra i preferiti: con quello puoi modificare la prenotazione quando vuoi.</p>
+    <button type="button" class="secondary" id="btnAltra" style="margin-top: 14px;">Prenota un altro appuntamento</button>
   </div>
 
   <div class="contatti" id="contatti" hidden></div>
@@ -184,6 +192,7 @@
     'Grazie di avercelo detto. Quando vuoi puoi prenotarne un altro.': 'Thanks for letting us know. You can book another one whenever you like.',
     'Lascia una recensione su Google': 'Leave us a review on Google',
     'Prenota di nuovo': 'Book again',
+    'Prenota un altro appuntamento': 'Book another appointment',
     'Stai modificando la tua prenotazione: cambia servizio, giorno o orario e conferma.': 'You are changing your booking: change the service, day or time and confirm.',
     "Lascia com'è": 'Keep it as it is',
     'Servizio': 'Service', 'Con chi': 'With whom', 'Quando': 'When', 'Orario': 'Time', 'I tuoi dati': 'Your details',
@@ -310,11 +319,60 @@
     return new Date(mia.d + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
       L(' alle ', ' at ') + mia.o + L(' da ', ' with ') + (NOME_OPERATORE[mia.op] || mia.op) + (mia.sn ? L(' per ', ' for ') + mia.sn : '') + '.';
   }
+  // ---- "Aggiungi al calendario": tasto Google Calendar e file .ics (iPhone, Outlook...).
+  // Nessun dato lascia la pagina finché la cliente non tocca il tasto.
+  function calSalone() { return (NOME_SALONE || L('Appuntamento dal parrucchiere', 'Hair appointment')); }
+  function calDate(m) {
+    const ini = new Date(m.d + 'T' + m.o + ':00'); const fine = new Date(ini.getTime() + (Number(m.dm) || 60) * 60000);
+    const p2 = n => String(n).padStart(2, '0');
+    const f = d => d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + 'T' + p2(d.getHours()) + p2(d.getMinutes()) + '00';
+    return { ini: f(ini), fine: f(fine) };
+  }
+  function calTesti(m) {
+    const titolo = (m.sn ? m.sn + ' — ' : '') + calSalone();
+    const dettagli = L('Con ', 'With ', 'Майстер: ') + (NOME_OPERATORE[m.op] || m.op) + '.\n' +
+      L('Richiesta inviata online: se l\'orario non fosse più disponibile ti contattiamo noi. Per cambiare o annullare: ',
+        'Request sent online: if the time is no longer available we will contact you. To change or cancel: ',
+        'Запит надіслано онлайн: якщо час стане недоступним, ми зв\'яжемося з вами. Щоб змінити чи скасувати: ') + linkPersonale();
+    return { titolo: titolo, dettagli: dettagli };
+  }
+  function calGoogleUrl(m) {
+    const d = calDate(m), t = calTesti(m);
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(t.titolo) + '&dates=' + d.ini + '/' + d.fine + '&details=' + encodeURIComponent(t.dettagli);
+  }
+  function calIcs(m) {
+    const d = calDate(m), t = calTesti(m);
+    const esc = s => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    const piega = r => { let o = ''; while (r.length > 73) { o += r.slice(0, 73) + '\r\n '; r = r.slice(73); } return o + r; };
+    const adesso = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+    return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Ericair//Prenotazione//IT', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT',
+      'UID:' + m.id + '@prenotazione', 'DTSTAMP:' + adesso, 'DTSTART:' + d.ini, 'DTEND:' + d.fine,
+      'SUMMARY:' + esc(t.titolo), 'DESCRIPTION:' + esc(t.dettagli), 'STATUS:TENTATIVE', 'END:VEVENT', 'END:VCALENDAR'].map(piega).join('\r\n');
+  }
+  function riempiCal(id) {
+    const el = document.getElementById(id); if (!el || !mia) return;
+    el.innerHTML = '';
+    const a = document.createElement('a'); a.className = 'cal-btn'; a.href = calGoogleUrl(mia); a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = L('Aggiungi a Google Calendar', 'Add to Google Calendar', 'Додати до Google Календаря');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'cal-btn';
+    b.textContent = L('Altri calendari (iPhone, Outlook)', 'Other calendars (iPhone, Outlook)', 'Інші календарі (iPhone, Outlook)');
+    b.addEventListener('click', () => {
+      const u = URL.createObjectURL(new Blob([calIcs(mia)], { type: 'text/calendar;charset=utf-8' }));
+      const x = document.createElement('a'); x.href = u; x.download = 'appuntamento.ics'; document.body.appendChild(x); x.click(); x.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 4000);
+    });
+    el.append(a, b);
+    const h = document.getElementById(id + 'H');
+    if (h) h.textContent = L('Nel calendario l\'appuntamento resta com\'è: se poi lo cambi o lo annulli da qui, aggiorna anche lì.',
+      'The calendar entry will stay as it is: if you later change or cancel here, update it there too.',
+      'Запис у календарі не оновлюється сам: якщо ви зміните чи скасуєте тут, оновіть і там.');
+  }
   function mostraTua() {
     const box = document.getElementById('tuaBox');
     if (!mia || miaNelPassato()) { box.hidden = true; return; }
     document.getElementById('tuaTesto').textContent = descrizioneMia();
     document.getElementById('btnAnnulla').hidden = false; document.getElementById('annullaConferma').hidden = true;
+    riempiCal('calTua');
     box.hidden = false;
   }
   let disp = null; // dati pubblici letti da app/disponibilitaPubblica
@@ -548,6 +606,7 @@
         document.getElementById('confermaTesto').textContent =
           L('Ti aspettiamo ', 'We look forward to seeing you on ') + new Date(data + 'T00:00:00').toLocaleDateString(LOCALE_DATE(), { weekday: 'long', day: 'numeric', month: 'long' }) +
           (L(' alle ', ' at ') + slot + L(' da ', ' with ') + NOME_OPERATORE[operatore] + L(' per ', ' for ') + servizio.nome + '.');
+        riempiCal('calConferma');
       }).catch((err) => {
         if (err && err.message === 'slot-appena-preso') return;
         btn.disabled = false; btn.textContent = testoBtn;
@@ -590,7 +649,10 @@
       try { m = JSON.parse(localStorage.getItem(CHIAVE_MIA) || 'null'); } catch (e) { m = null; }
     }
     if (!miaValida(m)) return;
-    mia = m; salvaMia(); mostraTua();
+    mia = m; salvaMia();
+    let nuova = false;
+    try { nuova = sessionStorage.getItem('prenotaNuova') === '1'; sessionStorage.removeItem('prenotaNuova'); } catch (e) {}
+    if (!nuova) mostraTua();
   }
   function entraInModifica() {
     if (!mia) return;
@@ -643,6 +705,11 @@
     });
   });
   document.getElementById('btnRiprenota').addEventListener('click', () => location.reload());
+  // Dopo la conferma: nuova prenotazione (la pagina si riapre pulita, senza la scheda della prenotazione precedente).
+  document.getElementById('btnAltra').addEventListener('click', () => {
+    try { sessionStorage.setItem('prenotaNuova', '1'); } catch (e) {}
+    location.reload();
+  });
   // Il link personale, se premuto mentre la pagina è già aperta (es. subito dopo aver prenotato),
   // cambia solo la parte dopo il "#" e il browser non ricarica nulla: lo forzo io.
   document.getElementById('linkModifica').addEventListener('click', (e) => {
