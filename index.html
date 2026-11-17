@@ -2113,7 +2113,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-17.236-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-17.237-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -4685,37 +4685,6 @@
     ensureSpace(20);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(30, 24, 20);
     doc.text('Valore stimato totale: ' + money(grandTotal), margin, y);
-    // Pagina finale: quanti pezzi comprati a ciascun prezzo (dalle fatture importate)
-    const acq = magazzinoAcquistiPerPrezzo();
-    if (acq.length) {
-      doc.addPage(); y = 54;
-      const c2 = { nome: margin, prezzo: pageW - margin - 175, qty: pageW - margin - 95, tot: pageW - margin };
-      const testa = () => {
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(107, 95, 87);
-        doc.text(I('PRODOTTO', 'PRODUCT'), c2.nome, y);
-        doc.text(I('PREZZO', 'PRICE'), c2.prezzo, y, { align: 'right' });
-        doc.text(I('PEZZI', 'PIECES'), c2.qty, y, { align: 'right' });
-        doc.text(I('TOTALE', 'TOTAL'), c2.tot, y, { align: 'right' });
-        y += 4; doc.setDrawColor(190, 180, 170); doc.setLineWidth(0.5); doc.line(margin, y, pageW - margin, y); y += 11;
-        doc.setTextColor(30, 24, 20);
-      };
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(122, 59, 86);
-      doc.text(I('Acquisti per prezzo', 'Purchases by price'), margin, y); y += 14;
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(107, 95, 87);
-      doc.text(I('Pezzi entrati con le fatture importate, divisi per prezzo pagato (già scontato). n/d = acquisto caricato prima che l’app salvasse il prezzo.', 'Pieces received through imported invoices, split by price paid (after discount). n/d = purchase loaded before the app saved the price.'), margin, y, { maxWidth: pageW - 2 * margin }); y += 24;
-      testa();
-      let ultimoNome = null;
-      acq.forEach(e => {
-        if (y > pageH - 50) { doc.addPage(); y = 54; testa(); }
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(30, 24, 20);
-        if (e.nome !== ultimoNome) doc.text(e.nome, c2.nome, y, { maxWidth: c2.prezzo - c2.nome - 14 });
-        ultimoNome = e.nome;
-        doc.text(e.prezzo == null ? 'n/d' : money(e.prezzo), c2.prezzo, y, { align: 'right' });
-        doc.text(String(e.pezzi), c2.qty, y, { align: 'right' });
-        doc.text(e.prezzo == null ? '' : money(e.prezzo * e.pezzi), c2.tot, y, { align: 'right' });
-        y += rowH;
-      });
-    }
     return doc.output('blob');
   }
   // Carica l'immagine del logo (quello di "Impostazioni", o quello predefinito se nessuno l'ha
@@ -4756,28 +4725,6 @@
   // (l'equivalente, su un foglio di calcolo, del dorso verticale del PDF). Si apre anche in
   // Numbers: non esiste un formato ".numbers" scrivibile da fuori Apple, ma Numbers importa
   // un .xlsx direttamente, quindi un unico file serve per entrambi.
-  // ---- Acquisti per prezzo ----
-  // Ogni fattura importata salva, per ogni prodotto, quanti pezzi sono entrati e a che prezzo
-  // (netto di sconto). Qui si sommano per prodotto e per prezzo: "3 pezzi a 12 €, 2 a 15 €".
-  // Gli acquisti caricati prima che l'app salvasse il prezzo hanno prezzo null (mostrati "n/d").
-  function magazzinoAcquistiPerPrezzo() {
-    const map = new Map();
-    (magazzinoCache.storicoRiordini || []).forEach(r => {
-      const q = Number(r.quantita) || 0;
-      if (!q) return;
-      const prod = magazzinoCache.prodotti.find(p => p.id === r.prodottoId);
-      if (!prod) return; // prodotto eliminato (es. magazzino svuotato e ricaricato): i suoi vecchi acquisti non contano
-      const nome = prod.nome || r.nome || '';
-      const prezzo = (r.prezzo != null && !isNaN(r.prezzo)) ? Math.round(Number(r.prezzo) * 100) / 100 : null;
-      const key = (r.prodottoId || nome) + '|' + (prezzo == null ? 'nd' : prezzo.toFixed(2));
-      if (!map.has(key)) map.set(key, { nome: nome, marca: (prod && prod.marca) || r.fornitore || '', prezzo: prezzo, pezzi: 0, ultima: '' });
-      const e = map.get(key);
-      e.pezzi += q;
-      if ((r.data || '') > e.ultima) e.ultima = r.data || '';
-    });
-    return Array.from(map.values()).sort((a, b) =>
-      a.nome.localeCompare(b.nome, 'it', { sensitivity: 'base' }) || ((a.prezzo == null ? -1 : a.prezzo) - (b.prezzo == null ? -1 : b.prezzo)));
-  }
   function buildMagazzinoWorkbook() {
     const wb = XLSX.utils.book_new();
     MAGAZZINO_TIPI.filter(t => t.key).forEach(t => {
@@ -4808,17 +4755,6 @@
       const ws = XLSX.utils.aoa_to_sheet(rows);
       ws['!cols'] = [{ wch: 22 }, { wch: 34 }, { wch: 10 }, { wch: 10 }, { wch: 10 }];
       XLSX.utils.book_append_sheet(wb, ws, I("Senza categoria", "Uncategorised"));
-    }
-    const acq = magazzinoAcquistiPerPrezzo();
-    if (acq.length) {
-      const rows = [[I('Marca/fornitore', 'Brand/supplier'), I('Prodotto', 'Product'), conValuta(I('Prezzo €', 'Price €')), I('Pezzi acquistati', 'Pieces bought'), conValuta(I('Totale €', 'Total €')), I('Ultimo acquisto', 'Last purchase')]];
-      acq.forEach(e => rows.push([e.marca, e.nome, e.prezzo == null ? 'n/d' : e.prezzo, e.pezzi, e.prezzo == null ? '' : Math.round(e.prezzo * e.pezzi * 100) / 100, e.ultima ? fmtDateISOBreve(e.ultima) : '']));
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [{ wch: 22 }, { wch: 34 }, { wch: 10 }, { wch: 16 }, { wch: 10 }, { wch: 14 }];
-      for (let i = 1; i < rows.length; i++) {
-        [2, 4].forEach(c => { const cell = ws[XLSX.utils.encode_cell({ r: i, c: c })]; if (cell && typeof cell.v === 'number') cell.z = '"' + cfgPaese().valuta + '"#,##0.00'; });
-      }
-      XLSX.utils.book_append_sheet(wb, ws, I('Acquisti per prezzo', 'Purchases by price'));
     }
     return wb;
   }
@@ -9865,7 +9801,7 @@
         registraVariazionePrezzo(prod, prezzo, 'fattura', righe[idx] && righe[idx].data);
         prod.prezzo = prezzo;
         nuovi++;
-        // Primo carico del prodotto: serve per "Acquisti per prezzo", ma non è un riordino
+        // Primo carico del prodotto: serve per il valore dei pezzi rimasti, ma non è un riordino
         // (flag "primo": le statistiche dei riordini lo saltano).
         if (qty > 0) magazzinoCache.storicoRiordini.push({ id: uid(), prodottoId: prod.id, nome: prod.nome, data: /^\d{4}-\d{2}-\d{2}/.test((righe[idx] && righe[idx].data) || '') ? righe[idx].data.slice(0, 10) : new Date().toISOString().slice(0, 10), quantita: qty, prezzo: prezzo, fornitore: fornitoreRiga, primo: true });
       } else {
