@@ -2110,7 +2110,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-17.227-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-17.228-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -9523,6 +9523,8 @@
       }
       if (netto == null && totaleRiga != null && quantita && quantita > 0) netto = totaleRiga / quantita;
       if (netto != null) { netto = Math.round(netto * 10000) / 10000; if (netto > 0) prezzoUnitario = netto; }
+      // Prezzo arrotondato al centesimo, come si fa di solito: 9,936 diventa 9,94 (e 8,255 diventa 8,26)
+      if (prezzoUnitario != null) prezzoUnitario = Math.round(prezzoUnitario * 100 + 1e-6) / 100;
       return { descrizione: fatturaText(el, 'Descrizione'), quantita: quantita, prezzoUnitario: prezzoUnitario, unitaMisura: fatturaText(el, 'UnitaMisura') };
     }).filter(r => r.descrizione);
     if (!righe.length) throw new Error(I("nessuna riga prodotto trovata", "no product line found"));
