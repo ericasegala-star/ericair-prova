@@ -1539,6 +1539,9 @@
   /* Importazione fattura in Magazzino: anteprima a tabella prima di confermare. */
   .mag-import-card { width: min(760px, 100%); }
   .mag-import-error { color: #A8433C; }
+  .mag-import-row .mag-import-col-check { touch-action: none; cursor: pointer; user-select: none; -webkit-user-select: none; min-width: 44px; text-align: center; }
+  .mag-import-row .mag-import-check { pointer-events: none; transform: scale(1.25); }
+  .mag-import-selezione-hint { font-size: 12px; color: var(--ink-soft); margin: -4px 0 10px; }
   .mag-import-summary { margin: 0 0 14px; font-size: 13.5px; color: var(--ink-soft); }
   .mag-import-summary strong { color: var(--ink); }
   .mag-import-table-wrap { max-height: 50vh; overflow-y: auto; margin-bottom: 16px; border: 1px solid var(--line); border-radius: var(--radius); }
@@ -2110,7 +2113,7 @@
   }
   function I(it, en) { return linguaCorrente() === 'it' ? it : en; }
   const __T0 = performance.now(); const __marks = {};
-  const APP_BUILD = "2026-11-17.228-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
+  const APP_BUILD = "2026-11-17.235-neutra"; // numero di versione, mostrato in basso: serve a verificare che si stia usando l'ultima versione pubblicata
   const STORAGE_KEY = "schedario-colore:clienti"; // usata solo per leggere, una volta sola, eventuali dati rimasti da una versione precedente
 
   // --- Schermata "Chi sei?" -----------------------------------------------------
@@ -4460,8 +4463,44 @@
   // Solo i prodotti con quantità e prezzo diversi da zero vanno esportati (PDF ed Excel): una
   // riga a zero non serve nell'inventario che si scarica. Senza "tipoKey" prende tutti i
   // prodotti esportabili, materie prime e merci vendita insieme.
+  // Pezzi che restano a magazzino divisi per prezzo: si considera che si usino prima i pezzi più
+  // vecchi, quindi quelli rimasti sono gli ultimi acquistati, ciascuno al prezzo a cui è stato
+  // pagato (dalle fatture importate). Niente medie: una riga per ogni prezzo. Se i pezzi in
+  // magazzino sono più di quelli registrati, o un acquisto non ha il prezzo salvato, per quei
+  // pezzi si usa il prezzo attuale del prodotto.
+  function magazzinoPezziPerPrezzo(p) {
+    const q = Number(p.quantita) || 0;
+    const fallback = (p.prezzo != null && !isNaN(p.prezzo)) ? Number(p.prezzo) : 0;
+    const acq = (magazzinoCache.storicoRiordini || [])
+      .filter(r => r.prodottoId === p.id && Number(r.quantita) > 0)
+      .map((r, i) => ({ r: r, i: i }))
+      .sort((a, b) => String(a.r.data || '').localeCompare(String(b.r.data || '')) || (a.i - b.i))
+      .map(x => x.r);
+    let resto = q;
+    const livelli = []; // dal più recente al più vecchio
+    for (let k = acq.length - 1; k >= 0 && resto > 0; k--) {
+      const pezzi = Math.min(resto, Number(acq[k].quantita));
+      const prezzo = (acq[k].prezzo != null && !isNaN(acq[k].prezzo)) ? Math.round(Number(acq[k].prezzo) * 100) / 100 : fallback;
+      livelli.push({ prezzo: prezzo, pezzi: pezzi }); resto -= pezzi;
+    }
+    if (resto > 0) livelli.push({ prezzo: fallback, pezzi: resto });
+    livelli.reverse(); // dal più vecchio al più recente
+    const out = [];
+    livelli.forEach(l => {
+      const g = out.find(x => Math.abs(x.prezzo - l.prezzo) < 0.005);
+      if (g) g.pezzi += l.pezzi; else out.push({ prezzo: l.prezzo, pezzi: l.pezzi });
+    });
+    return out;
+  }
+  // Una riga per ogni prodotto e per ogni prezzo dei pezzi rimasti (es. "2 pz a 11 €" e "1 pz a 0 €").
   function magazzinoEsportabili(tipoKey) {
-    return magazzinoCache.prodotti.filter(p => (!tipoKey || p.tipo === tipoKey) && (p.quantita || 0) > 0 && p.prezzo != null && p.prezzo > 0);
+    const righe = [];
+    magazzinoCache.prodotti
+      .filter(p => (!tipoKey || p.tipo === tipoKey) && (p.quantita || 0) > 0 && p.prezzo != null && p.prezzo >= 0) // anche gli omaggi a 0 € sono merce in magazzino
+      .forEach(p => magazzinoPezziPerPrezzo(p).forEach(l => {
+        righe.push(Object.assign({}, p, { prezzo: l.prezzo, quantita: l.pezzi, _valore: Math.round(l.prezzo * l.pezzi * 100) / 100 }));
+      }));
+    return righe;
   }
 
   // una "Quantità minima" opzionale per prodotto — quando la
@@ -4526,7 +4565,7 @@
       doc.text(p.nome || I("Senza nome", "Unnamed"), col.nome, y, { maxWidth: col.prezzo - col.nome - 14 });
       doc.text(money(p.prezzo), col.prezzo, y, { align: 'right' });
       doc.text(String(p.quantita), col.qty, y, { align: 'right' });
-      doc.text(money(p.prezzo * p.quantita), col.valore, y, { align: 'right' });
+      doc.text(money(p._valore), col.valore, y, { align: 'right' });
       y += rowH;
     }
     // Il "dorso" verticale a sinistra con il nome del fornitore, alto quanto il blocco appena
@@ -4622,7 +4661,7 @@
           continued = true;
         }
         drawRow(p);
-        groupValore += p.prezzo * p.quantita;
+        groupValore += p._valore;
       });
       // Se il gruppo ha pochi prodotti (dorso basso) il nome a dimensione normale potrebbe non
       // starci: prima di disegnare il dorso, allungo lo spazio sotto l'ultimo prodotto quanto
@@ -4727,7 +4766,8 @@
       const q = Number(r.quantita) || 0;
       if (!q) return;
       const prod = magazzinoCache.prodotti.find(p => p.id === r.prodottoId);
-      const nome = (prod && prod.nome) || r.nome || 'Prodotto eliminato';
+      if (!prod) return; // prodotto eliminato (es. magazzino svuotato e ricaricato): i suoi vecchi acquisti non contano
+      const nome = prod.nome || r.nome || '';
       const prezzo = (r.prezzo != null && !isNaN(r.prezzo)) ? Math.round(Number(r.prezzo) * 100) / 100 : null;
       const key = (r.prodottoId || nome) + '|' + (prezzo == null ? 'nd' : prezzo.toFixed(2));
       if (!map.has(key)) map.set(key, { nome: nome, marca: (prod && prod.marca) || r.fornitore || '', prezzo: prezzo, pezzi: 0, ultima: '' });
@@ -4747,7 +4787,7 @@
       groupMagazzinoByMarca(prodotti).forEach(g => {
         const startR = rows.length;
         g.prodotti.forEach(p => {
-          rows.push([g.marca, p.nome || I("Senza nome", "Unnamed"), p.prezzo, p.quantita, Math.round(p.prezzo * p.quantita * 100) / 100]);
+          rows.push([g.marca, p.nome || I("Senza nome", "Unnamed"), p.prezzo, p.quantita, p._valore]);
         });
         if (g.prodotti.length > 1) merges.push({ s: { r: startR, c: 0 }, e: { r: rows.length - 1, c: 0 } });
       });
@@ -4764,7 +4804,7 @@
     const senzaTipo = magazzinoEsportabili().filter(p => !p.tipo);
     if (senzaTipo.length) {
       const rows = [[I("Marca/fornitore", "Brand/supplier"), I("Prodotto", "Product"), conValuta(I("Prezzo €", "Price €")), I("Quantità", "Quantity"), conValuta(I("Valore €", "Value €"))]];
-      groupMagazzinoByMarca(senzaTipo).forEach(g => g.prodotti.forEach(p => rows.push([g.marca, p.nome || I("Senza nome", "Unnamed"), p.prezzo, p.quantita, Math.round(p.prezzo * p.quantita * 100) / 100])));
+      groupMagazzinoByMarca(senzaTipo).forEach(g => g.prodotti.forEach(p => rows.push([g.marca, p.nome || I("Senza nome", "Unnamed"), p.prezzo, p.quantita, p._valore])));
       const ws = XLSX.utils.aoa_to_sheet(rows);
       ws['!cols'] = [{ wch: 22 }, { wch: 34 }, { wch: 10 }, { wch: 10 }, { wch: 10 }];
       XLSX.utils.book_append_sheet(wb, ws, I("Senza categoria", "Uncategorised"));
@@ -9522,7 +9562,7 @@
         if (totaleRiga != null && quantita && Math.abs(netto * quantita - totaleRiga) > 0.02 + quantita * 0.01) netto = null;
       }
       if (netto == null && totaleRiga != null && quantita && quantita > 0) netto = totaleRiga / quantita;
-      if (netto != null) { netto = Math.round(netto * 10000) / 10000; if (netto > 0) prezzoUnitario = netto; }
+      if (netto != null) { netto = Math.round(netto * 10000) / 10000; if (netto >= 0) prezzoUnitario = netto; } // anche 0: omaggio o sconto 100%, pagato zero
       // Prezzo arrotondato al centesimo, come si fa di solito: 9,936 diventa 9,94 (e 8,255 diventa 8,26)
       if (prezzoUnitario != null) prezzoUnitario = Math.round(prezzoUnitario * 100 + 1e-6) / 100;
       return { descrizione: fatturaText(el, 'Descrizione'), quantita: quantita, prezzoUnitario: prezzoUnitario, unitaMisura: fatturaText(el, 'UnitaMisura') };
@@ -9726,6 +9766,75 @@
         if (row) row.classList.toggle('mag-import-row-off', !chk.checked);
       });
     });
+    // Tasti per spuntare / togliere la spunta a tutte le righe in un colpo solo
+    const wrapTab = reviewEl.querySelector('.mag-import-table-wrap');
+    if (wrapTab) {
+      wrapTab.insertAdjacentHTML('beforebegin', `<div class="mag-import-selezione" style="display:flex; gap:8px; margin:0 0 10px;"><button type="button" class="ghost small" id="magImportSelTutto">${I('Seleziona tutto', 'Select all')}</button><button type="button" class="ghost small" id="magImportDeselTutto">${I('Deseleziona tutto', 'Deselect all')}</button></div>`);
+      const impostaTutte = (val) => reviewEl.querySelectorAll('.mag-import-row').forEach(row => {
+        const c = row.querySelector('.mag-import-check'); c.checked = val; row.classList.toggle('mag-import-row-off', !val);
+      });
+      document.getElementById('magImportSelTutto').addEventListener('click', () => impostaTutte(true));
+      document.getElementById('magImportDeselTutto').addEventListener('click', () => impostaTutte(false));
+      wrapTab.insertAdjacentHTML('beforebegin', `<p class="mag-import-selezione-hint">${I("Per scegliere più righe: trascina il dito (o il mouse) sulla colonna delle spunte. Da computer, tieni premuto Maiusc e clicca per selezionare tutto l'intervallo.", 'To pick several lines: drag your finger (or mouse) along the tick column. On a computer, hold Shift and click to select the whole range.')}</p>`);
+      // Selezione di più righe insieme: trascinando sulla colonna delle spunte (dito o mouse) oppure,
+      // da computer, Maiusc+clic per un intervallo.
+      const righeTab = Array.from(reviewEl.querySelectorAll('.mag-import-row'));
+      const setRiga = (row, v) => { row.querySelector('.mag-import-check').checked = v; row.classList.toggle('mag-import-row-off', !v); };
+      let ancora = -1, drag = null;
+      const indiceDa = (x, y) => {
+        const el = document.elementFromPoint(x, y);
+        const row = el && el.closest ? el.closest('.mag-import-row') : null;
+        return row ? righeTab.indexOf(row) : -1;
+      };
+      righeTab.forEach((row, i) => {
+        row.querySelector('.mag-import-col-check').addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'mouse' && e.button > 0) return;
+          e.preventDefault();
+          const nuovo = !row.querySelector('.mag-import-check').checked;
+          const snap = righeTab.map(r => r.querySelector('.mag-import-check').checked);
+          if (e.shiftKey && ancora >= 0) {
+            const a = Math.min(ancora, i), b = Math.max(ancora, i);
+            for (let k = a; k <= b; k++) setRiga(righeTab[k], nuovo);
+            ancora = i; drag = null;
+          } else {
+            setRiga(row, nuovo); ancora = i; drag = { stato: nuovo, da: i, snap: snap };
+          }
+        });
+      });
+      // Se si trascina oltre il bordo alto o basso della tabella, questa scorre da sola
+      // (anche col dito fermo) e la selezione continua; le righe già scelte restano.
+      let ultimo = null, timer = null;
+      const aggiorna = () => {
+        if (!drag || !ultimo) return;
+        const wr = wrapTab.getBoundingClientRect();
+        const x = Math.min(Math.max(ultimo.x, wr.left + 6), wr.right - 6);
+        const y = Math.min(Math.max(ultimo.y, wr.top + 46), wr.bottom - 4);
+        const j = indiceDa(x, y);
+        if (j < 0) return;
+        const a = Math.min(drag.da, j), b = Math.max(drag.da, j);
+        righeTab.forEach((r, k) => setRiga(r, (k >= a && k <= b) ? drag.stato : drag.snap[k]));
+      };
+      const fineDrag = () => { drag = null; ultimo = null; if (timer) { clearInterval(timer); timer = null; } };
+      righeTab.forEach(row => row.querySelector('.mag-import-col-check').addEventListener('pointerdown', (e) => {
+        if (!drag) return;
+        ultimo = { x: e.clientX, y: e.clientY };
+        if (timer) clearInterval(timer);
+        timer = setInterval(() => {
+          if (!drag || !ultimo) { fineDrag(); return; }
+          const wr = wrapTab.getBoundingClientRect();
+          if (ultimo.y < wr.top + 56) wrapTab.scrollTop -= 14;
+          else if (ultimo.y > wr.bottom - 30) wrapTab.scrollTop += 14;
+          aggiorna();
+        }, 40);
+      }));
+      reviewEl.onpointermove = (e) => {
+        if (!drag) return;
+        if (e.pointerType === 'mouse' && e.buttons === 0) { fineDrag(); return; }
+        ultimo = { x: e.clientX, y: e.clientY };
+        aggiorna();
+      };
+      reviewEl.onpointerup = reviewEl.onpointercancel = fineDrag;
+    }
     document.getElementById('magImportCancelBtn').addEventListener('click', closeMagImportModal);
     document.getElementById('magImportConfirmBtn').addEventListener('click', confirmMagImport);
   }
@@ -9744,7 +9853,8 @@
       const matchSel = row.querySelector('.mag-import-match').value;
       const qty = parseFloat(row.querySelector('.mag-import-qty').value) || 0;
       const prezzoRaw = row.querySelector('.mag-import-prezzo').value;
-      const prezzo = prezzoRaw === '' ? null : (parseFloat(prezzoRaw) || null);
+      const prezzoNum = parseFloat(prezzoRaw);
+      const prezzo = (prezzoRaw === '' || isNaN(prezzoNum)) ? null : prezzoNum; // 0 è un prezzo valido (omaggio)
       if (!nome) return;
       if (matchSel === '__new__') {
         const prod = createMagazzinoProdotto();
